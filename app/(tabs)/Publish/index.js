@@ -728,23 +728,22 @@ const index = () => {
     {
       title: "Where is the location?",
       render: () => (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
+   
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <SafeAreaProvider style={styles.stepContainer}>
+            <SafeAreaProvider style={{ flex: 1,
+    padding: 10,}}>
               <Text style={styles.stepTitle}>
                 Where is the <Text style={styles.highlight}>location</Text>?
               </Text>
 
-              <View style={{ padding: 16 }}>
+              <View style={{ padding: 6 }}>
                 <Text style={{ marginBottom: 8 }}>Select State</Text>
                 <DropDownPicker
                   open={openState}
                   value={state}
                   items={stateItems}
                   setOpen={setOpenState}
-                  listMode="SCROLLVIEW"
+                  listMode="MODAL"
                   setValue={(callback) => {
                     const value =
                       typeof callback === "function"
@@ -760,9 +759,9 @@ const index = () => {
                   placeholder="Select a state"
                   searchable={true}
                   zIndex={2000}
-                  zIndexInverse={2000}
+              
                   dropDownContainerStyle={{
-                    maxHeight: 300,
+                    maxHeight: 500,
                   }}
                 />
 
@@ -774,7 +773,7 @@ const index = () => {
                   value={city}
                   items={cityItems}
                   setOpen={setOpenCity}
-                  listMode="SCROLLVIEW"
+                  listMode="MODAL"
                   setValue={(callback) => {
                     const value =
                       typeof callback === "function"
@@ -789,8 +788,11 @@ const index = () => {
                   setItems={setCityItems}
                   placeholder="Select City"
                   searchable={true}
-                  zIndex={1000}
-                  zIndexInverse={3000}
+                         zIndex={1800}
+            
+                  dropDownContainerStyle={{
+                    maxHeight: 900,
+                  }}
                 />
               </View>
 
@@ -801,10 +803,10 @@ const index = () => {
                 <TextInput
                   style={{
                     backgroundColor: "#FFFFFF",
-                    padding: 15,
-                    borderRadius: 5,
+                    padding: 14,
+                    borderRadius: 4,
                     paddingLeft: 5,
-                    marginHorizontal: 14,
+                    marginHorizontal: 10,
                     borderColor: "#555",
                     borderWidth: 1,
                   }}
@@ -815,7 +817,7 @@ const index = () => {
               </View>
             </SafeAreaProvider>
           </ScrollView>
-        </KeyboardAvoidingView>
+       
       ),
     },
     {
@@ -913,7 +915,7 @@ const index = () => {
               setValue={setDocValue}
               setItems={setDocItems}
               placeholder="Select Document Type"
-              zIndex={4000}
+              zIndex={3000}
               onChangeValue={(val) => {
                 onValueChange(val);
               }}
@@ -930,7 +932,7 @@ const index = () => {
               setValue={setSalesValue}
               setItems={setSalesItems}
               placeholder="Select Sales Type"
-              zIndex={2000}
+              zIndex={3000}
               onChangeValue={(val) => {
                 handleSalesTypeChange(val);
               }}
@@ -947,7 +949,7 @@ const index = () => {
               setValue={setStatusValue}
               setItems={setStatusItems}
               placeholder="Select Status"
-              zIndex={1000}
+              zIndex={3000}
               onChangeValue={(val) => {
                 handleStatusChange(val);
               }}

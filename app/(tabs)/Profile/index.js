@@ -1,7 +1,7 @@
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,58 +15,21 @@ import {
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import { signOut } from "../../../store";
 
-const tabs = ["Properties", "Pending", "Sold"];
+const tabs = ["Properties", "Pending", "Rejected"];
 
 const index = () => {
   const [activeTab, setActiveTab] = useState("Properties");
   const [user, setUser] = useState(null);
-  const [properties, setProperties] = useState(null);
+  const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+    const [saved, setSaved] = useState([]);
+  const [error, setError] = useState(null);
+
   const router = useRouter();
 
-  const Propertiess = [
-    {
-      id: "1",
-      title: "Wings Tower",
-      date: "November 21, 2021",
-      status: "Rent",
-      image: require("@/assets/images/nearby1.jpg"),
-    },
-    {
-      id: "2",
-      title: "Bridgeland Modern House",
-      date: "December 17, 2021",
-      status: "Rent",
-      image: require("@/assets/images/nearby2.jpg"),
-    },
-  ];
+  
 
-  const Pending = [
-    {
-      id: "1",
-      title: "Fairview Apartment",
-      price: "$370/month",
-      location: "Jakarta, Indonesia",
-      image: require("@/assets/images/nearby3.jpg"),
-    },
-    {
-      id: "2",
-      title: "Shoolview House",
-      price: "$320/month",
-      location: "Jakarta, Indonesia",
-      image: require("@/assets/images/nearby4.jpeg"),
-    },
-  ];
-
-  const sold = [
-    {
-      id: "1",
-      title: "Sunset Villa",
-      date: "March 3, 2021",
-      price: "$500,000",
-      image: require("@/assets/images/nearby3.jpg"),
-    },
-  ];
+  
 
   const handleLogout = async () => {
     await signOut();
@@ -90,11 +53,14 @@ const index = () => {
     checkAuth();
   }, []);
 
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     if (user) {
       fetchPropertiesByCompany();
+      fetchSaved();
     }
-  }, [user]);
+  }, [user])
+);
 
   const fetchPropertiesByCompany = async () => {
     try {
@@ -113,7 +79,8 @@ const index = () => {
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
-        setProperties(result.properties);
+     
+        setAllProperties(result.properties ?? []);
         setLoading(false);
         console.log("properties by companies=.....", result.properties);
       } else {
@@ -129,37 +96,147 @@ const index = () => {
     } finally {
       setLoading(false);
     }
+    
   };
 
-  const renderTabContent = () => {
-    let data;
-    if (activeTab === "Properties") data = properties;
-    else if (activeTab === "Pending") data = Pending;
-    else data = sold;
 
+  const fetchSaved = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('authToken');
+      const res = await fetch(
+        'https://insighthub.com.ng/NestifyAPI/get_liked_properties.php',
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Token ${token ?? ''}`,
+          },
+        }
+      );
+      const result = await res.json();
+      if (result.status === 'success') setSaved(result.data ?? []);
+      console.log(result.data ,' saved properties loaded');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+const renderTabContent = () => {
+  
+  if (!allProperties || allProperties.length === 0) {
     return (
+      <View style={{ alignItems: 'center', marginTop: 40 }}>
+        <Text style={{ color: '#888', fontSize: 15 }}>No properties found</Text>
+      </View>
+    );
+  }
+
+  let data;
+  if (activeTab === "Properties") {
+    data = allProperties.filter(p => p.approval_status === 'approved');
+  } else if (activeTab === "Pending") {
+    data = allProperties.filter(p => p.approval_status === 'pending');
+  } else {
+    data = allProperties.filter(p => p.approval_status === 'rejected');
+  }
+
+  if (data.length === 0) {
+    return (
+      <View style={{ alignItems: 'center', marginTop: 40 }}>
+        <Text style={{ color: '#888', fontSize: 15 }}>
+          No {activeTab.toLowerCase()} properties
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+   
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <TouchableOpacity style={styles.card}        onPress={() =>
+                    router.push({
+                      pathname: "/Profile/EditProperty",
+                params: { id: item.id },
+                    })
+                  }>
             <Image
               source={{ uri: `https://insighthub.com.ng/${item.images[0]}` }}
               style={styles.cardImage}
             />
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{item.propertyName}</Text>
-              {item.price && (
-                <Text style={styles.subText}>
-                  {item.rentPrice ? item.rentPrice : item.sellPrice}
+              <Text  numberOfLines={1}
+    ellipsizeMode="tail" style={styles.cardTitle}>{item.propertyName}</Text>
+              {item.sellPrice  && (
+                <Text  numberOfLines={1}
+    ellipsizeMode="tail" style={{...styles.subText, color: '#1e40af', }}>
+                  {item.listingType === 'Rent'
+                    ? `$${item.rentPrice}/year`
+                    : item.listingType === 'Sell'
+                    ? `${item.sellPrice}`
+                    : `${item.sellPrice} • ${item.rentPrice}/year`}
                 </Text>
               )}
-              {/* {item.date && <Text style={styles.subText}>{item.date}</Text>} */}
-              {item.location && (
-                <Text style={styles.subText}>{item.location}</Text>
-              )}
+
+
+         
+
+
+            {item.location && (
+  <Text
+    style={{flex: 1 ,color: '#4b5563', fontSize: 13, width: '80%' }}
+    numberOfLines={1}
+    ellipsizeMode="tail"
+  >
+    {item.location}
+  </Text>
+)}
+
+<View style={{ flexDirection: 'row' ,alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+
+{item.created_at && (
+  <Text style={{}}>{formatDate(item.created_at)}</Text>
+)}
+
+             {item.status && (
+  <Text
+    style={{
+      backgroundColor: 
+        item.status.toLowerCase() === 'available' ? '#059669' :
+        item.status.toLowerCase() === 'draft'     ? '#64748b' :
+        item.status.toLowerCase() === 'sold'      ? '#e11d48' :
+        '#4f46e5',
+      color: 'white',
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 20,        // pill shape looks cleaner for status badges
+
+      marginRight: '17%',
+      marginTop: 2,
+      textTransform: 'capitalize',
+      fontSize: 11,
+      fontWeight: '600',       // slightly bold reads better on colored bg
+      overflow: 'hidden',      // ensures borderRadius clips properly on Android
+    }}
+  >
+    {item.status}
+  </Text>
+)}
+</View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     );
@@ -261,22 +338,24 @@ const index = () => {
           />
         )}
 
+        <Text style={styles.name}>{user ? user.name : "User Name"}</Text>
+
         <View style={styles.statsContainer}>
           <View style={styles.stat}>
             <Text style={styles.statNumber}>30</Text>
             <Text>Properties</Text>
           </View>
-          <View style={styles.stat}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text>Sold</Text>
-          </View>
+     <TouchableOpacity style={styles.stat} onPress={() => router.push("../Profile/Wishlist")}>
+            <Text style={styles.statNumber}>{saved.length}</Text>
+            <Text>Wishlists</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.stat}
             onPress={() => {
               router.push("../Profile/UserReviews");
             }}
           >
-            <Text style={styles.statNumber}>28</Text>
+            <Text style={styles.statNumber}>{user?.review_count ?? 0}</Text>
             <Text>Reviews</Text>
           </TouchableOpacity>
         </View>

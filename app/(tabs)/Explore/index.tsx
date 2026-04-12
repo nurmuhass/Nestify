@@ -15,6 +15,7 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import CategoryTabs from '../../../components/CategoryTabs';
 import SearchBar from '../../../components/SearchBar';
+import LikeButton from '@/components/LikeButton';
 
 export default function ExplorePage() {
   const router = useRouter();
@@ -143,9 +144,14 @@ setProperties(prev => {
                 ) : (
                   <View style={[styles.image, { backgroundColor: '#ddd' }]} />
                 )}
-                <TouchableOpacity style={styles.heartIcon}>
-                  <Entypo name="heart-outlined" size={18} color="#FF4D4D" />
-                </TouchableOpacity>
+    <TouchableOpacity style={styles.heartIcon}>
+      <LikeButton
+        propertyId={Number(prop.id)}
+        variant="icon"
+        size={17}
+        color="red"
+      />
+    </TouchableOpacity>
                 <View style={styles.tag}>
                   <Text style={styles.tagText}>
                     {prop.listingType === 'Both' ? 'House' : prop.listingType}
@@ -169,10 +175,10 @@ setProperties(prev => {
 
                 <Text style={styles.price}>
                   {prop.listingType === 'Rent'
-                    ? `$${prop.rentPrice}`
+                    ? `${prop.rentPrice}`
                     : prop.listingType === 'Sell'
-                    ? `$${prop.sellPrice}`
-                    : `$${prop.sellPrice} • $${prop.rentPrice}`}
+                    ? `${prop.sellPrice}`
+                    : `${prop.sellPrice} • ${prop.rentPrice}`}
                   <Text style={styles.month}> /month</Text>
                 </Text>
               </View>

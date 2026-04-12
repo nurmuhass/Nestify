@@ -1,6 +1,7 @@
+// parent
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import FeaturedEstates from '../../../components/FeaturedEstates';
 import Header from '../../../components/Header';
@@ -33,34 +34,37 @@ useEffect(() => {
   }, []);
 
   return (
- <ScrollView showsVerticalScrollIndicator={false} style={styles.headerWrapper}>
-
-      
+ <FlatList
+  data={[]} // empty because header handles top content
+  keyExtractor={(item, index) => index.toString()}
+  showsVerticalScrollIndicator={false}
+style={ styles.headerWrapper}
+  ListHeaderComponent={
+    <>
       <Header />
 
-      {/* Eclipse background */}
       <View style={styles.eclipse} />
 
-      {/* Foreground Content */}
       <View style={styles.content}>
-        <Text style={styles.greeting}>Hey, <Text style={styles.username}>{user ? user.name : ''}!</Text></Text>
+        <Text style={styles.greeting}>
+          Hey, <Text style={styles.username}>{user ? user.name : ''}!</Text>
+        </Text>
         <Text style={styles.subtitle}>Let's start exploring</Text>
       </View>
 
-
-
-
-     
       <SearchBar />
-      
       <PromoSlider />
       <TopLocations />
       <FeaturedEstates />
       <TopCompanies />
 
-
+      {/* 👇 IMPORTANT: keep NearbyProperties here */}
       <NearbyProperties />
-    </ScrollView>
+    </>
+  }
+
+  ListFooterComponent={<View style={{ }} />}
+/>
   )
 }
 
