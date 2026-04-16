@@ -1,4 +1,4 @@
-// EstateCompanyScreen.tsx
+// CompanyScreen.tsx
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -377,10 +377,7 @@ useEffect(() => {
   
           {/* CTA Row */}
           <View style={styles.ctaRow}>
-            <TouchableOpacity style={styles.ctaBtnPrimary} onPress={onBookInspection}>
-              <Ionicons name="calendar-outline" size={16} color="#fff" />
-              <Text style={styles.ctaTextPrimary}>Book Inspection</Text>
-            </TouchableOpacity>
+         
             <TouchableOpacity style={styles.ctaBtnOutline} onPress={onChatWithAgent}>
               <Ionicons name="chatbubble-ellipses-outline" size={16} color="#0a84ff" />
               <Text style={styles.ctaTextOutline}>Chat</Text>

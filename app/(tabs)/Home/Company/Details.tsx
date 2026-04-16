@@ -20,6 +20,8 @@ import { getStatusBarHeight } from 'react-native-status-bar-height';
 import NearbyProperties from '../../../../components/NearbyProperties';
 import LikeButton from '@/components/LikeButton';
 import { useCompanyReviews } from '@/hooks/useCompanyReviews';
+import { initiateChat } from '@/hooks/useChat';
+import PricingModal from '@/components/PricingModal';
 
 
 interface CompanyData {
@@ -54,7 +56,8 @@ export default function PropertyDetails() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
    const [activeIndex, setActiveIndex] = useState(0);
-
+const [chatLoading, setChatLoading] = useState(false);
+  const [pricingVisible, setPricingVisible] = useState(false);
 
 const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
   Number(property?.user_id)
@@ -66,6 +69,55 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
+  const handleChatAction = async (type: 'chat' | 'inspection') => {
+  const userJson = await AsyncStorage.getItem('authUser');
+  if (!userJson) return;
+  const user = JSON.parse(userJson);
+
+  // Premium check — freemium users see upgrade prompt
+  if (user.planType !== 'premium') {
+    Alert.alert(
+      '⭐ Premium Feature',
+      'Chat with sellers is available for premium members only. Upgrade to unlock unlimited messaging.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        {
+          text: 'Upgrade',
+          onPress: () => setPricingVisible(true),
+        },
+      ]
+    );
+    return;
+  }
+
+  setChatLoading(true);
+  const openingMessage = type === 'inspection'
+    ? `Hi, I'd like to book an inspection for "${property.propertyName}". Are you available?`
+    : `Hi, I'm interested in "${property.propertyName}". Is it still available?`;
+
+  const result = await initiateChat(
+    property.user_id,   // seller
+    property.id,        // property
+    openingMessage
+  );
+  setChatLoading(false);
+
+  if (result.success && result.conversationId) {
+    router.push({
+      pathname: '../ChatRoom',
+      params: {
+        conversation_id: result.conversationId,
+        property_name:   property.propertyName,
+        property_id:     property.id,
+      },
+    });
+  } else if (result.notPremium) {
+    // Server-side premium check failed too
+    Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat with sellers.');
+  } else {
+    Alert.alert('Error', result.msg ?? 'Could not start chat');
+  }
+};
 
   useEffect(() => {
     if (id) {
@@ -426,17 +478,30 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
             </View>
 
             {/* CTA Buttons */}
-            <View style={styles.btnRow}>
-              <TouchableOpacity
-                style={styles.btnChat}
-                onPress={() => router.push("../Profile/Messages")}
-              >
-                <Text style={styles.btnChatText}>Chat With Seller</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.btnBook}>
-                <Text style={styles.btnBookText}>Book For Inspection</Text>
-              </TouchableOpacity>
-            </View>
+ <View style={styles.btnRow}>
+  <TouchableOpacity
+    style={styles.btnChat}
+    onPress={() => handleChatAction('chat')}
+    disabled={chatLoading}
+  >
+    {chatLoading
+      ? <ActivityIndicator size="small" color="#111" />
+      : <Text style={styles.btnChatText}>💬 Chat With Seller</Text>
+    }
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={styles.btnBook}
+    onPress={() => handleChatAction('inspection')}
+    disabled={chatLoading}
+  >
+    
+      {chatLoading
+      ? <ActivityIndicator size="small" color="#111" />
+      : <Text style={styles.btnBookText}>📅 Book Inspection</Text>
+    }
+  </TouchableOpacity>
+</View>
 
             {/* Agent Card */}
             <View style={styles.agentCard}>
@@ -627,7 +692,38 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
         <Text style={styles.sectionTitle}>Nearby From this Location</Text>
         <NearbyProperties />
 
+
+  <PricingModal
+        visible={pricingVisible}
+        onSelectPlan={(planKey) => {
+          setPricingVisible(false);
+          // navigate to your payment/upgrade flow, passing planKey
+          // router.push(`./upgrade?plan=${planKey}`);
+          switch (planKey) {
+            case "freemium":
+              setPricingVisible(false);
+              break;
+            case "single":
+              router.push("/upgrade/single");
+              break;
+            case "monthly":
+              router.push("/upgrade/monthly");
+              break;
+            case "semi":
+              router.push("/upgrade/semiannual");
+              break;
+            case "annual":
+              router.push("/upgrade/annual");
+              break;
+            default:
+              router.push("/upgrade");
+          }
+        }}
+        onClose={() => setPricingVisible(false)}
+      />
+
           </View>
+          
         </>
       }
     />

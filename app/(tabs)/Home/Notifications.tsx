@@ -200,7 +200,7 @@ useFocusEffect(
           </View>
           <Text style={styles.emptyTitle}>No notifications yet</Text>
           <Text style={styles.emptySub}>
-            You'll see updates about your properties here
+            You will see updates releated to your account here
           </Text>
         </View>
       );
