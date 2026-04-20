@@ -222,7 +222,7 @@ export default function ChatRoom() {
 
   const {
     messages, loading, sending,
-    sendText, sendImage, sendInspection, respondInspection,
+    sendText, sendImage, sendInspection, respondInspection, deleteMessage,
   } = useMessages(conversationId, userId);
 
   // Scroll to bottom on new message
@@ -231,6 +231,23 @@ export default function ChatRoom() {
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
     }
   }, [messages.length]);
+
+  const handleDeleteMessage = (messageId: number, isMine: boolean) => {
+  if (!isMine) return; // can only delete own messages
+  Alert.alert(
+    'Delete message',
+    'Delete this message? It will be removed for everyone.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteMessage(messageId),
+      },
+    ]
+  );
+};
+
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
@@ -267,86 +284,92 @@ export default function ChatRoom() {
   };
 
   // ── Render a single message ───────────────────────────────────────────────
-  const renderMessage = ({ item, index }: { item: Message; index: number }) => {
-    const isMine    = item.sender_id === userId;
-    const showDate  = shouldShowDate(messages, index);
+const renderMessage = ({ item, index }: { item: Message; index: number }) => {
+  const isMine   = item.sender_id === userId;
+  const showDate = shouldShowDate(messages, index);
 
-    return (
-      <>
-        {showDate && (
-          <View style={styles.dateSeparator}>
-            <Text style={styles.dateSeparatorText}>
-              {new Date(item.created_at).toLocaleDateString('en-GB', {
-                weekday: 'short', day: '2-digit', month: 'short',
-              })}
-            </Text>
-          </View>
+  return (
+    <>
+      {showDate && (
+        <View style={styles.dateSeparator}>
+          <Text style={styles.dateSeparatorText}>
+            {new Date(item.created_at).toLocaleDateString('en-GB', {
+              weekday: 'short', day: '2-digit', month: 'short',
+            })}
+          </Text>
+        </View>
+      )}
+
+      <View style={[styles.messageRow, isMine && styles.messageRowMine]}>
+        {/* Avatar for received messages */}
+        {!isMine && (
+          item.sender_avatar ? (
+            <Image source={{ uri: item.sender_avatar }} style={styles.msgAvatar} />
+          ) : (
+            <View style={[styles.msgAvatar, styles.msgAvatarFallback]}>
+              <Text style={styles.msgAvatarInitial}>
+                {(item.sender_name ?? '?')[0].toUpperCase()}
+              </Text>
+            </View>
+          )
         )}
 
-        <View style={[styles.messageRow, isMine && styles.messageRowMine]}>
-          {/* Avatar for received messages */}
-          {!isMine && (
-            item.sender_avatar ? (
-              <Image source={{ uri: item.sender_avatar }} style={styles.msgAvatar} />
-            ) : (
-              <View style={[styles.msgAvatar, styles.msgAvatarFallback]}>
-                <Text style={styles.msgAvatarInitial}>
-                  {(item.sender_name ?? '?')[0].toUpperCase()}
-                </Text>
-              </View>
-            )
+        {/* ── Long press wrapper — only on own messages ── */}
+        <TouchableOpacity
+          activeOpacity={1}
+          onLongPress={() => isMine && handleDeleteMessage(item.id, isMine)}
+          delayLongPress={400}
+          style={[styles.messageWrap, isMine && { alignItems: 'flex-end' }]}
+        >
+          {/* Inspection request */}
+          {item.type === 'inspection_request' && (
+            <InspectionBubble
+              msg={item}
+              isMine={isMine}
+              onRespond={respondInspection}
+            />
           )}
 
-          <View style={[styles.messageWrap, isMine && { alignItems: 'flex-end' }]}>
-            {/* Inspection request */}
-            {item.type === 'inspection_request' && (
-              <InspectionBubble
-                msg={item}
-                isMine={isMine}
-                onRespond={respondInspection}
+          {/* Image */}
+          {item.type === 'image' && item.image_path && (
+            <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs, { padding: 4 }]}>
+              <Image
+                source={{ uri: BASE_URL + item.image_path }}
+                style={styles.chatImage}
+                resizeMode="cover"
               />
-            )}
+              <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
+                {formatTime(item.created_at)}
+              </Text>
+            </View>
+          )}
 
-            {/* Image */}
-            {item.type === 'image' && item.image_path && (
-              <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs, { padding: 4 }]}>
-                <Image
-                  source={{ uri: BASE_URL + item.image_path }}
-                  style={styles.chatImage}
-                  resizeMode="cover"
-                />
+          {/* Text */}
+          {item.type === 'text' && (
+            <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
+              <Text style={[styles.msgText, isMine && styles.msgTextMine]}>
+                {item.message}
+              </Text>
+              <View style={styles.msgMeta}>
                 <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
                   {formatTime(item.created_at)}
                 </Text>
+                {isMine && (
+                  <Ionicons
+                    name={item.is_read ? 'checkmark-done' : 'checkmark'}
+                    size={13}
+                    color={item.is_read ? '#93C5FD' : 'rgba(255,255,255,0.6)'}
+                    style={{ marginLeft: 3 }}
+                  />
+                )}
               </View>
-            )}
-
-            {/* Text */}
-            {item.type === 'text' && (
-              <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                <Text style={[styles.msgText, isMine && styles.msgTextMine]}>
-                  {item.message}
-                </Text>
-                <View style={styles.msgMeta}>
-                  <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
-                    {formatTime(item.created_at)}
-                  </Text>
-                  {isMine && (
-                    <Ionicons
-                      name={item.is_read ? 'checkmark-done' : 'checkmark'}
-                      size={13}
-                      color={item.is_read ? '#93C5FD' : 'rgba(255,255,255,0.6)'}
-                      style={{ marginLeft: 3 }}
-                    />
-                  )}
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
-      </>
-    );
-  };
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+};
 
   return (
      <KeyboardAvoidingView
@@ -357,23 +380,35 @@ export default function ChatRoom() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() =>  router.push({
+            pathname: "../Profile/Messages",
+          })}>
           <Ionicons name="chevron-back" size={22} color="#111" />
-        </TouchableOpacity>
-    <TouchableOpacity
-  style={{ flex: 1 }}
-  onPress={() =>
-    router.push({
-      pathname: '/Home/Company/Details',
-      params: { id: property_id },
-    })
-  }
->
-  <Text style={styles.headerTitle} numberOfLines={1}>
-    {property_name ?? 'Chat'}
-  </Text>
-  <Text style={styles.headerSub}>Tap to view property →</Text>
-</TouchableOpacity>
+        </TouchableOpacity> 
+
+{property_id ? (
+  <TouchableOpacity
+    style={{ flex: 1 }}
+    onPress={() =>
+      router.push({
+        pathname: '/Home/Company/Details',
+        params: { id: property_id },
+      })
+    }
+  >
+    <Text style={styles.headerTitle} numberOfLines={1}>
+      {property_name ?? 'Chat'}
+    </Text>
+    <Text style={styles.headerSub}>Tap to view property →</Text>
+  </TouchableOpacity>
+) : (
+  <View style={{ flex: 1 }}>
+    <Text style={styles.headerTitle} numberOfLines={1}>
+      {property_name ?? 'General Enquiry'}
+    </Text>
+    <Text style={styles.headerSub}>General enquiry</Text>
+  </View>
+)}
         <TouchableOpacity
           style={styles.headerAction}
           onPress={() => setInspModal(true)}
@@ -408,8 +443,11 @@ export default function ChatRoom() {
         />
       )}
 
+      <View style={styles.hintRow}>
+        <Text style={styles.hintText}>Hold a sent message to delete it.</Text>
+      </View>
+
       {/* Input bar */}
-   
         <View style={styles.inputBar}>
           {/* Camera / image button */}
           <TouchableOpacity style={styles.inputAction} onPress={handlePickImage}>
@@ -602,6 +640,20 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   sendBtnDisabled: { backgroundColor: '#93C5FD' },
+
+  hintRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#F8FAFC',
+    borderTopWidth: 0.5,
+    borderBottomWidth: 0.5,
+    borderColor: '#E2E8F0',
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#475569',
+    textAlign: 'center',
+  },
 
   // Inspection modal
   modalOverlay: {

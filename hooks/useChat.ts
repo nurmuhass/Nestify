@@ -22,20 +22,22 @@ export interface Message {
 }
 
 export interface Conversation {
-  id:               number;
-  buyer_id:         number;
-  seller_id:        number;
-  property_id:      number;
-  propertyName:     string;
-  property_image:   string | null;
-  buyer_name:       string;
-  buyer_avatar:     string | null;
-  seller_name:      string;
-  seller_company:   string | null;
-  seller_avatar:    string | null;
-  last_message:     string | null;
-  last_message_at:  string | null;
-  unread_count:     number;
+  id:                number;
+  buyer_id:          number;
+  seller_id:         number;
+  property_id:       number;
+  propertyName:      string;
+  property_image:    string | null;
+  buyer_name:        string;
+  buyer_avatar:      string | null;
+  seller_name:       string;
+  seller_company:    string | null;
+  seller_avatar:     string | null;
+  last_message:      string | null;
+  last_message_at:   string | null;
+  unread_count:      number;
+  deleted_by_buyer:  number;
+  deleted_by_seller: number;
 }
 
 const getHeaders = async (multipart = false) => {
@@ -45,18 +47,24 @@ const getHeaders = async (multipart = false) => {
   return h;
 };
 
-// ── Initiate chat from details page ──────────────────────────────────────────
+// ── Initiate chat ─────────────────────────────────────────────────────────────
 export async function initiateChat(
-  sellerId:   number,
-  propertyId: number,
-  message:    string = ''
+  sellerId:    number,
+  propertyId:  number | null,
+  message:     string = '',
+  enquiryType: 'property' | 'general' = 'property'
 ): Promise<{ success: boolean; conversationId?: number; msg?: string; notPremium?: boolean }> {
   try {
     const headers = await getHeaders();
     const res = await fetch(`${BASE}?action=initiate`, {
       method:  'POST',
       headers,
-      body:    JSON.stringify({ seller_id: sellerId, property_id: propertyId, message }),
+      body:    JSON.stringify({
+        seller_id:    sellerId,
+        property_id:  propertyId,
+        message,
+        enquiry_type: enquiryType,
+      }),
     });
     const result = await res.json();
     if (result.status === 'success') {
@@ -95,18 +103,46 @@ export function useInbox() {
 
   useEffect(() => { fetch_(); }, []);
 
-  return { conversations, totalUnread, loading, refresh: fetch_ };
+  // ── Delete conversation ───────────────────────────────────────────────────
+  const deleteConversation = async (conversationId: number): Promise<boolean> => {
+    setConversations(prev => prev.filter(c => c.id !== conversationId));
+    try {
+      const headers = await getHeaders();
+      const res = await fetch(`${BASE}?action=delete_conversation`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ conversation_id: conversationId }),
+      });
+      const result = await res.json();
+      if (result.status !== 'success') {
+        await fetch_();
+        return false;
+      }
+      return true;
+    } catch {
+      await fetch_();
+      return false;
+    }
+  };
+
+  return {
+    conversations,
+    totalUnread,
+    loading,
+    refresh:             fetch_,
+    deleteConversation,
+  };
 }
 
 // ── Single chat hook ──────────────────────────────────────────────────────────
 export function useMessages(conversationId: number, currentUserId: number) {
-  const [messages,  setMessages]  = useState<Message[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [sending,   setSending]   = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [sending,  setSending]  = useState(false);
   const lastIdRef = useRef(0);
   const pollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Initial load
+  // ── Load ──────────────────────────────────────────────────────────────────
   const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
@@ -127,52 +163,66 @@ export function useMessages(conversationId: number, currentUserId: number) {
     }
   }, [conversationId]);
 
-  // Poll for new messages every 4 seconds
-  const startPolling = useCallback(() => {
-    pollRef.current = setInterval(async () => {
-      try {
-        const headers = await getHeaders();
-        const res     = await fetch(
-          `${BASE}?action=poll&conversation_id=${conversationId}&after_id=${lastIdRef.current}`,
-          { headers }
-        );
-        const result = await res.json();
-        if (result.status === 'success' && result.data.length > 0) {
-          setMessages(prev => [...prev, ...result.data]);
-          lastIdRef.current = result.data[result.data.length - 1].id;
-        }
-      } catch {}
-    }, 4000);
-  }, [conversationId]);
+  // ── Poll ──────────────────────────────────────────────────────────────────
+ // In startPolling inside useMessages:
+const startPolling = useCallback(() => {
+  pollRef.current = setInterval(async () => {
+    try {
+      const headers = await getHeaders();
+      const res     = await fetch(
+        `${BASE}?action=poll&conversation_id=${conversationId}&after_id=${lastIdRef.current}`,
+        { headers }
+      );
+      const result = await res.json();
+      if (result.status === 'success' && result.data.length > 0) {
+        setMessages(prev => {
+          // Get IDs of messages already in state
+          const existingIds = new Set(prev.map(m => m.id));
+          // Only add truly new messages, don't re-add anything
+          const newMsgs = result.data.filter((m: Message) => !existingIds.has(m.id));
+          return newMsgs.length > 0 ? [...prev, ...newMsgs] : prev;
+        });
+        lastIdRef.current = result.data[result.data.length - 1].id;
+      }
+    } catch {}
+  }, 4000);
+}, [conversationId]);
 
   useEffect(() => {
     loadMessages().then(startPolling);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [conversationId]);
 
+  // ── Send text ─────────────────────────────────────────────────────────────
   const sendText = async (text: string): Promise<boolean> => {
     if (!text.trim()) return false;
     setSending(true);
-    // Optimistic
     const temp: Message = {
-      id: Date.now(), conversation_id: conversationId,
-      sender_id: currentUserId, type: 'text',
-      message: text, image_path: null,
-      inspection_date: null, inspection_time: null,
-      inspection_note: null, inspection_status: 'pending',
-      is_read: 0, sender_name: 'You', sender_avatar: null,
-      created_at: new Date().toISOString(),
+      id:                Date.now(),
+      conversation_id:   conversationId,
+      sender_id:         currentUserId,
+      type:              'text',
+      message:           text,
+      image_path:        null,
+      inspection_date:   null,
+      inspection_time:   null,
+      inspection_note:   null,
+      inspection_status: 'pending',
+      is_read:           0,
+      sender_name:       'You',
+      sender_avatar:     null,
+      created_at:        new Date().toISOString(),
     };
     setMessages(prev => [...prev, temp]);
     try {
       const headers = await getHeaders();
       const res = await fetch(`${BASE}?action=send_text`, {
-        method: 'POST', headers,
-        body: JSON.stringify({ conversation_id: conversationId, message: text }),
+        method: 'POST',
+        headers,
+        body:   JSON.stringify({ conversation_id: conversationId, message: text }),
       });
       const result = await res.json();
       if (result.status === 'success') {
-        // Replace temp with real message
         setMessages(prev => [...prev.filter(m => m.id !== temp.id), result.data]);
         lastIdRef.current = result.data.id;
         return true;
@@ -187,6 +237,7 @@ export function useMessages(conversationId: number, currentUserId: number) {
     }
   };
 
+  // ── Send image ────────────────────────────────────────────────────────────
   const sendImage = async (imageAsset: { uri: string; name: string; type: string }): Promise<boolean> => {
     setSending(true);
     try {
@@ -210,13 +261,15 @@ export function useMessages(conversationId: number, currentUserId: number) {
     finally  { setSending(false); }
   };
 
+  // ── Send inspection ───────────────────────────────────────────────────────
   const sendInspection = async (date: string, time: string, note: string): Promise<boolean> => {
     setSending(true);
     try {
       const headers = await getHeaders();
       const res = await fetch(`${BASE}?action=inspection`, {
-        method: 'POST', headers,
-        body: JSON.stringify({ conversation_id: conversationId, date, time, note }),
+        method: 'POST',
+        headers,
+        body:   JSON.stringify({ conversation_id: conversationId, date, time, note }),
       });
       const result = await res.json();
       if (result.status === 'success') {
@@ -229,20 +282,19 @@ export function useMessages(conversationId: number, currentUserId: number) {
     finally  { setSending(false); }
   };
 
+  // ── Respond to inspection ─────────────────────────────────────────────────
   const respondInspection = async (messageId: number, status: 'confirmed' | 'declined'): Promise<boolean> => {
     try {
       const headers = await getHeaders();
       const res = await fetch(`${BASE}?action=inspection_status`, {
-        method: 'POST', headers,
-        body: JSON.stringify({ message_id: messageId, status }),
+        method: 'POST',
+        headers,
+        body:   JSON.stringify({ message_id: messageId, status }),
       });
       const result = await res.json();
       if (result.status === 'success') {
         setMessages(prev =>
-          prev.map(m => m.id === messageId
-            ? { ...m, inspection_status: status }
-            : m
-          )
+          prev.map(m => m.id === messageId ? { ...m, inspection_status: status } : m)
         );
         return true;
       }
@@ -250,9 +302,38 @@ export function useMessages(conversationId: number, currentUserId: number) {
     } catch { return false; }
   };
 
+  // ── Delete message ────────────────────────────────────────────────────────
+  const deleteMessage = async (messageId: number): Promise<boolean> => {
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+    try {
+      const headers = await getHeaders();
+      const res = await fetch(`${BASE}?action=delete_message`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ message_id: messageId }),
+      });
+      const result = await res.json();
+       console.log('DELETE MESSAGE RESULT:', JSON.stringify(result));
+      if (result.status !== 'success') {
+        await loadMessages();
+        return false;
+      }
+      return true;
+    } catch {
+      await loadMessages();
+      return false;
+    }
+  };
+
   return {
-    messages, loading, sending,
-    sendText, sendImage, sendInspection, respondInspection,
+    messages,
+    loading,
+    sending,
+    sendText,
+    sendImage,
+    sendInspection,
+    respondInspection,
+    deleteMessage,
     refresh: loadMessages,
   };
 }

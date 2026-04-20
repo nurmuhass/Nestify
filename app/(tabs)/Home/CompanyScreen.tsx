@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-
+import { initiateChat } from '@/hooks/useChat';
 /**
  * Dummy data (ready to use)
  */
@@ -118,6 +118,8 @@ export default function EstateCompanyScreen() {
   const [companyDetails, setCompanyDetails] = useState<any>(null);
    const [properties, setProperties] = useState<any[]>([]);
       const [Estates, setEstates] = useState<any[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+
 
 
   const [loading, setLoading] = useState(true);
@@ -236,6 +238,56 @@ useEffect(() => {
       setLoading(false);
     }
   };
+
+  const handleChatAction = async (type: 'chat' | 'inspection') => {
+  const userJson = await AsyncStorage.getItem('authUser');
+  if (!userJson) return;
+  const currentUser = JSON.parse(userJson);
+
+  if (currentUser.planType !== 'premium') {
+    Alert.alert(
+      '⭐ Premium Feature',
+      'Chat with agents is available for premium members only.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Upgrade', onPress: () => router.push('/Subscription') },
+      ]
+    );
+    return;
+  }
+
+  setChatLoading(true);
+
+  // ── General enquiry — no property needed ─────────────────────────────────
+  const sellerId = companyDetails?.id ?? estate?.company_id;
+  const openingMessage = type === 'inspection'
+    ? `Hi, I'd like to schedule an inspection. Are you available?`
+    : `Hi, I'm interested in your properties. Can we talk?`;
+
+  const result = await initiateChat(
+    sellerId,
+    null,           // ← null = general enquiry, no specific property
+    openingMessage,
+    'general'
+  );
+
+  setChatLoading(false);
+
+  if (result.success && result.conversationId) {
+    router.push({
+      pathname: '/Home/ChatRoom',
+      params: {
+        conversation_id: result.conversationId,
+        property_name:   companyDetails?.company_name ?? estate?.name ?? 'General Enquiry',
+        property_id:     '',   // empty string — no property to tap through to
+      },
+    });
+  } else if (result.notPremium) {
+    Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat.');
+  } else {
+    Alert.alert('Error', result.msg ?? 'Could not start chat');
+  }
+};
  
   // CTA handlers (replace with real flows)
   const onBookInspection = useCallback(() => {
@@ -256,9 +308,9 @@ useEffect(() => {
     );
   }, [company]);
 
-  const onChatWithAgent = useCallback(() => {
-    Alert.alert("Chat", "Open your chat or messaging screen (not implemented).");
-  }, []);
+const onChatWithAgent = useCallback(() => {
+  handleChatAction('chat');
+}, [properties, companyDetails]);
 
   const onDownloadBrochure = useCallback(() => {
     const url = company.brochure;
@@ -378,10 +430,17 @@ useEffect(() => {
           {/* CTA Row */}
           <View style={styles.ctaRow}>
          
-            <TouchableOpacity style={styles.ctaBtnOutline} onPress={onChatWithAgent}>
-              <Ionicons name="chatbubble-ellipses-outline" size={16} color="#0a84ff" />
-              <Text style={styles.ctaTextOutline}>Chat</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+  style={styles.ctaBtnOutline}
+  onPress={onChatWithAgent}
+  disabled={chatLoading}
+>
+  {chatLoading
+    ? <ActivityIndicator size="small" color="#0a84ff" />
+    : <Ionicons name="chatbubble-ellipses-outline" size={16} color="#0a84ff" />
+  }
+  <Text style={styles.ctaTextOutline}>Chat</Text>
+</TouchableOpacity>
             <TouchableOpacity style={styles.ctaBtnOutline} onPress={onDownloadBrochure}>
               <Ionicons name="download-outline" size={16} color="#0a84ff" />
               <Text style={styles.ctaTextOutline}>Brochure</Text>

@@ -2,7 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,11 +10,12 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View,Alert 
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { Conversation, useInbox } from '@/hooks/useChat';
 import PricingModal from '@/components/PricingModal';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 const formatTime = (d: string | null) => {
   if (!d) return '';
@@ -29,10 +30,12 @@ const formatTime = (d: string | null) => {
 export default function MessagesScreen() {
   const router = useRouter();
   const [userId, setUserId] = useState<number>(0);
-  const { conversations, totalUnread, loading, refresh } = useInbox();
+  const { conversations, totalUnread, loading, deleteConversation, refresh } = useInbox();
   const [isPremium, setIsPremium] = useState(false);
-    const [pricingVisible, setPricingVisible] = useState(false);
-    const [pendingCount, setPendingCount] = useState(0);
+  const [pricingVisible, setPricingVisible] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const openSwipeable = useRef<Swipeable | null>(null);
+  const rowRefs = useRef(new Map<number, Swipeable | null>());
 
   useEffect(() => {
   AsyncStorage.getItem('authUser').then(j => {
@@ -48,6 +51,22 @@ export default function MessagesScreen() {
     }
   });
 }, []);
+
+const handleDeleteConversation = (id: number, name: string) => {
+  Alert.alert(
+    'Delete conversation',
+    `Delete your conversation with ${name}? This cannot be undone.`,
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteConversation(id),
+      },
+    ]
+  );
+};
+
 
 const fetchPendingCount = async () => {
   try {
@@ -73,10 +92,41 @@ const fetchPendingCount = async () => {
   };
 
   const renderItem = ({ item }: { item: Conversation }) => {
-    const other   = getOtherParty(item);
+    const other = getOtherParty(item);
     const hasUnread = item.unread_count > 0;
 
+    const renderRightActions = () => (
+      <TouchableOpacity
+        style={styles.deleteAction}
+        onPress={() => handleDeleteConversation(item.id, other.name ?? 'this person')}
+      >
+        <Ionicons name="trash-outline" size={22} color="#fff" />
+        <Text style={styles.deleteActionText}>Delete</Text>
+      </TouchableOpacity>
+    );
+
+    const setRowRef = (ref: Swipeable | null) => {
+      rowRefs.current.set(item.id, ref);
+    };
+
     return (
+       <Swipeable
+         ref={setRowRef}
+         renderRightActions={renderRightActions}
+         overshootRight={false}
+         onSwipeableOpen={() => {
+           const currentRef = rowRefs.current.get(item.id);
+           if (openSwipeable.current && openSwipeable.current !== currentRef) {
+             openSwipeable.current.close();
+           }
+           openSwipeable.current = currentRef ?? null;
+         }}
+         onSwipeableClose={() => {
+           if (openSwipeable.current === rowRefs.current.get(item.id)) {
+             openSwipeable.current = null;
+           }
+         }}
+       >
       <TouchableOpacity
         style={[styles.convItem, hasUnread && styles.convItemUnread]}
         activeOpacity={0.8}
@@ -84,9 +134,7 @@ const fetchPendingCount = async () => {
           router.push({
             pathname: '../Home/ChatRoom',
             params: { conversation_id: item.id, property_name: item.propertyName,property_id:item.property_id, },
-            
           })
-
         }
       >
         {/* Avatar */}
@@ -113,9 +161,10 @@ const fetchPendingCount = async () => {
             <Text style={styles.convTime}>{formatTime(item.last_message_at)}</Text>
           </View>
 
-          <Text style={styles.convProperty} numberOfLines={1}>
-            🏠 {item.propertyName}
-          </Text>
+     <Text style={styles.convProperty} numberOfLines={1}>
+  {item.propertyName ? `🏠 ${item.propertyName}` : '💬 General enquiry'}
+</Text>
+
 
           <View style={styles.convBottom}>
             <Text
@@ -134,6 +183,7 @@ const fetchPendingCount = async () => {
           </View>
         </View>
       </TouchableOpacity>
+      </Swipeable>
     );
   };
 
@@ -154,6 +204,9 @@ const fetchPendingCount = async () => {
             <Text style={styles.headerSub}>{totalUnread} unread</Text>
           )}
         </View>
+      </View>
+      <View style={styles.swipeHintRow}>
+        <Text style={styles.swipeHintText}>Swipe left on a conversation to delete it.</Text>
       </View>
 
       {loading ? (
@@ -349,6 +402,31 @@ upgradeBtnText: {
     backgroundColor: '#f3f4f6',
     alignItems: 'center', justifyContent: 'center',
   },
+  deleteAction: {
+  backgroundColor: '#EF4444',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: 80,
+  borderRadius: 0,
+},
+deleteActionText: {
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: '600',
+  marginTop: 4,
+},
   emptyTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
   emptySub:   { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 20 },
+  swipeHintRow: {
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5,
+    borderColor: '#E2E8F0',
+  },
+  swipeHintText: {
+    fontSize: 12,
+    color: '#475569',
+    textAlign: 'center',
+  },
 });

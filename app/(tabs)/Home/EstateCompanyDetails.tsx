@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -12,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { initiateChat } from '@/hooks/useChat';
 
 const estateCompany = {
   id: 1,
@@ -69,6 +71,7 @@ export default function EstateDetails() {
   const [company, setCompany] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
 const [user, setUser] = useState<any>(null);
+  const [chatLoading, setChatLoading] = useState<boolean>(false);
 
   
   
@@ -167,8 +170,59 @@ useEffect(() => {
    
   }, []);
 
+const handleChatAction = async (type: 'chat' | 'inspection') => {
+  const userJson = await AsyncStorage.getItem('authUser');
+  if (!userJson) return;
+  const currentUser = JSON.parse(userJson);
 
- 
+  if (currentUser.planType !== 'premium') {
+    Alert.alert(
+      '⭐ Premium Feature',
+      'Chat with agents is available for premium members only.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Upgrade', onPress: () => router.push('/Subscription') },
+      ]
+    );
+    return;
+  }
+
+  // Guard — make sure we have a seller
+  const sellerId = estate?.company_id;
+  if (!sellerId) {
+    Alert.alert('Error', 'Could not identify the company. Please try again.');
+    return;
+  }
+
+  setChatLoading(true);
+
+  const openingMessage = type === 'inspection'
+    ? `Hi, I'd like to schedule an inspection. Are you available?`
+    : `Hi, I'm interested in your properties. Can we talk?`;
+
+  try {
+    const result = await initiateChat(sellerId, null, openingMessage, 'general');
+
+    if (result.success && result.conversationId) {
+      router.push({
+        pathname: '/Home/ChatRoom',
+        params: {
+          conversation_id: result.conversationId,
+          property_name:   estate?.name ?? 'General Enquiry',
+          property_id:     '',
+        },
+      });
+    } else if (result.notPremium) {
+      Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat.');
+    } else {
+      Alert.alert('Error', result.msg ?? 'Could not start chat');
+    }
+  } catch (e: any) {
+    Alert.alert('Error', e.message ?? 'Something went wrong');
+  } finally {
+    setChatLoading(false);  // ← always runs, stops the spinner
+  }
+};
 
   
 
@@ -220,19 +274,29 @@ useEffect(() => {
 
       <ScrollView contentContainerStyle={{}} horizontal showsHorizontalScrollIndicator={false} scrollEnabled>
       <View style={styles.ctaRow}>
-        <TouchableOpacity style={styles.ctaBtn}>
-          <Ionicons name="calendar-outline" size={18} color="#fff" />
-          <Text style={styles.ctaText}>Book Inspection</Text>
-        </TouchableOpacity>
+    <TouchableOpacity
+  style={styles.ctaBtn}
+  onPress={() => handleChatAction('inspection')}
+  disabled={chatLoading}
+>
+  {chatLoading
+    ? <ActivityIndicator size="small" color="#fff" />
+    : <Ionicons name="calendar-outline" size={18} color="#fff" />
+  }
+  <Text style={styles.ctaText}>Book Inspection</Text>
+</TouchableOpacity>
 
-        <TouchableOpacity style={styles.ctaBtn}>
-          <Ionicons
-            name="chatbubble-ellipses-outline"
-            size={18}
-            color="#fff"
-          />
-          <Text style={styles.ctaText}>Chat With Agent</Text>
-        </TouchableOpacity>
+<TouchableOpacity
+  style={styles.ctaBtn}
+  onPress={() => handleChatAction('chat')}
+  disabled={chatLoading}
+>
+  {chatLoading
+    ? <ActivityIndicator size="small" color="#fff" />
+    : <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
+  }
+  <Text style={styles.ctaText}>Chat With Company</Text>
+</TouchableOpacity>
 
         <TouchableOpacity style={styles.ctaBtn}>
           <Ionicons name="download-outline" size={18} color="#fff" />
