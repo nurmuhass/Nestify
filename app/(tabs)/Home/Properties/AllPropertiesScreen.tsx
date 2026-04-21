@@ -11,6 +11,7 @@ import {
   View
 } from "react-native";
 import PropertyGrid from "../../../../components/PropertyGrid";
+import { getStatusBarHeight } from "react-native-status-bar-height";
 
 export default function AllPropertiesScreen() {
   const { companyId } = useLocalSearchParams();
@@ -99,7 +100,7 @@ export default function AllPropertiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+  container: { flex: 1, backgroundColor: "#fff", padding: 16,paddingTop:getStatusBarHeight() },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",

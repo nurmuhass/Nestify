@@ -342,12 +342,12 @@ const renderTabContent = () => {
 
         <View style={styles.statsContainer}>
           <View style={styles.stat}>
-            <Text style={styles.statNumber}>30</Text>
-            <Text>Properties</Text>
+            <Text style={styles.statNumber}>{allProperties.length}</Text>
+            <Text style={{fontSize:12}}>Properties</Text>
           </View>
      <TouchableOpacity style={styles.stat} onPress={() => router.push("../Profile/Wishlist")}>
             <Text style={styles.statNumber}>{saved.length}</Text>
-            <Text>Wishlists</Text>
+            <Text style={{fontSize:12}}>Wishlists</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.stat}
@@ -356,7 +356,7 @@ const renderTabContent = () => {
             }}
           >
             <Text style={styles.statNumber}>{user?.review_count ?? 0}</Text>
-            <Text>Reviews</Text>
+            <Text style={{fontSize:12}}>Reviews</Text>
           </TouchableOpacity>
         </View>
       </View>
