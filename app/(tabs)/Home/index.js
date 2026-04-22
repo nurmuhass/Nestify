@@ -1,112 +1,74 @@
-// parent
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import { Dimensions, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
-import FeaturedEstates from '../../../components/FeaturedEstates';
-import Header from '../../../components/Header';
+
+// ── Components ──────────────────────────────────────────────────
+import FeaturedEstates  from '../../../components/FeaturedEstates';
+import HomeHeader       from '../../../components/HomeHeader';
+import HomeSearchBar    from '../../../components/HomeSearchBar';
 import NearbyProperties from '../../../components/NearbyProperties';
-import PromoSlider from '../../../components/PromoSlider';
-import SearchBar from '../../../components/SearchBar';
-import TopCompanies from '../../../components/TopCompanies';
+import PromoSlider      from '../../../components/PromoSlider';
+import TopCompanies     from '../../../components/TopCompanies';
 import TopLocations from '../../../components/TopLocations';
 
-const { width } = Dimensions.get('window');
-
-const index = () => {
-
-const { width } = Dimensions.get('window');
-const [user, setUser] = useState(null);
-
-useEffect(() => {
-    const checkAuth = async () => {
-      const token = await AsyncStorage.getItem('authToken');
-      const userJson = await AsyncStorage.getItem('authUser');
-      if (!token || !userJson) {
-        console.log("Error", "Not authenticated");
-        return;
-      }
-      const userObj = JSON.parse(userJson); 
-      setUser(userObj); 
-      console.log("User data:", userObj);
-    };
-    checkAuth();
-  }, []);
+export default function HomeScreen() {
+  // Lifted state so HomeHeader can show live counts from child fetches
+  const [propertiesCount, setPropertiesCount] = useState(0);
+  const [companiesCount,  setCompaniesCount]  = useState(0);
 
   return (
- <FlatList
-  data={[]} // empty because header handles top content
-  keyExtractor={(item, index) => index.toString()}
-  showsVerticalScrollIndicator={false}
-style={ styles.headerWrapper}
-  ListHeaderComponent={
-    <>
-      <Header />
+    <FlatList
+      data={[]}
+      keyExtractor={(_, i) => i.toString()}
+      showsVerticalScrollIndicator={false}
+      style={styles.root}
+      // NearbyProperties manages its own FlatList internally (scrollEnabled=false),
+      // so we keep ONE outer scroll container here and everything nests cleanly.
+      ListHeaderComponent={
+        <>
+          {/* ── 1. Hero card (greeting + location + stats) ── */}
+          <HomeHeader
+            propertiesCount={propertiesCount}
+            companiesCount={companiesCount}
+          />
 
-      <View style={styles.eclipse} />
+          {/* ── 2. Search bar → navigates to SearchScreen ── */}
+          <HomeSearchBar />
 
-      <View style={styles.content}>
-        <Text style={styles.greeting}>
-          Hey, <Text style={styles.username}>{user ? user.name : ''}!</Text>
-        </Text>
-        <Text style={styles.subtitle}>Let's start exploring</Text>
-      </View>
+          {/* ── 3. Promo / banner slider ── */}
+          <PromoSlider />
 
-      <SearchBar />
-      <PromoSlider />
-      <TopLocations />
-      <FeaturedEstates />
-      <TopCompanies />
+          <TopLocations />
 
-      {/* 👇 IMPORTANT: keep NearbyProperties here */}
-      <NearbyProperties />
-    </>
-  }
+          {/* ── 4. Featured estates (horizontal scroll) ── */}
+          <FeaturedEstates />
 
-  ListFooterComponent={<View style={{ }} />}
-/>
-  )
+          {/* ── 5. Top companies (horizontal scroll) ── */}
+          <TopCompanies
+            onCountChange={(n) => setCompaniesCount(n)}
+          />
+
+          {/* ── 6. Nearby properties (tabs + category chips + 2-col grid) ── */}
+          <NearbyProperties
+            onPropertiesCountChange={(n) => setPropertiesCount(n)}
+          />
+
+          <View style={{ height: 40 }} />
+        </>
+      }
+      ListFooterComponent={null}
+    />
+  );
 }
 
-export default index
-
-
 const styles = StyleSheet.create({
-  headerWrapper: {
-    backgroundColor: '#fff',
-    padding: 10,
-    position: 'relative',
-    overflow: 'hidden',
-    paddingTop:getStatusBarHeight()
-  },
-  eclipse: {
-    position: 'absolute',
-    top: -80,
-    left: -100,
-    width: width * 0.9,
-    height: width * 0.8,
-    borderRadius: width,
-    backgroundColor: '#D8F1FD', // soft blue tint
-    zIndex: 0,
-  },
-  content: {
-    zIndex: 1,
-    marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 22,
-    color: '#444',
-  },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#234F68',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#333',
-    marginTop: 4,
+  root: {
+    flex: 1,
+    backgroundColor: '#faf8f4',
+    paddingTop: getStatusBarHeight(),
   },
 });
-
-

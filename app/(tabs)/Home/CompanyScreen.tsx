@@ -113,11 +113,11 @@ const estateCompany = {
 export default function EstateCompanyScreen() {
   const router = useRouter();
   const [company] = useState(estateCompany); // using dummy directly for now
-  
+
   const { id } = useLocalSearchParams();
   const [companyDetails, setCompanyDetails] = useState<any>(null);
-   const [properties, setProperties] = useState<any[]>([]);
-      const [Estates, setEstates] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [Estates, setEstates] = useState<any[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
 
 
@@ -126,74 +126,74 @@ export default function EstateCompanyScreen() {
   const [error, setError] = useState<string | null>(null);
 
 
-   useEffect(() => {
-      if (id) {
-        fetchCompanyById();
-      }
-    }, [id]);
+  useEffect(() => {
+    if (id) {
+      fetchCompanyById();
+    }
+  }, [id]);
 
 
-useEffect(() => {
-  if (companyDetails?.id) {
-    fetchPropertiesByCompany();
-    fetchEstatesByCompany();
-  }
-}, [companyDetails]);  
+  useEffect(() => {
+    if (companyDetails?.id) {
+      fetchPropertiesByCompany();
+      fetchEstatesByCompany();
+    }
+  }, [companyDetails]);
 
 
 
-     const  fetchCompanyById = async () => {
-        try {
-            const token = await AsyncStorage.getItem('authToken');
-          const response = await fetch(
-            `https://insighthub.com.ng/NestifyAPI/get_CompanyById.php?id=${id}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-           'Authorization': `Token ${token}`,
-              },
-            }
-          );
-          const result = await response.json();
-     
-          if (response.ok && result.status === 'success') {
-               setCompanyDetails(result.user);
-              setLoading(false)
-            
-          } else {
-            const msg = result.msg || 'Failed to load property details';
-            setError(msg);
-            Alert.alert('Error', msg);
-              setLoading(false)
-          }
-        } catch (err: any) {
-              setError(err.message);
-              Alert.alert('Error', err.message);
-            } finally {
-              setLoading(false);
-            }
-      };
-
-    
-       const fetchPropertiesByCompany = async () => {
+  const fetchCompanyById = async () => {
     try {
-        const token = await AsyncStorage.getItem('authToken');
-  const response = await fetch(
-       `https://insighthub.com.ng/NestifyAPI/get_Company_properties.php?companyId=${companyDetails.id}`, 
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
-        },
+      const token = await AsyncStorage.getItem('authToken');
+      const response = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_CompanyById.php?id=${id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setCompanyDetails(result.user);
+        setLoading(false)
+
+      } else {
+        const msg = result.msg || 'Failed to load property details';
+        setError(msg);
+        Alert.alert('Error', msg);
+        setLoading(false)
       }
-    );
+    } catch (err: any) {
+      setError(err.message);
+      Alert.alert('Error', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const fetchPropertiesByCompany = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const response = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_Company_properties.php?companyId=${companyDetails.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
       const result = await response.json();
 
       if (response.ok && result.status === 'success') {
         setProperties(result.properties);
-        console.log("properties....." ,result.properties)
+        console.log("properties.....", result.properties)
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
@@ -208,19 +208,19 @@ useEffect(() => {
   };
 
 
-       const fetchEstatesByCompany = async () => {
+  const fetchEstatesByCompany = async () => {
     try {
-        const token = await AsyncStorage.getItem('authToken');
-  const response = await fetch(
-       `https://insighthub.com.ng/NestifyAPI/get_Company_Estate.php?companyId=${companyDetails.id}`, 
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
-        },
-      }
-    );
+      const token = await AsyncStorage.getItem('authToken');
+      const response = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_Company_Estate.php?companyId=${companyDetails.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
       const result = await response.json();
 
       if (response.ok && result.status === 'success') {
@@ -229,7 +229,7 @@ useEffect(() => {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg); 
+        Alert.alert('Error', msg);
       }
     } catch (err: any) {
       setError(err.message);
@@ -240,55 +240,56 @@ useEffect(() => {
   };
 
   const handleChatAction = async (type: 'chat' | 'inspection') => {
-  const userJson = await AsyncStorage.getItem('authUser');
-  if (!userJson) return;
-  const currentUser = JSON.parse(userJson);
+    const userJson = await AsyncStorage.getItem('authUser');
+    if (!userJson) return;
+    const currentUser = JSON.parse(userJson);
 
-  if (currentUser.planType !== 'premium') {
-    Alert.alert(
-      '⭐ Premium Feature',
-      'Chat with agents is available for premium members only.',
-      [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Upgrade', onPress: () => router.push('/Subscription') },
-      ]
+    if (currentUser.planType !== 'premium') {
+      Alert.alert(
+        '⭐ Premium Feature',
+        'Chat with agents is available for premium members only.',
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => router.push('/Subscription') },
+        ]
+      );
+      return;
+    }
+
+    setChatLoading(true);
+
+    // ── General enquiry — no property needed ─────────────────────────────────
+    const sellerId = companyDetails?.id;
+    const openingMessage = type === 'inspection'
+      ? `Hi, I'd like to schedule an inspection. Are you available?`
+      : `Hi, I'm interested in your properties. Can we talk?`;
+
+    const result = await initiateChat(
+      sellerId,
+      null,           // ← null = general enquiry, no specific property
+      openingMessage,
+      'general'
     );
-    return;
-  }
 
-  setChatLoading(true);
+    setChatLoading(false);
 
-  // ── General enquiry — no property needed ─────────────────────────────────
-  const sellerId = companyDetails?.id ?? estate?.company_id;
-  const openingMessage = type === 'inspection'
-    ? `Hi, I'd like to schedule an inspection. Are you available?`
-    : `Hi, I'm interested in your properties. Can we talk?`;
+    if (result.success && result.conversationId) {
+      router.push({
+        pathname: '/Home/ChatRoom',
+        params: {
+          conversation_id: result.conversationId,
+          property_name: companyDetails?.company_name ?? 'General Enquiry',
+          property_id: '',   // empty string — no property to tap through to
+          company_id: companyDetails?.id ?? '',
+        },
+      });
+    } else if (result.notPremium) {
+      Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat.');
+    } else {
+      Alert.alert('Error', result.msg ?? 'Could not start chat');
+    }
+  };
 
-  const result = await initiateChat(
-    sellerId,
-    null,           // ← null = general enquiry, no specific property
-    openingMessage,
-    'general'
-  );
-
-  setChatLoading(false);
-
-  if (result.success && result.conversationId) {
-    router.push({
-      pathname: '/Home/ChatRoom',
-      params: {
-        conversation_id: result.conversationId,
-        property_name:   companyDetails?.company_name ?? estate?.name ?? 'General Enquiry',
-        property_id:     '',   // empty string — no property to tap through to
-      },
-    });
-  } else if (result.notPremium) {
-    Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat.');
-  } else {
-    Alert.alert('Error', result.msg ?? 'Could not start chat');
-  }
-};
- 
   // CTA handlers (replace with real flows)
   const onBookInspection = useCallback(() => {
     Alert.alert(
@@ -308,9 +309,9 @@ useEffect(() => {
     );
   }, [company]);
 
-const onChatWithAgent = useCallback(() => {
-  handleChatAction('chat');
-}, [properties, companyDetails]);
+  const onChatWithAgent = useCallback(() => {
+    handleChatAction('chat');
+  }, [properties, companyDetails]);
 
   const onDownloadBrochure = useCallback(() => {
     const url = company.brochure;
@@ -318,76 +319,76 @@ const onChatWithAgent = useCallback(() => {
       Alert.alert("Could not open brochure URL")
     );
   }, [company]);
- 
+
   const onOpenWebsite = useCallback(() => {
     Linking.openURL(companyDetails?.website).catch(() =>
       Alert.alert("Could not open website")
     );
   }, [company]);
 
- const renderProperty = useCallback(
-
-  
-  ({ item }: ListRenderItemInfo<any>) => {
-    return (
-<>
+  const renderProperty = useCallback(
 
 
-      <TouchableOpacity
-        style={styles.propertyCard}
-        onPress={() =>
-          router.push({ pathname: "/Home/Company/Details", params: { id: String(item.id) } })
-        }
-      >
-        <Image
-          source={{ uri: `https://insighthub.com.ng/${item.images[0]}` }}
-          style={styles.propertyImage}
-        />
+    ({ item }: ListRenderItemInfo<any>) => {
+      return (
+        <>
 
-        <View style={styles.propertyBody}>
-          <Text numberOfLines={1} style={styles.propertyTitle}>
-            {item.propertyName}
-          </Text>
-          
 
-          <Text style={styles.propertyPrice}>
-            {item.listingType === "Rent" 
-              ? `₦${item.rentPrice}`
-              : item.listingType === "Sell"
-              ? `₦${item.sellPrice}`
-              : `₦${item.sellPrice} / ₦${item.rentPrice}`}
-          </Text>
+          <TouchableOpacity
+            style={styles.propertyCard}
+            onPress={() =>
+              router.push({ pathname: "/Home/Company/Details", params: { id: String(item.id) } })
+            }
+          >
+            <Image
+              source={{ uri: `https://insighthub.com.ng/${item.images[0]}` }}
+              style={styles.propertyImage}
+            />
 
-          <Text style={styles.propertyMeta}>
-            
+            <View style={styles.propertyBody}>
+              <Text numberOfLines={1} style={styles.propertyTitle}>
+                {item.propertyName}
+              </Text>
 
-             {item.listingType === "Rent"
-              ? `Rent`
-              : item.listingType === "Sell"
-              ? `Sell`
-              : `Sell / Rent`}
-          </Text>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.propertyLocation}>{item.city}</Text>
-          <Text style={styles.propertyLocation}>{item.status}</Text>
-          </View>
+              <Text style={styles.propertyPrice}>
+                {item.listingType === "Rent"
+                  ? `₦${item.rentPrice}`
+                  : item.listingType === "Sell"
+                    ? `₦${item.sellPrice}`
+                    : `₦${item.sellPrice} / ₦${item.rentPrice}`}
+              </Text>
 
-        </View>
-      </TouchableOpacity></>
-    );
-  },
-  [router]
-);
+              <Text style={styles.propertyMeta}>
 
- 
+
+                {item.listingType === "Rent"
+                  ? `Rent`
+                  : item.listingType === "Sell"
+                    ? `Sell`
+                    : `Sell / Rent`}
+              </Text>
+
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={styles.propertyLocation}>{item.city}</Text>
+                <Text style={styles.propertyLocation}>{item.status}</Text>
+              </View>
+
+            </View>
+          </TouchableOpacity></>
+      );
+    },
+    [router]
+  );
+
+
   // Header component (ListHeaderComponent)
   const ListHeader = useMemo(() => {
     return (
       <View>
         {/* Cover image & badges */}
         <View>
-          <Image source={{uri:companyDetails?.cover_image}} style={styles.coverImage} />
+          <Image source={{ uri: companyDetails?.cover_image }} style={styles.coverImage} />
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
@@ -397,18 +398,18 @@ const onChatWithAgent = useCallback(() => {
 
           {/* Floating logo */}
           <View style={styles.logoWrap}>
-            <Image source={{uri:companyDetails?.profile_image}} style={styles.logo} />
+            <Image source={{ uri: companyDetails?.profile_image }} style={styles.logo} />
           </View>
         </View>
 
         {/* Company Info */}
         <View style={styles.section}>
 
-    <Text style={styles.title}>{companyDetails?.company_name}</Text>
-    <Text style={styles.subtitle}> 
-      <Ionicons name="location-outline" size={14} /> 
-      {companyDetails?.city}, {companyDetails?.state}
-    </Text>
+          <Text style={styles.title}>{companyDetails?.company_name}</Text>
+          <Text style={styles.subtitle}>
+            <Ionicons name="location-outline" size={14} />
+            {companyDetails?.city}, {companyDetails?.state}
+          </Text>
 
 
 
@@ -425,22 +426,22 @@ const onChatWithAgent = useCallback(() => {
               <Text style={styles.statValue}>30</Text>
               <Text style={styles.statLabel}>Properties</Text>
             </View>
-          </View>   
-  
+          </View>
+
           {/* CTA Row */}
           <View style={styles.ctaRow}>
-         
-          <TouchableOpacity
-  style={styles.ctaBtnOutline}
-  onPress={onChatWithAgent}
-  disabled={chatLoading}
->
-  {chatLoading
-    ? <ActivityIndicator size="small" color="#0a84ff" />
-    : <Ionicons name="chatbubble-ellipses-outline" size={16} color="#0a84ff" />
-  }
-  <Text style={styles.ctaTextOutline}>Chat</Text>
-</TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.ctaBtnOutline}
+              onPress={onChatWithAgent}
+              disabled={chatLoading}
+            >
+              {chatLoading
+                ? <ActivityIndicator size="small" color="#0a84ff" />
+                : <Ionicons name="chatbubble-ellipses-outline" size={16} color="#0a84ff" />
+              }
+              <Text style={styles.ctaTextOutline}>Chat</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.ctaBtnOutline} onPress={onDownloadBrochure}>
               <Ionicons name="download-outline" size={16} color="#0a84ff" />
               <Text style={styles.ctaTextOutline}>Brochure</Text>
@@ -454,7 +455,7 @@ const onChatWithAgent = useCallback(() => {
           <Text style={styles.bodyText}>{companyDetails?.about}</Text>
         </View>
 
-        {/* Amenities */} 
+        {/* Amenities */}
         {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Amenities</Text>
           <View style={styles.amenitiesRow}>
@@ -468,23 +469,23 @@ const onChatWithAgent = useCallback(() => {
         </View> */}
 
         {/* Estates (horizontal) */}
-        <View style={{...styles.section, paddingBottom:10}}>
+        <View style={{ ...styles.section, paddingBottom: 10 }}>
 
-            {Estates.length === 0 ? (
-              <Text style={styles.bodyText}> </Text>
-            ) : (
-              <>
-              
-             
-<View style={{...styles.rowSpace, marginBottom:8}}>
-  <Text style={styles.sectionTitle}>Estates</Text>
-  <TouchableOpacity onPress={() => router.push({ pathname: '/Home/Estates/AllEstates', params: { companyId: String(companyDetails?.id) } })}>
-    <Text style={styles.linkText}>See all</Text>
-  </TouchableOpacity>
-</View>
+          {Estates.length === 0 ? (
+            <Text style={styles.bodyText}> </Text>
+          ) : (
+            <>
 
-           </>
-            )}
+
+              <View style={{ ...styles.rowSpace, marginBottom: 8 }}>
+                <Text style={styles.sectionTitle}>Estates</Text>
+                <TouchableOpacity onPress={() => router.push({ pathname: '/Home/Estates/AllEstates', params: { companyId: String(companyDetails?.id) } })}>
+                  <Text style={styles.linkText}>See all</Text>
+                </TouchableOpacity>
+              </View>
+
+            </>
+          )}
 
           <FlatList
             data={Estates}
@@ -492,9 +493,9 @@ const onChatWithAgent = useCallback(() => {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(it) => it.id}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.estateCard}      onPress={() =>
-                        router.push({ pathname: '/Home/EstateCompanyDetails', params: { id: String(item.id) } })
-                      }>
+              <TouchableOpacity style={styles.estateCard} onPress={() =>
+                router.push({ pathname: '/Home/EstateCompanyDetails', params: { id: String(item.id) } })
+              }>
                 <Image source={{ uri: item.image_path }} style={styles.estateImage} />
                 <Text style={styles.estateName}>{item.name}</Text>
                 <Text style={styles.estateMeta}>
@@ -528,32 +529,32 @@ const onChatWithAgent = useCallback(() => {
 
         {/* small spacer between header and properties list */}
         <View style={{ height: 12 }} />
-        <View style={{...styles.rowSpace, marginBottom:8}}>
-  <Text style={styles.sectionTitle}>Properties by {companyDetails?.company_name}</Text>
-  <TouchableOpacity onPress={() => router.push({ pathname: '/Home/Properties/AllPropertiesScreen', params: { companyId: String(companyDetails?.id) } })}>
-    <Text style={styles.linkText}>See all</Text>
-  </TouchableOpacity>
-</View>
+        <View style={{ ...styles.rowSpace, marginBottom: 8 }}>
+          <Text style={styles.sectionTitle}>Properties by {companyDetails?.company_name}</Text>
+          <TouchableOpacity onPress={() => router.push({ pathname: '/Home/Properties/AllPropertiesScreen', params: { companyId: String(companyDetails?.id) } })}>
+            <Text style={styles.linkText}>See all</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
-  }, [company,companyDetails,Estates, onBookInspection, onChatWithAgent, onDownloadBrochure, onOpenWebsite, router]);
+  }, [company, companyDetails, Estates, onBookInspection, onChatWithAgent, onDownloadBrochure, onOpenWebsite, router]);
 
- 
-   if (loading) {
-  return (
-    <View style={styles.center}>
-      <ActivityIndicator size="large" color="#007bff" />
-    </View>
-  );
-}
 
-if (!companyDetails) {
-  return (
-    <View style={styles.center}>
-      <Text>Company not found.</Text>
-    </View>
-  );
-}
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
+
+  if (!companyDetails) {
+    return (
+      <View style={styles.center}>
+        <Text>Company not found.</Text>
+      </View>
+    );
+  }
   return (
     <FlatList
       data={properties}
@@ -620,7 +621,7 @@ const styles = StyleSheet.create({
   /* Sections */
   section: { paddingVertical: 8, paddingHorizontal: 4 },
   sectionNoPadTop: { paddingTop: 0 },
-  title: { fontSize: 20, fontWeight: "700", color: "#111" ,marginTop:18},
+  title: { fontSize: 20, fontWeight: "700", color: "#111", marginTop: 18 },
   subtitle: { marginTop: 6, color: "#666", fontSize: 13 },
   statsRow: { flexDirection: "row", marginTop: 12 },
   statItem: { marginRight: 18 },

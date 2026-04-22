@@ -26,7 +26,7 @@ const index = () => {
   // State to track the current step
   const [currentStep, setCurrentStep] = useState(0);
 
-  const [pricingVisible, setPricingVisible] = useState(true);
+  const [pricingVisible, setPricingVisible] = useState(false);
   // State for form data
   const [formData, setFormData] = useState({
     images: [],

@@ -9,7 +9,7 @@ const locations = [
 
 export default function TopLocations() {
   return (
-    <View style={{ marginTop: 20, marginRight: 10 }}>
+    <View style={{ marginTop: 8, marginRight: 10 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20 }}>
         <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Top Locations</Text> 
         {/* <Text style={{ color: '#007bff' }}>explore</Text> */}

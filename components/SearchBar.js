@@ -11,7 +11,7 @@ export default function SearchBar() {
             <TouchableOpacity
               onPress={() =>
                 router.push({
-                  pathname: "/Home/Properties/AllPropertiesScreen",
+                  pathname: "/Home/Searchscreen",
                 })
               }  style={{ marginHorizontal: 5, marginBottom: 15, backgroundColor: '#f0f0f0', borderRadius: 10,
      flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10 ,borderColor:'#25B4F8',borderWidth:1,paddingVertical:10}}

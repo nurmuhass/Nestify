@@ -41,15 +41,15 @@ const InspectionBubble = ({
   onRespond: (id: number, status: 'confirmed' | 'declined') => void;
 }) => {
   const statusColor = {
-    pending:   '#F59E0B',
+    pending: '#F59E0B',
     confirmed: '#22C55E',
-    declined:  '#EF4444',
+    declined: '#EF4444',
   }[msg.inspection_status];
 
   const statusLabel = {
-    pending:   '⏳ Awaiting response',
+    pending: '⏳ Awaiting response',
     confirmed: '✅ Confirmed',
-    declined:  '❌ Declined',
+    declined: '❌ Declined',
   }[msg.inspection_status];
 
   return (
@@ -104,13 +104,13 @@ const InspectionModal = ({
   onClose,
   onSend,
 }: {
-  visible:  boolean;
-  onClose:  () => void;
-  onSend:   (date: string, time: string, note: string) => void;
+  visible: boolean;
+  onClose: () => void;
+  onSend: (date: string, time: string, note: string) => void;
 }) => {
-  const [date,    setDate]    = useState(new Date());
-  const [time,    setTime]    = useState(new Date());
-  const [note,    setNote]    = useState('');
+  const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
+  const [note, setNote] = useState('');
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
 
@@ -202,15 +202,16 @@ const InspectionModal = ({
 // ── Main ChatRoom ─────────────────────────────────────────────────────────────
 export default function ChatRoom() {
   const router = useRouter();
-  const { conversation_id, property_name,property_id  } = useLocalSearchParams() as {
+  const { conversation_id, property_name, property_id, company_id } = useLocalSearchParams() as {
     conversation_id: string;
-    property_name:   string;
-    property_id:     string;  
+    property_name: string;
+    property_id: string;
+    company_id: string;
   };
   const conversationId = Number(conversation_id);
 
-  const [userId,       setUserId]       = useState<number>(0);
-  const [inputText,    setInputText]    = useState('');
+  const [userId, setUserId] = useState<number>(0);
+  const [inputText, setInputText] = useState('');
   const [inspModalVisible, setInspModal] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
@@ -233,20 +234,20 @@ export default function ChatRoom() {
   }, [messages.length]);
 
   const handleDeleteMessage = (messageId: number, isMine: boolean) => {
-  if (!isMine) return; // can only delete own messages
-  Alert.alert(
-    'Delete message',
-    'Delete this message? It will be removed for everyone.',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => deleteMessage(messageId),
-      },
-    ]
-  );
-};
+    if (!isMine) return; // can only delete own messages
+    Alert.alert(
+      'Delete message',
+      'Delete this message? It will be removed for everyone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteMessage(messageId),
+        },
+      ]
+    );
+  };
 
 
   const handleSend = async () => {
@@ -268,7 +269,7 @@ export default function ChatRoom() {
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       await sendImage({
-        uri:  asset.uri,
+        uri: asset.uri,
         name: asset.fileName ?? `chat_${Date.now()}.jpg`,
         type: asset.mimeType ?? 'image/jpeg',
       });
@@ -284,170 +285,181 @@ export default function ChatRoom() {
   };
 
   // ── Render a single message ───────────────────────────────────────────────
-const renderMessage = ({ item, index }: { item: Message; index: number }) => {
-  const isMine   = item.sender_id === userId;
-  const showDate = shouldShowDate(messages, index);
+  const renderMessage = ({ item, index }: { item: Message; index: number }) => {
+    const isMine = item.sender_id === userId;
+    const showDate = shouldShowDate(messages, index);
 
-  return (
-    <>
-      {showDate && (
-        <View style={styles.dateSeparator}>
-          <Text style={styles.dateSeparatorText}>
-            {new Date(item.created_at).toLocaleDateString('en-GB', {
-              weekday: 'short', day: '2-digit', month: 'short',
-            })}
-          </Text>
-        </View>
-      )}
-
-      <View style={[styles.messageRow, isMine && styles.messageRowMine]}>
-        {/* Avatar for received messages */}
-        {!isMine && (
-          item.sender_avatar ? (
-            <Image source={{ uri: item.sender_avatar }} style={styles.msgAvatar} />
-          ) : (
-            <View style={[styles.msgAvatar, styles.msgAvatarFallback]}>
-              <Text style={styles.msgAvatarInitial}>
-                {(item.sender_name ?? '?')[0].toUpperCase()}
-              </Text>
-            </View>
-          )
+    return (
+      <>
+        {showDate && (
+          <View style={styles.dateSeparator}>
+            <Text style={styles.dateSeparatorText}>
+              {new Date(item.created_at).toLocaleDateString('en-GB', {
+                weekday: 'short', day: '2-digit', month: 'short',
+              })}
+            </Text>
+          </View>
         )}
 
-        {/* ── Long press wrapper — only on own messages ── */}
-        <TouchableOpacity
-          activeOpacity={1}
-          onLongPress={() => isMine && handleDeleteMessage(item.id, isMine)}
-          delayLongPress={400}
-          style={[styles.messageWrap, isMine && { alignItems: 'flex-end' }]}
-        >
-          {/* Inspection request */}
-          {item.type === 'inspection_request' && (
-            <InspectionBubble
-              msg={item}
-              isMine={isMine}
-              onRespond={respondInspection}
-            />
+        <View style={[styles.messageRow, isMine && styles.messageRowMine]}>
+          {/* Avatar for received messages */}
+          {!isMine && (
+            item.sender_avatar ? (
+              <Image source={{ uri: item.sender_avatar }} style={styles.msgAvatar} />
+            ) : (
+              <View style={[styles.msgAvatar, styles.msgAvatarFallback]}>
+                <Text style={styles.msgAvatarInitial}>
+                  {(item.sender_name ?? '?')[0].toUpperCase()}
+                </Text>
+              </View>
+            )
           )}
 
-          {/* Image */}
-          {item.type === 'image' && item.image_path && (
-            <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs, { padding: 4 }]}>
-              <Image
-                source={{ uri: BASE_URL + item.image_path }}
-                style={styles.chatImage}
-                resizeMode="cover"
+          {/* ── Long press wrapper — only on own messages ── */}
+          <TouchableOpacity
+            activeOpacity={1}
+            onLongPress={() => isMine && handleDeleteMessage(item.id, isMine)}
+            delayLongPress={400}
+            style={[styles.messageWrap, isMine && { alignItems: 'flex-end' }]}
+          >
+            {/* Inspection request */}
+            {item.type === 'inspection_request' && (
+              <InspectionBubble
+                msg={item}
+                isMine={isMine}
+                onRespond={respondInspection}
               />
-              <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
-                {formatTime(item.created_at)}
-              </Text>
-            </View>
-          )}
+            )}
 
-          {/* Text */}
-          {item.type === 'text' && (
-            <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-              <Text style={[styles.msgText, isMine && styles.msgTextMine]}>
-                {item.message}
-              </Text>
-              <View style={styles.msgMeta}>
+            {/* Image */}
+            {item.type === 'image' && item.image_path && (
+              <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs, { padding: 4 }]}>
+                <Image
+                  source={{ uri: BASE_URL + item.image_path }}
+                  style={styles.chatImage}
+                  resizeMode="cover"
+                />
                 <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
                   {formatTime(item.created_at)}
                 </Text>
-                {isMine && (
-                  <Ionicons
-                    name={item.is_read ? 'checkmark-done' : 'checkmark'}
-                    size={13}
-                    color={item.is_read ? '#93C5FD' : 'rgba(255,255,255,0.6)'}
-                    style={{ marginLeft: 3 }}
-                  />
-                )}
               </View>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-    </>
-  );
-};
+            )}
+
+            {/* Text */}
+            {item.type === 'text' && (
+              <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                <Text style={[styles.msgText, isMine && styles.msgTextMine]}>
+                  {item.message}
+                </Text>
+                <View style={styles.msgMeta}>
+                  <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
+                    {formatTime(item.created_at)}
+                  </Text>
+                  {isMine && (
+                    <Ionicons
+                      name={item.is_read ? 'checkmark-done' : 'checkmark'}
+                      size={13}
+                      color={item.is_read ? '#93C5FD' : 'rgba(255,255,255,0.6)'}
+                      style={{ marginLeft: 3 }}
+                    />
+                  )}
+                </View>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  };
 
   return (
-     <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-  >
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() =>  router.push({
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.push({
             pathname: "../Profile/Messages",
           })}>
-          <Ionicons name="chevron-back" size={22} color="#111" />
-        </TouchableOpacity> 
+            <Ionicons name="chevron-back" size={22} color="#111" />
+          </TouchableOpacity>
 
-{property_id ? (
-  <TouchableOpacity
-    style={{ flex: 1 }}
-    onPress={() =>
-      router.push({
-        pathname: '/Home/Company/Details',
-        params: { id: property_id },
-      })
-    }
-  >
-    <Text style={styles.headerTitle} numberOfLines={1}>
-      {property_name ?? 'Chat'}
-    </Text>
-    <Text style={styles.headerSub}>Tap to view property →</Text>
-  </TouchableOpacity>
-) : (
-  <View style={{ flex: 1 }}>
-    <Text style={styles.headerTitle} numberOfLines={1}>
-      {property_name ?? 'General Enquiry'}
-    </Text>
-    <Text style={styles.headerSub}>General enquiry</Text>
-  </View>
-)}
-        <TouchableOpacity
-          style={styles.headerAction}
-          onPress={() => setInspModal(true)}
-        >
-          <MaterialIcons name="event" size={20} color="#007bff" />
-        </TouchableOpacity>
-      </View>
+          {property_id ? (
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() =>
+                router.push({
+                  pathname: '/Home/Company/Details',
+                  params: { id: property_id },
+                })
+              }
+            >
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                {property_name ?? 'Chat'}
+              </Text>
+              <Text style={styles.headerSub}>Tap to view property →</Text>
+            </TouchableOpacity>
+          ) : (
 
-      {/* Messages */}
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#007bff" />
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() =>
+                router.push({
+                  pathname: '/Home/CompanyScreen',
+                  params: { id: company_id },
+                })
+              }
+            >
+
+
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                {property_name ?? 'General Enquiry'}
+              </Text>
+              <Text style={styles.headerSub}>General enquiry</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.headerAction}
+            onPress={() => setInspModal(true)}
+          >
+            <MaterialIcons name="event" size={20} color="#007bff" />
+          </TouchableOpacity>
         </View>
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={item => item.id.toString()}
-          renderItem={renderMessage}
-          contentContainerStyle={styles.messagesList}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: false })
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyChat}>
-              <Ionicons name="chatbubble-outline" size={40} color="#ddd" />
-              <Text style={styles.emptyChatText}>Say hello to get started!</Text>
-            </View>
-          }
-        />
-      )}
 
-      <View style={styles.hintRow}>
-        <Text style={styles.hintText}>Hold a sent message to delete it.</Text>
-      </View>
+        {/* Messages */}
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color="#007bff" />
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={item => item.id.toString()}
+            renderItem={renderMessage}
+            contentContainerStyle={styles.messagesList}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            onContentSizeChange={() =>
+              flatListRef.current?.scrollToEnd({ animated: false })
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyChat}>
+                <Ionicons name="chatbubble-outline" size={40} color="#ddd" />
+                <Text style={styles.emptyChatText}>Say hello to get started!</Text>
+              </View>
+            }
+          />
+        )}
 
-      {/* Input bar */}
+        <View style={styles.hintRow}>
+          <Text style={styles.hintText}>Hold a sent message to delete it.</Text>
+        </View>
+
+        {/* Input bar */}
         <View style={styles.inputBar}>
           {/* Camera / image button */}
           <TouchableOpacity style={styles.inputAction} onPress={handlePickImage}>
@@ -481,15 +493,15 @@ const renderMessage = ({ item, index }: { item: Message; index: number }) => {
             }
           </TouchableOpacity>
         </View>
-     
 
-      {/* Inspection modal */}
-      <InspectionModal
-        visible={inspModalVisible}
-        onClose={() => setInspModal(false)}
-        onSend={sendInspection}
-      />
-    </View>
+
+        {/* Inspection modal */}
+        <InspectionModal
+          visible={inspModalVisible}
+          onClose={() => setInspModal(false)}
+          onSend={sendInspection}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -514,8 +526,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle:  { fontSize: 15, fontWeight: 'bold', color: '#111' },
-  headerSub:    { fontSize: 11, color: '#007bff', marginTop: 1 },
+  headerTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
+  headerSub: { fontSize: 11, color: '#007bff', marginTop: 1 },
   headerAction: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#EFF6FF',
@@ -563,7 +575,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: '#e5e7eb',
   },
-  msgText:     { fontSize: 14, color: '#111', lineHeight: 20 },
+  msgText: { fontSize: 14, color: '#111', lineHeight: 20 },
   msgTextMine: { color: '#fff' },
   msgMeta: {
     flexDirection: 'row', alignItems: 'center',
@@ -595,7 +607,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'flex-start',
     gap: 6, marginBottom: 5,
   },
-  inspectionText:  { fontSize: 13, color: '#444', flex: 1 },
+  inspectionText: { fontSize: 13, color: '#444', flex: 1 },
   inspectionStatus: {
     borderRadius: 8, padding: 6, marginTop: 6, alignItems: 'center',
   },

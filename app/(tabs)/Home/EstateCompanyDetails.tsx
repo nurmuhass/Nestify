@@ -15,53 +15,7 @@ import {
 } from "react-native";
 import { initiateChat } from '@/hooks/useChat';
 
-const estateCompany = {
-  id: 1,
-  name: "GreenVille Estate Developers",
-  coverImage:
-    "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg",
 
-  logo:
-    "https://images.pexels.com/photos/439391/pexels-photo-439391.jpeg",
-
-  location: "Lekki Phase 1, Lagos, Nigeria",
-  rating: 4.8,
-  totalProperties: 12,
-  established: "2015",
-  verified: true,
-
-  about:
-    "GreenVille Estate Developers is a trusted real estate development company specializing in luxury residential homes, serviced apartments, and eco-friendly estates. We focus on delivering modern, secure, and comfortable living environments.",
-
-  amenities: [
-    { id: 1, name: "24/7 Security", icon: "shield-check" },
-    { id: 2, name: "Clean Water", icon: "droplet" },
-    { id: 3, name: "Electricity", icon: "zap" },
-    { id: 4, name: "Parking Space", icon: "car" },
-    { id: 5, name: "CCTV", icon: "camera" },
-  ],
-
-  
-
-  gallery: [
-    "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg",
-    "https://images.pexels.com/photos/32870/pexels-photo.jpg",
-    "https://images.pexels.com/photos/280222/pexels-photo-280222.jpeg",
-    "https://images.pexels.com/photos/259962/pexels-photo-259962.jpeg",
-  ],
-
-  contact: {
-    phone: "+234 808 556 8922",
-    email: "support@greenvilleestates.com",
-    website: "https://greenvilleestates.com",
-    address: "21 Freedom Way, Lekki Phase 1, Lagos",
-    latitude: 6.4311,
-    longitude: 3.4845,
-  },
-
-  brochure:
-    "https://www.africahousingnews.com/wp-content/uploads/2023/01/sample-estate-brochure.pdf",
-};
 
 
 export default function EstateDetails() {
@@ -73,7 +27,6 @@ export default function EstateDetails() {
 const [user, setUser] = useState<any>(null);
   const [chatLoading, setChatLoading] = useState<boolean>(false);
 
-  
   
     const [estate, setEstate] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -89,6 +42,7 @@ const [user, setUser] = useState<any>(null);
 useEffect(() => {
   if (estate?.id) {
     fetchPropertiesByEstate();
+    fetchCompanyById();
   }
 }, [estate]);  // ✅ triggered when estate loads
 
@@ -164,11 +118,41 @@ useEffect(() => {
     }
   };
 
-  // Load dummy data
-  React.useEffect(() => {
-    setCompany(estateCompany);
-   
-  }, []);
+
+
+
+       const  fetchCompanyById = async () => {
+          try {
+              const token = await AsyncStorage.getItem('authToken');
+            const response = await fetch(
+              `https://insighthub.com.ng/NestifyAPI/get_CompanyById.php?id=${estate.company_id}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+             'Authorization': `Token ${token}`,
+                },
+              }
+            );
+            const result = await response.json();
+       
+            if (response.ok && result.status === 'success') {
+                  setCompany(result.user);
+                setLoading(false)
+              
+            } else {
+              const msg = result.msg || 'Failed to load property details';
+              setError(msg);
+              Alert.alert('Error', msg);
+                setLoading(false)
+            }
+          } catch (err: any) {
+                setError(err.message);
+                Alert.alert('Error', err.message);
+              } finally {
+                setLoading(false);
+              }
+        };
 
 const handleChatAction = async (type: 'chat' | 'inspection') => {
   const userJson = await AsyncStorage.getItem('authUser');
@@ -210,6 +194,7 @@ const handleChatAction = async (type: 'chat' | 'inspection') => {
           conversation_id: result.conversationId,
           property_name:   estate?.name ?? 'General Enquiry',
           property_id:     '',
+          company_id:      estate?.company_id ?? '',
         },
       });
     } else if (result.notPremium) {
@@ -261,13 +246,17 @@ const handleChatAction = async (type: 'chat' | 'inspection') => {
         <Text style={styles.subtitle}>
           <Ionicons name="location-outline" size={16} /> {estate.location}
         </Text>
-
+{/* 
         {company.verified && (
           <View style={styles.row}>
             <Ionicons name="shield-checkmark" size={18} color="#0a84ff" />
             <Text style={styles.verified}>Verified Estate Company</Text>
           </View>
-        )}
+        )} */} 
+        <TouchableOpacity onPress={() => router.push(`/Home/CompanyScreen?id=${estate.company_id}`)}  >
+               <Text style={styles.bodyText}>By: {company?.company_name}</Text>
+        </TouchableOpacity>
+     
       </View>
 
       {/* CTA Buttons */}
@@ -376,7 +365,7 @@ const handleChatAction = async (type: 'chat' | 'inspection') => {
 </View>
 
       {/* Gallery */}
-      <View style={styles.section}>
+      {/* <View style={styles.section}>
         <Text style={styles.sectionTitle}>Gallery</Text>
 
         <View style={styles.galleryGrid}>
@@ -384,7 +373,7 @@ const handleChatAction = async (type: 'chat' | 'inspection') => {
             <Image key={index} source={{ uri: img }} style={styles.galleryImg} />
           ))}
         </View>
-      </View>
+      </View> */}
 
       {/* Contact */}
       <View style={styles.section}>

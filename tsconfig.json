@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "app/(tabs)/Home/CompanyScreen.js", "app/(tabs)/Home/Notifications.js"  ]
+, "app/(tabs)/Home/CompanyScreen.js", "app/(tabs)/Home/Notifications.js", "components/Header.js", "components/FeaturedEstates.js"  ]
 }
