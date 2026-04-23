@@ -1,12 +1,15 @@
+// app/(tabs)/Profile/_layout.tsx
 import { Stack } from "expo-router";
 
 export default function Layout() {
   return (
- <Stack screenOptions={{ headerShown: false }}>
- <Stack.Screen  name="index" options={{ title: 'Home' }} />
-  <Stack.Screen  name="EditProfile" options={{ title: 'Profile' }} />
-
-
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="EditProfile" />
+      <Stack.Screen name="Messages" />
+      <Stack.Screen name="UserReviews" />
+      <Stack.Screen name="Wishlist" />
+      <Stack.Screen name="EditProperty" />
     </Stack>
   );
 }
