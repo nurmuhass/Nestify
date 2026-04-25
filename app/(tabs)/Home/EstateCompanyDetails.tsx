@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -33,11 +33,14 @@ const [user, setUser] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
 
 
-  useEffect(() => {
-    if (id) {
-      fetchEstateById();
-    }
-  }, [id]); 
+
+useFocusEffect(
+  React.useCallback(() => {
+      if (id) {
+    fetchEstateById();
+  }
+  }, [id])
+);
 
 useEffect(() => {
   if (estate?.id) {
@@ -72,7 +75,7 @@ useEffect(() => {
 
       if (response.ok && result.status === 'success') {
         setEstate(result.estate);
-        console.log("estate........." ,result.estate)
+  
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
@@ -104,7 +107,7 @@ useEffect(() => {
 
       if (response.ok && result.status === 'success') {
         setProperties(result.properties);
-        console.log("properties....." ,result.properties)
+   
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
@@ -222,7 +225,7 @@ const handleChatAction = async (type: 'chat' | 'inspection') => {
   return (
      <ScrollView style={styles.container}>
       {/* Header Image */}
-      <View>
+      <View style={{position:'relative'}}>
         <Image
           source={{ uri: estate.image_path }}
           style={styles.coverImage}
@@ -238,62 +241,100 @@ const handleChatAction = async (type: 'chat' | 'inspection') => {
         <TouchableOpacity style={styles.favoriteButton}>
           <Ionicons name="heart-outline" size={22} color="#ff4d4d" />
         </TouchableOpacity>
+
+        
+      {user?.id === estate.company_id && (
+        <View style={{alignItems:"center", paddingHorizontal:16, position:"absolute", bottom:10, right:0, }}>
+          <TouchableOpacity style={styles.ctaBtn} onPress={() => router.push(`/Home/Estates/EditEstate?id=${estate.id}`)}>
+        <Text style={styles.ctaText}>Edit Estate</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       </View>
 
       {/* Company Info */}
       <View style={styles.section}>
-        <Text style={styles.title}>{estate.name}</Text>
-        <Text style={styles.subtitle}>
-          <Ionicons name="location-outline" size={16} /> {estate.location}
-        </Text>
+
+        <View style={{ marginBottom: 12,flexDirection:"column",justifyContent:"space-between",alignItems:"center" }}>
+          <Text style={styles.title}>{estate.name}</Text>
+            <Text style={styles.subtitle}>
+              <Ionicons name="location-outline" size={16} /> 
+              <Text style={{fontSize: 14}} numberOfLines={3}>{estate.location}</Text>
+            </Text>
+        </View>
+    
 {/* 
         {company.verified && (
           <View style={styles.row}>
-            <Ionicons name="shield-checkmark" size={18} color="#0a84ff" />
+            <Ionicons name="shield-checkmark" size={18} color="#0f2044" />
             <Text style={styles.verified}>Verified Estate Company</Text>
           </View>
         )} */} 
-        <TouchableOpacity onPress={() => router.push(`/Home/CompanyScreen?id=${estate.company_id}`)}  >
-               <Text style={styles.bodyText}>By: {company?.company_name}</Text>
-        </TouchableOpacity>
+
+   <TouchableOpacity onPress={() => router.push(`/Home/CompanyScreen?id=${estate.company_id}`)}  style={styles.agentCard} >
+                      {company?.profile_image ? (
+                        <Image
+                          source={{ uri: company.profile_image }}
+                          style={styles.agentImg}
+                        />
+                      ) : (
+                        <View style={styles.agentAvatar}>
+                          <Text style={styles.agentInitials}>
+                            {(company?.company_name ?? "?")[0].toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.agentName} numberOfLines={1}>
+                          {company?.company_name ?? "Company Name"}
+                        </Text>
+                        <Text style={styles.agentLoc} numberOfLines={1}>
+                          {[company?.city, company?.state]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </Text>
+                      </View>
+                      <Ionicons name="chatbubble-ellipses-outline" size={20} color="#0f2044" />
+             </TouchableOpacity>
      
       </View>
 
       {/* CTA Buttons */}
+      {user?.id && user.id !== estate.company_id && (
+        <ScrollView contentContainerStyle={{}} horizontal showsHorizontalScrollIndicator={false} scrollEnabled>
+          <View style={styles.ctaRow}>
+        <TouchableOpacity
+          style={styles.ctaBtn}
+          onPress={() => handleChatAction('inspection')}
+          disabled={chatLoading}
+        >
+          {chatLoading
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <Ionicons name="calendar-outline" size={18} color="#fff" />
+          }
+          <Text style={styles.ctaText}>Book Inspection</Text>
+        </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={{}} horizontal showsHorizontalScrollIndicator={false} scrollEnabled>
-      <View style={styles.ctaRow}>
-    <TouchableOpacity
-  style={styles.ctaBtn}
-  onPress={() => handleChatAction('inspection')}
-  disabled={chatLoading}
->
-  {chatLoading
-    ? <ActivityIndicator size="small" color="#fff" />
-    : <Ionicons name="calendar-outline" size={18} color="#fff" />
-  }
-  <Text style={styles.ctaText}>Book Inspection</Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-  style={styles.ctaBtn}
-  onPress={() => handleChatAction('chat')}
-  disabled={chatLoading}
->
-  {chatLoading
-    ? <ActivityIndicator size="small" color="#fff" />
-    : <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
-  }
-  <Text style={styles.ctaText}>Chat With Company</Text>
-</TouchableOpacity>
+        <TouchableOpacity
+          style={styles.ctaBtn}
+          onPress={() => handleChatAction('chat')}
+          disabled={chatLoading}
+        >
+          {chatLoading
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
+          }
+          <Text style={styles.ctaText}>Chat With Company</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.ctaBtn}>
           <Ionicons name="download-outline" size={18} color="#fff" />
           <Text style={styles.ctaText}>Brochure (PDF)</Text>
         </TouchableOpacity>
-      </View>
+          </View>
+        </ScrollView>
+      )}
 
-      </ScrollView>
 
       {/* About Section */}
       <View style={styles.section}>
@@ -325,7 +366,7 @@ const handleChatAction = async (type: 'chat' | 'inspection') => {
       <View style={styles.rowSpace}>
         <Text style={{...styles.sectionTitle,marginBottom:5}}>Properties</Text>
         <TouchableOpacity>
-          <Text style={{ color: "#0a84ff" }}>See all</Text>
+          <Text style={{ color: "#0f2044" }}>See all</Text>
         </TouchableOpacity>
       </View>
 
@@ -423,7 +464,7 @@ const styles = StyleSheet.create({
   section: { padding: 16 },
   title: { fontSize: 22, fontWeight: "700" },
   subtitle: { marginTop: 6, color: "#666" },
-  verified: { marginLeft: 6, fontSize: 14, color: "#0a84ff" },
+  verified: { marginLeft: 6, fontSize: 14, color: "#0f2044" },
 
   row: { flexDirection: "row", alignItems: "center", marginTop: 8 },
   rowSpace: {
@@ -442,7 +483,7 @@ const styles = StyleSheet.create({
    
   },
   ctaBtn: {
-    backgroundColor: "#0a84ff",
+    backgroundColor: "#0f2044",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -488,7 +529,7 @@ const styles = StyleSheet.create({
   propertyPrice: {
     marginLeft: 38,
     marginBottom: 8,
-    color: "#0a84ff",
+    color: "#0f2044",
     fontWeight: "700",
    
   },
@@ -505,6 +546,28 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
   },
+    agentCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 2,
+  },
+  agentImg: { width: 42, height: 42, borderRadius: 21 },
+  agentAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#B5D4F4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  agentInitials: { fontSize: 16, fontWeight: "600", color: "#0C447C" },
+  agentName: { fontWeight: "bold", fontSize: 14, color: "#111" },
+  agentLoc: { fontSize: 12, color: "#777" },
 
   contactText: { marginTop: 6, fontSize: 14, color: "#333" },
   sectionTitle:{

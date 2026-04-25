@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
         borderWidth: 3, borderColor: "#e5e7eb",
         overflow: "hidden",
     },
-    buyerAvatarImg: { width: "100%", height: "100%" },
+    buyerAvatarImg: { width: "100%", height: "100%", },
     buyerAvatarFallback: {
         width: "100%", height: "100%",
         backgroundColor: "#e0e7ff",

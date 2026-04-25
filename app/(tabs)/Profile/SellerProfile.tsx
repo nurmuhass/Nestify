@@ -59,7 +59,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
     const [staff, setStaff] = useState<any[]>([]);
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const isPremium = user?.planType === "premium";
+    const isPremium = user?.plan_type === "premium";
 
     useFocusEffect(
         useCallback(() => {
@@ -103,7 +103,10 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                 { headers: { Authorization: `Token ${token}` } }
             );
             const result = await res.json();
+       
             if (result.status === "success") setEstates(result.Estates ?? []);
+
+                 console.log("estates",result);
         } catch { }
     };
 
@@ -115,7 +118,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                 { headers: { Authorization: `Token ${token}` } }
             );
             const result = await res.json();
-            if (result.status === "success") setStaff(result.staff ?? []);
+            if (result.status === "success") setStaff(result.staffs ?? []);
         } catch { }
     };
 
@@ -125,11 +128,11 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
         if (activeTab === "Pending")
             return allProperties.filter((p) => p.approval_status === "pending");
         if (activeTab === "Estates") return estates;
-        if (activeTab === "Staff") return staff;
+        if (activeTab === "Staffs") return staff;
         return [];
     };
 
-    const TABS = ["Properties", "Pending", "Estates", "Staff"];
+    const TABS = ["Properties", "Pending", "Estates", "Staffs"];
 
     const renderPropertyCard = (item: any) => (
         <TouchableOpacity
@@ -196,30 +199,38 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
             />
             <View style={styles.estateBody}>
                 <Text style={styles.estateName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.estateLoc}>{item.city} · {item.state}</Text>
+                <Text style={styles.estateLoc}>{item.location}</Text>
             </View>
         </TouchableOpacity>
     );
 
     const renderStaffCard = (item: any) => (
-        <View key={item.id} style={styles.staffCard}>
-            {item.avatar ? (
-                <Image source={{ uri: item.avatar }} style={styles.staffAvatar} />
-            ) : (
-                <View style={styles.staffAvatarFallback}>
-                    <Text style={styles.staffAvatarInitial}>
-                        {(item.name ?? "?")[0].toUpperCase()}
-                    </Text>
-                </View>
-            )}
+        <TouchableOpacity key={item.id} style={styles.staffCard} onPress={() => { router.push({ pathname: "/Profile/EditStaff", params: { id: item.id } })}}>
+
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                        {item.profile_image ? (
+                        <Image source={{ uri: item.profile_image }} style={styles.staffAvatar} />
+                    ) : (
+                        <View style={styles.staffAvatarFallback}>
+                            <Text style={styles.staffAvatarInitial}>
+                                {(item.name ?? "?")[0].toUpperCase()}
+                            </Text>
+                        </View>
+                    )}
             <View style={styles.staffInfo}>
-                <Text style={styles.staffName}>{item.name}</Text>
-                <Text style={styles.staffRole}>{item.role}</Text>
+                        <Text style={styles.staffName}>{item.name}</Text>
+                        <Text style={styles.staffRole}>{item.email}</Text>
             </View>
-            <View style={[styles.staffBadge, { backgroundColor: item.is_active ? "#14532d" : "#374151" }]}>
+
+   <View style={[styles.staffBadge, { backgroundColor: item.is_active ? "#14532d" : "#374151" }]}>
                 <Text style={styles.staffBadgeText}>{item.is_active ? "Active" : "Inactive"}</Text>
             </View>
-        </View>
+
+
+            </View>
+    
+         
+        </TouchableOpacity>
     );
 
     const renderTabContent = () => {
@@ -242,7 +253,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
         if (activeTab === "Estates") {
             return <View style={styles.estateGrid}>{data.map(renderEstateCard)}</View>;
         }
-        if (activeTab === "Staff") {
+        if (activeTab === "Staffs") {
             return <View style={styles.staffList}>{data.map(renderStaffCard)}</View>;
         }
         return null;
@@ -282,12 +293,12 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                             </TouchableOpacity>
                         </View>
                     </View>
-
+ 
                     {/* Avatar + name */}
                     <View style={styles.heroBottom}>
                         <View style={styles.sellerAvatarWrap}>
                             {user.profile_image ? (
-                                <Image source={{ uri: user.profile_image }} style={styles.sellerAvatar} />
+                                <Image source={{ uri: user.profile_image }} style={styles.sellerAvatar}  />
                             ) : (
                                 <View style={[styles.sellerAvatar, styles.sellerAvatarFallback]}>
                                     <Text style={styles.sellerAvatarInitial}>
@@ -347,7 +358,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                     <View style={styles.sellerCtaRow}>
                         <TouchableOpacity
                             style={styles.sellerCtaPrimary}
-                            onPress={() => router.push("/AddProperty")}
+                            onPress={() => router.push("../Publish")}
                         >
                             <Ionicons name="add" size={16} color="#0F0F1A" />
                             <Text style={styles.sellerCtaPrimaryText}>Add Property</Text>
@@ -362,7 +373,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                         <TouchableOpacity
                             style={styles.sellerCtaIcon}
                             onPress={() =>
-                                router.push({ pathname: "/Profile/CompanyReviews", params: { company_id: user.id, company_name: user.company_name } })
+                                router.push({ pathname: "../Profile/UserReviews", params: { company_id: user.id, company_name: user.company_name } })
                             }
                         >
                             <MaterialIcons name="rate-review" size={18} color={GOLD} />
@@ -446,7 +457,7 @@ const styles = StyleSheet.create({
         height: 220,
         position: "relative",
         backgroundColor: DARK2,
-        overflow: "hidden",
+     overflow: "visible",
     },
     heroPattern: {
         ...StyleSheet.absoluteFillObject,
@@ -488,16 +499,18 @@ const styles = StyleSheet.create({
     premiumPillText: { fontSize: 11, fontWeight: "700", color: GOLD },
     heroBottom: {
         position: "absolute",
-        bottom: -32,
+        bottom: -19,
         left: 20,
+        zIndex:9000,
     },
-    sellerAvatarWrap: { position: "relative" },
+    sellerAvatarWrap: { position: "relative" , overflow: "visible",},
     sellerAvatar: {
         width: 72,
         height: 72,
         borderRadius: 20,
         borderWidth: 3,
         borderColor: GOLD,
+      zIndex:9000
     },
     sellerAvatarFallback: {
         backgroundColor: DARK2,
@@ -512,6 +525,8 @@ const styles = StyleSheet.create({
         backgroundColor: DARK,
         borderRadius: 10,
         padding: 1,
+         zIndex: 2000, 
+  elevation: 5, 
     },
 
     sellerIdentity: {

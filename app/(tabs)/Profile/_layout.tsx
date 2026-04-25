@@ -10,6 +10,10 @@ export default function Layout() {
       <Stack.Screen name="UserReviews" />
       <Stack.Screen name="Wishlist" />
       <Stack.Screen name="EditProperty" />
+      <Stack.Screen name="Reviews" />
+      <Stack.Screen name="EditStaff" />
+      
+      
     </Stack>
   );
 }

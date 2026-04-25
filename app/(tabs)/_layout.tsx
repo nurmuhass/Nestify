@@ -39,7 +39,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarActiveTintColor: GOLD,
+        tabBarActiveTintColor: NAVY,
         tabBarInactiveTintColor: MUTED,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.label,

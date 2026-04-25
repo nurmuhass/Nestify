@@ -32,7 +32,7 @@ export default function ProfileScreen() {
             const freshUser = result.data;
             // Update AsyncStorage so next load is also correct
             await AsyncStorage.setItem("authUser", JSON.stringify(freshUser));
-            setUser(freshUser);
+            setUser(freshUser); 
           } else {
             // Fallback to cached if API fails
             setUser(cached);

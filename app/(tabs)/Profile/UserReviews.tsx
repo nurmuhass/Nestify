@@ -184,14 +184,14 @@ export default function UserReviewsScreen() {
 
         {item.images?.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewImgs}>
-            {item.images.map((img, i) => (
-              <Image
-                key={i}
-                source={{ uri: `https://insighthub.com.ng/${img}` }}
-                style={styles.reviewImg}
-                resizeMode="cover"
-              />
-            ))}
+                  {item.images.map((img, i) => (
+                <Image
+                  key={`${img}-${i}`}
+                  source={{ uri: `https://insighthub.com.ng/${img}` }}
+                  style={styles.reviewImg}
+                  resizeMode="cover"
+                />
+              ))}
           </ScrollView>
         )}
       </View>
@@ -232,7 +232,7 @@ export default function UserReviewsScreen() {
 
       <FlatList
         data={reviews}
-        keyExtractor={item => item.id.toString()}
+       keyExtractor={(item, index) => `${item.id}-${index}`}
         showsVerticalScrollIndicator={false}
         refreshing={loading}
         onRefresh={refresh}
