@@ -146,7 +146,7 @@ const filteredProperties = useMemo(() => {
   if (loading && properties.length === 0) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#0f2044" />
       </View>
     );
   }
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 6,
     left: 6,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#0f2044',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
@@ -491,7 +491,7 @@ emptyReset: {
   marginTop: 12,
   paddingVertical: 9,
   paddingHorizontal: 24,
-  backgroundColor: '#007bff',
+  backgroundColor: '#0f2044',
   borderRadius: 20,
 },
 emptyResetText: {
@@ -516,7 +516,7 @@ catBtn: {
   marginBottom: -0.5,
 },
 catBtnActive: {
-  borderBottomColor: '#007bff',
+  borderBottomColor: '#0f2044',
 },
 catText: {
   fontSize: 13,
@@ -524,7 +524,7 @@ catText: {
 
 },
 catTextActive: {
-  color: '#007bff',
+  color: '#0f2044',
   fontWeight: '500',
 },
 });

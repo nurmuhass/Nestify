@@ -359,7 +359,7 @@ if (loading) {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff', alignItems: 'center',paddingTop:getStatusBarHeight() },
+  container: { flex: 1, padding: 20, backgroundColor: '#0f2044', alignItems: 'center',paddingTop:getStatusBarHeight() },
   backButton: { alignSelf: 'flex-start', marginBottom: 10 },
   title: { fontSize: 18, fontWeight: 'bold', marginBottom: 20 },
   profileImage: { width: 80, height: 80, borderRadius: 40, marginBottom: 20,borderColor: '#007BFF', borderWidth: 2 },
