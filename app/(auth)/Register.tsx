@@ -23,6 +23,7 @@ import {
 import DropDownPicker from 'react-native-dropdown-picker';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { AuthContext } from '../../store';
+import { useToast } from '../../components/Toast';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -192,6 +193,7 @@ export default function RegisterScreen() {
   const [cityItems,  setCityItems]  = useState([]);
   const [openState,  setOpenState]  = useState(false);
   const [openCity,   setOpenCity]   = useState(false);
+  const { show } = useToast();
 
   /* ── your original effects ── */
   useEffect(() => {
@@ -216,30 +218,56 @@ export default function RegisterScreen() {
     }
   }, [state]);
 
-  /* ── your original handleRegister ── */
-  const handleRegister = async () => {
-    if (!name || !email || !phone || !password || !state || !city) {
-      Alert.alert('Error', 'Please fill all required fields');
-      return;
-    }
-    const selectedState = stateItems.find((item: any) => item.value === state);
-    const stateName     = selectedState ? selectedState.label : state;
-    const form: any     = { name, email, phone, password, isSeller, state: stateName, city };
-    if (isSeller) {
-      form.companyName    = CompanyName;
-      form.licenseNumber  = licenseNumber;
-    }
-    setLoading(true);
-    const res = await signUp(form);
-    setLoading(false);
-    if (res.error) {
-      Alert.alert('Registration failed', res.error);
-    } else {
-      Alert.alert('Registration Successful');
-      router.replace('/(tabs)/Home');
-    }
+
+
+const handleRegister = async () => {
+  if (!name || !email || !phone || !password || !state || !city) {
+    show({
+      type: 'error',
+      title: 'Error',
+      message: 'Please fill all required fields',
+    });
+    return;
+  }
+
+  const selectedState = stateItems.find((item: any) => item.value === state);
+  const stateName = selectedState ? selectedState.label : state;
+
+  const form: any = {
+    name,
+    email,
+    phone,
+    password,
+    isSeller,
+    state: stateName,
+    city,
   };
 
+  if (isSeller) {
+    form.companyName = CompanyName;
+    form.licenseNumber = licenseNumber;
+  }
+
+  setLoading(true);
+  const res = await signUp(form);
+  setLoading(false);
+
+  if (res.error) {
+    show({
+      type: 'error',
+      title: 'Registration Failed',
+      message: res.error,
+    });
+  } else {
+    show({
+      type: 'success',
+      title: 'Account Created 🎉',
+      message: 'Registration successful',
+    });
+
+    router.replace('/(tabs)/Home');
+  }
+};
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor={NAVY2} />

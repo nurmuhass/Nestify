@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { AuthContext } from '../../store';
+import { useToast } from '../../components/Toast';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -139,21 +140,38 @@ export default function LoginScreen() {
   const [password,     setPassword]     = useState('');
   const [showPw,       setShowPw]       = useState(false);
   const [loading,      setLoading]      = useState(false);
+  const { show } = useToast();
 
-  const handleLogin = async () => {
-    if (!emailOrPhone || !password) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
-    setLoading(true);
-    const res = await signIn({ emailOrPhone, password });
-    setLoading(false);
-    if (res.error) {
-      Alert.alert('Login failed', res.error);
-    } else {
-      router.replace('/(tabs)/Home');
-    }
-  };
+const handleLogin = async () => {
+  if (!emailOrPhone || !password) {
+    show({
+      type: 'error',
+      title: 'Error',
+      message: 'Please fill all fields',
+    });
+    return;
+  }
+
+  setLoading(true);
+  const res = await signIn({ emailOrPhone, password });
+  setLoading(false);
+
+  if (res.error) {
+    show({
+      type: 'error',
+      title: 'Login Failed',
+      message: res.error,
+    });
+  } else {
+    show({
+      type: 'success',
+      title: 'Welcome back 👋',
+      message: 'Login successful',
+    });
+
+    router.replace('/(tabs)/Home');
+  }
+};
 
   return (
     <View style={styles.root}>
