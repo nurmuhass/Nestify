@@ -47,10 +47,14 @@ setSliders(result.sliders);
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />;
+    return    <View style={{ height: 238,
+    alignItems: 'center',
+    justifyContent: 'center'}}>
+          <ActivityIndicator color="#c9a84c" />
+        </View>;
   }
 
   if (!sliders || sliders.length === 0) {

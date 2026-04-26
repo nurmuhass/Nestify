@@ -40,8 +40,8 @@ const Index = () => {
 
     const inAuthGroup = segments[0] === "(auth)";
     if (!isLoggedIn && !inAuthGroup) {
-      console.log("User not logged in - routing to login");
-      router.replace("/(auth)/Login");
+      console.log("User not logged in - routing to Welcome Screen");
+      router.replace("/(auth)/Welcome");
     } else if (isLoggedIn) {
       // If already in auth group, avoid infinite loop:
       if (inAuthGroup) {
