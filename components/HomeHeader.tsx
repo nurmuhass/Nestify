@@ -20,7 +20,7 @@ type Props = {
 export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: Props) {
   const router = useRouter();
 
- const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // 🔐 Load user info
@@ -42,41 +42,41 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
   }, []);
 
   // 🔔 Fetch notifications (only unread count)
-const fetchNotifications = async () => {
-  try {
-    const token = await AsyncStorage.getItem('authToken');
+  const fetchNotifications = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
 
-    if (!token) {
-      console.log("No token");
-      return;
-    }
-
-    const res = await fetch(
-      'https://insighthub.com.ng/NestifyAPI/get_notifications.php',
-      {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
+      if (!token) {
+        console.log("No token");
+        return;
       }
-    );
 
-    const result = await res.json();
+      const res = await fetch(
+        'https://insighthub.com.ng/NestifyAPI/get_notifications.php',
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      const result = await res.json();
 
 
 
-    if (result.status === 'success') {
-      const data = result.data ?? [];
+      if (result.status === 'success') {
+        const data = result.data ?? [];
 
-      const unread = data.filter((n) => {
-        return n.is_read == 0 || n.is_read === false || n.is_read === '0';
-      }).length;
+        const unread = data.filter((n) => {
+          return n.is_read == 0 || n.is_read === false || n.is_read === '0';
+        }).length;
 
-      setUnreadCount(unread);
+        setUnreadCount(unread);
+      }
+    } catch (e) {
+      console.error('Notification fetch error:', e);
     }
-  } catch (e) {
-    console.error('Notification fetch error:', e);
-  }
-};
+  };
   // 🔁 Refresh when screen is focused
   useFocusEffect(
     useCallback(() => {
@@ -94,9 +94,10 @@ const fetchNotifications = async () => {
     hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
 
   const displayName = user?.company_name ?? user?.name ?? 'Welcome back';
-  const parts     = displayName.trim().split(' ');
+  const parts = displayName.trim().split(' ');
   const firstName = parts.slice(0, -1).join(' ') || displayName;
-  const lastName  = parts.length > 1 ? parts[parts.length - 1] : '';
+  const lastName = parts.length > 1 ? parts[parts.length - 1] : '';
+  const locationText = `${user?.city ?? 'Nigeria'}, ${user?.state ?? 'NG'}`;
 
   return (
     <View style={styles.hero}>
@@ -106,58 +107,66 @@ const fetchNotifications = async () => {
 
       {/* Top row */}
       <View style={styles.topRow}>
-        <TouchableOpacity style={styles.locPill}>
-          <View style={styles.locDot} />
-          <Text style={styles.locText}>
-            {user?.city ?? 'Nigeria'}, {user?.state ?? 'NG'}
-          </Text>
-          <Text style={styles.locCaret}>▾</Text>
-        </TouchableOpacity>
 
+        <View style={styles.locContainer}>
+          <TouchableOpacity style={styles.locPill}>
+            <View style={styles.locDot} />
+
+            <Text
+              style={styles.locText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {locationText}
+            </Text>
+
+            <Text style={styles.locCaret}>▾</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.actions}>
 
-             {/* 🔔 Notification Button with Badge */}
-      <View style={{ position: 'relative' }}>
-          <TouchableOpacity
-            style={styles.bellWrap}
-            onPress={() => router.push('/Home/Notifications')}
-          >
-            <Ionicons name="notifications-outline" size={19} color="rgba(255,255,255,0.68)" />
-            <View style={styles.bellDot} />
-          </TouchableOpacity>
- {/* 🔴 Badge */}
-        {unreadCount > 0 && (
-          <View
-            style={{
-              position: 'absolute',
-              top: -4,
-              right: -4,
-              backgroundColor: '#e11d48',
-              borderRadius: 10,
-              minWidth: 18,
-              height: 18,
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingHorizontal: 4,
-            }}
-          >
-            <Text
-              style={{
-                color: '#fff',
-                fontSize: 10,
-                fontWeight: 'bold',
-              }}
+          {/* 🔔 Notification Button with Badge */}
+          <View style={{ position: 'relative' }}>
+            <TouchableOpacity
+              style={styles.bellWrap}
+              onPress={() => router.push('/Home/Notifications')}
             >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </Text>
+              <Ionicons name="notifications-outline" size={19} color="rgba(255,255,255,0.68)" />
+              <View style={styles.bellDot} />
+            </TouchableOpacity>
+            {/* 🔴 Badge */}
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  backgroundColor: '#e11d48',
+                  borderRadius: 10,
+                  minWidth: 18,
+                  height: 18,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </View>
-        )}
-      </View>    
 
           <TouchableOpacity style={styles.avatar}>
             {user?.profileImage ? (
               <Image
-              source={{ uri: user.profileImage }}
+                source={{ uri: user.profileImage }}
                 style={styles.avatarImg}
               />
             ) : (
@@ -187,9 +196,9 @@ const fetchNotifications = async () => {
       {/* Stats */}
       <View style={styles.stats}>
         {[
-          { val: propertiesCount > 0 ? `${propertiesCount}+` : '247+', lbl: 'Listings'   },
-          { val: companiesCount  > 0 ? `${companiesCount}+`  : '18+',  lbl: 'Companies'  },
-          { val: '4.9★',                                                 lbl: 'Rating'     },
+          { val: propertiesCount > 0 ? `${propertiesCount}+` : '247+', lbl: 'Listings' },
+          { val: companiesCount > 0 ? `${companiesCount}+` : '18+', lbl: 'Companies' },
+          { val: '4.9★', lbl: 'Rating' },
         ].map((s) => (
           <View key={s.lbl} style={styles.statPill}>
             <Text style={styles.statVal}>{s.val}</Text>
@@ -222,23 +231,30 @@ const styles = StyleSheet.create({
   },
 
   topRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 18, zIndex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    zIndex: 2,
+  },
+  locContainer: {
+    flex: 1,
+    marginRight: 40,
   },
   locPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(255,255,255,0.10)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)',
     borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
+    maxWidth: '100%',
   },
   locDot: {
     width: 7, height: 7, borderRadius: 4,
     backgroundColor: '#c9a84c',
   },
-  locText: { fontSize: 12, color: 'rgba(255,255,255,0.82)' },
-  locCaret: { fontSize: 9, color: '#c9a84c', marginLeft: 2 },
+  locText: { fontSize: 12, color: 'rgba(255,255,255,0.82)', flexShrink: 1, },
+  locCaret: { fontSize: 9, color: '#c9a84c', marginLeft: 2, flexShrink: 0, },
 
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 0, },
   bellWrap: { position: 'relative' },
   bellDot: {
     position: 'absolute', top: -1, right: -1,

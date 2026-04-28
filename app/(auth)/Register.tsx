@@ -230,6 +230,15 @@ const handleRegister = async () => {
     return;
   }
 
+  if (isSeller && (!CompanyName || !licenseNumber)) {
+  show({
+    type: 'warning',
+    title: 'Incomplete',
+    message: 'Please fill company details',
+  });
+  return;
+}
+
   const selectedState = stateItems.find((item: any) => item.value === state);
   const stateName = selectedState ? selectedState.label : state;
 
