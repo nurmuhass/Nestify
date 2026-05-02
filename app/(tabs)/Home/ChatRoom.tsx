@@ -30,6 +30,20 @@ const formatTime = (d: string) =>
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  inputBg: '#0b1a33',
+  danger: '#ef4444',
+  success: '#22C55E',
+  warning: '#F59E0B',
+};
+
 // ── Inspection request bubble ─────────────────────────────────────────────────
 const InspectionBubble = ({
   msg,
@@ -55,7 +69,7 @@ const InspectionBubble = ({
   return (
     <View style={[styles.inspectionCard, isMine && styles.inspectionCardMine]}>
       <View style={styles.inspectionHeader}>
-        <MaterialIcons name="event" size={18} color="#007bff" />
+        <MaterialIcons name="event" size={18} color="COLORS.gold" />
         <Text style={styles.inspectionTitle}>Inspection Request</Text>
       </View>
       <View style={styles.inspectionRow}>
@@ -143,7 +157,7 @@ const InspectionModal = ({
             style={styles.datePickerBtn}
             onPress={() => setShowDate(true)}
           >
-            <MaterialIcons name="calendar-today" size={18} color="#007bff" />
+            <MaterialIcons name="calendar-today" size={18} color="COLORS.gold" />
             <Text style={styles.datePickerText}>
               {date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
             </Text>
@@ -163,7 +177,7 @@ const InspectionModal = ({
             style={styles.datePickerBtn}
             onPress={() => setShowTime(true)}
           >
-            <MaterialIcons name="access-time" size={18} color="#007bff" />
+            <MaterialIcons name="access-time" size={18} color="COLORS.gold" />
             <Text style={styles.datePickerText}>
               {time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
             </Text>
@@ -384,7 +398,7 @@ export default function ChatRoom() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.push({
             pathname: "../Profile/Messages",
           })}>
-            <Ionicons name="chevron-back" size={22} color="#111" />
+            <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
           </TouchableOpacity>
 
           {property_id ? (
@@ -425,14 +439,14 @@ export default function ChatRoom() {
             style={styles.headerAction}
             onPress={() => setInspModal(true)}
           >
-            <MaterialIcons name="event" size={20} color="#007bff" />
+            <MaterialIcons name="event" size={20} color="COLORS.gold" />
           </TouchableOpacity>
         </View>
 
         {/* Messages */}
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color="#007bff" />
+            <ActivityIndicator size="large" color="#c9a84c" />
           </View>
         ) : (
           <FlatList
@@ -488,7 +502,7 @@ export default function ChatRoom() {
             disabled={!inputText.trim() || sending}
           >
             {sending
-              ? <ActivityIndicator size="small" color="#fff" />
+              ? <ActivityIndicator size="small" color="#c9a84c" />
               : <Ionicons name="send" size={18} color="#fff" />
             }
           </TouchableOpacity>
@@ -509,25 +523,46 @@ export default function ChatRoom() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: COLORS.bg,
     paddingTop: getStatusBarHeight(),
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   // Header
+
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 14, paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 0.5, borderColor: '#e5e7eb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(15,32,68,0.85)',
+    borderBottomWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center', justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: COLORS.card,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
-  headerSub: { fontSize: 11, color: '#007bff', marginTop: 1 },
+
+
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#F9FAFB',
+    letterSpacing: 0.3,
+  },
+
+
+  headerSub: {
+    fontSize: 11,
+    color: '#c9a84c',
+    marginTop: 2,
+  },
   headerAction: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#EFF6FF',
@@ -537,11 +572,14 @@ const styles = StyleSheet.create({
   // Messages list
   messagesList: { paddingHorizontal: 12, paddingVertical: 10, paddingBottom: 20 },
 
+
   dateSeparator: { alignItems: 'center', marginVertical: 12 },
   dateSeparatorText: {
-    fontSize: 11, color: '#888',
-    backgroundColor: '#E2E8F0',
-    paddingHorizontal: 12, paddingVertical: 4,
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    backgroundColor: COLORS.card,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 20,
   },
 
@@ -563,20 +601,25 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    marginBottom: 2,
+    marginBottom: 4,
+
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   bubbleMine: {
-    backgroundColor: '#007bff',
+    backgroundColor: COLORS.gold,
     borderBottomRightRadius: 4,
   },
   bubbleTheirs: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
     borderBottomLeftRadius: 4,
     borderWidth: 0.5,
-    borderColor: '#e5e7eb',
+    borderColor: COLORS.border,
   },
-  msgText: { fontSize: 14, color: '#111', lineHeight: 20 },
-  msgTextMine: { color: '#fff' },
+  msgText: { fontSize: 14, color: COLORS.textPrimary, lineHeight: 20 },
+  msgTextMine: { color: COLORS.bg },
   msgMeta: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'flex-end', marginTop: 3, gap: 2,
@@ -589,11 +632,12 @@ const styles = StyleSheet.create({
 
   // Inspection bubble
   inspectionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+
     maxWidth: 260,
     marginBottom: 2,
   },
@@ -602,7 +646,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     gap: 6, marginBottom: 10,
   },
-  inspectionTitle: { fontSize: 14, fontWeight: '700', color: '#1D4ED8' },
+  inspectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.gold,
+  },
   inspectionRow: {
     flexDirection: 'row', alignItems: 'flex-start',
     gap: 6, marginBottom: 5,
@@ -622,36 +670,53 @@ const styles = StyleSheet.create({
   },
   declineBtnText: { color: '#EF4444', fontWeight: '600', fontSize: 13 },
   confirmBtn: {
-    flex: 1, paddingVertical: 8, borderRadius: 8,
-    backgroundColor: '#22C55E', alignItems: 'center',
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: COLORS.gold,
+    alignItems: 'center',
   },
-  confirmBtnText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  confirmBtnText: { color: COLORS.bg, fontWeight: '600', fontSize: 13 },
 
   // Input bar
   inputBar: {
     flexDirection: 'row', alignItems: 'flex-end',
     paddingHorizontal: 12, paddingVertical: 10,
-    backgroundColor: '#fff', gap: 8,
+    backgroundColor: COLORS.bg, gap: 8,
     borderTopWidth: 0.5, borderColor: '#e5e7eb',
   },
+
   inputAction: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center', justifyContent: 'center',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: COLORS.card,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   input: {
-    flex: 1, minHeight: 38, maxHeight: 100,
-    backgroundColor: '#f3f4f6',
+    flex: 1,
+    minHeight: 38,
+    maxHeight: 100,
+    backgroundColor: COLORS.inputBg,
     borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 9,
-    fontSize: 14, color: '#111',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    fontSize: 14,
+    color: COLORS.textPrimary,
   },
   sendBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: '#007bff',
-    alignItems: 'center', justifyContent: 'center',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: COLORS.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: '#93C5FD' },
+
+  sendBtnDisabled: {
+    backgroundColor: '#5c4a1a',
+  },
 
   hintRow: {
     paddingHorizontal: 16,
@@ -672,9 +737,11 @@ const styles = StyleSheet.create({
     flex: 1, justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
+
   modalSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: COLORS.bg,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: 20, paddingBottom: 36,
   },
   modalHandle: {
@@ -703,18 +770,24 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#BFDBFE',
   },
   datePickerText: { fontSize: 14, color: '#1D4ED8', fontWeight: '600' },
+
   modalInput: {
-    borderWidth: 1, borderColor: '#E5E7EB',
-    borderRadius: 12, padding: 12,
-    fontSize: 14, color: '#111',
-    minHeight: 80,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    backgroundColor: COLORS.inputBg, minHeight: 80,
   },
   sendInspectionBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, backgroundColor: '#007bff',
+    gap: 8, backgroundColor: COLORS.gold,
     borderRadius: 12, paddingVertical: 14,
     marginTop: 20,
   },
+
+
   sendInspectionText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 
   emptyChat: { alignItems: 'center', marginTop: 80, gap: 10 },

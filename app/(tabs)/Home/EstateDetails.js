@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import PremiumLoader from '@/components/PremiumLoader';
 
 export default function EstateDetails() {
   const { id } = useLocalSearchParams();
@@ -14,7 +14,7 @@ export default function EstateDetails() {
 
 
 
-   useEffect(() => {
+  useEffect(() => {
     if (id) {
       fetchEstateById();
     }
@@ -22,22 +22,22 @@ export default function EstateDetails() {
 
   const fetchEstateById = async () => {
     try {
-        const token = await AsyncStorage.getItem('authToken');
+      const token = await AsyncStorage.getItem('authToken');
       const response = await fetch(
         `https://insighthub.com.ng/NestifyAPI/getEstateById.php?id=${id}`,
         {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-       'Authorization': `Token ${token}`,
+            'Authorization': `Token ${token}`,
           },
         }
       );
       const result = await response.json();
- 
+
       if (response.ok && result.status === 'success') {
-           setEstate(result.property);
-        
+        setEstate(result.property);
+
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
@@ -51,44 +51,41 @@ export default function EstateDetails() {
     }
   };
 
+
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
+    return <PremiumLoader />;
   }
 
   if (!estate) {
     return (
       <View style={styles.center}>
         <Text>No estate found.</Text>
-        
+
       </View>
     );
   }
 
   return (
-    <ScrollView style={{...styles.container,paddingTop:50}}>
+    <ScrollView style={{ ...styles.container, paddingTop: 50 }}>
 
 
-        <View style={{...styles.headerIcons,}}>
-          <TouchableOpacity
-            style={{ padding: 10, backgroundColor: '#000', borderRadius: 10 }}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={20} color="#e9ecf2" />
-          </TouchableOpacity>
-          <View style={styles.rightIcons}>
-         
-          </View>
+      <View style={{ ...styles.headerIcons, }}>
+        <TouchableOpacity
+          style={{ padding: 10, backgroundColor: '#000', borderRadius: 10 }}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={20} color="#e9ecf2" />
+        </TouchableOpacity>
+        <View style={styles.rightIcons}>
+
         </View>
+      </View>
 
       {/* Main Image */}
-      <View style={{marginTop:55}}>
-  <Image source={{ uri: estate.image_path }} style={styles.mainImage} />
+      <View style={{ marginTop: 55 }}>
+        <Image source={{ uri: estate.image_path }} style={styles.mainImage} />
       </View>
-    
+
 
       {/* Name + Rating */}
       <View style={styles.header}>
@@ -133,7 +130,7 @@ export default function EstateDetails() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 15 },
-  mainImage: { width: '100%', height: 220, borderRadius: 10,paddingTop:35 },
+  mainImage: { width: '100%', height: 220, borderRadius: 10, paddingTop: 35 },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 },
   title: { fontSize: 20, fontWeight: 'bold', flex: 1 },
   ratingBox: { flexDirection: 'row', alignItems: 'center' },
@@ -143,12 +140,12 @@ const styles = StyleSheet.create({
   facilityItem: { fontSize: 14, color: '#444', marginTop: 4 },
   dateText: { color: 'gray', fontSize: 12, marginTop: 20, textAlign: 'right' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-   headerIcons: { 
-    position: 'absolute', 
-    top: 5, 
-    left: 3, 
-    flexDirection: 'row', 
-    justifyContent: 'space-between' 
+  headerIcons: {
+    position: 'absolute',
+    top: 5,
+    left: 3,
+    flexDirection: 'row',
+    justifyContent: 'space-between'
   },
-   rightIcons: { flexDirection: 'row', gap: 10 },
+  rightIcons: { flexDirection: 'row', gap: 10 },
 });

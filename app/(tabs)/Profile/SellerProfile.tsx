@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
+
     Alert,
     FlatList,
     Image,
@@ -103,10 +103,10 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                 { headers: { Authorization: `Token ${token}` } }
             );
             const result = await res.json();
-       
+
             if (result.status === "success") setEstates(result.Estates ?? []);
 
-                 console.log("estates",result);
+            console.log("estates", result);
         } catch { }
     };
 
@@ -205,31 +205,31 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
     );
 
     const renderStaffCard = (item: any) => (
-        <TouchableOpacity key={item.id} style={styles.staffCard} onPress={() => { router.push({ pathname: "/Profile/EditStaff", params: { id: item.id } })}}>
+        <TouchableOpacity key={item.id} style={styles.staffCard} onPress={() => { router.push({ pathname: "/Profile/EditStaff", params: { id: item.id } }) }}>
 
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                        {item.profile_image ? (
-                        <Image source={{ uri: item.profile_image }} style={styles.staffAvatar} />
-                    ) : (
-                        <View style={styles.staffAvatarFallback}>
-                            <Text style={styles.staffAvatarInitial}>
-                                {(item.name ?? "?")[0].toUpperCase()}
-                            </Text>
-                        </View>
-                    )}
-            <View style={styles.staffInfo}>
-                        <Text style={styles.staffName}>{item.name}</Text>
-                        <Text style={styles.staffRole}>{item.email}</Text>
+                {item.profile_image ? (
+                    <Image source={{ uri: item.profile_image }} style={styles.staffAvatar} />
+                ) : (
+                    <View style={styles.staffAvatarFallback}>
+                        <Text style={styles.staffAvatarInitial}>
+                            {(item.name ?? "?")[0].toUpperCase()}
+                        </Text>
+                    </View>
+                )}
+                <View style={styles.staffInfo}>
+                    <Text style={styles.staffName}>{item.name}</Text>
+                    <Text style={styles.staffRole}>{item.email}</Text>
+                </View>
+
+                <View style={[styles.staffBadge, { backgroundColor: item.is_active ? "#14532d" : "#374151" }]}>
+                    <Text style={styles.staffBadgeText}>{item.is_active ? "Active" : "Inactive"}</Text>
+                </View>
+
+
             </View>
 
-   <View style={[styles.staffBadge, { backgroundColor: item.is_active ? "#14532d" : "#374151" }]}>
-                <Text style={styles.staffBadgeText}>{item.is_active ? "Active" : "Inactive"}</Text>
-            </View>
 
-
-            </View>
-    
-         
         </TouchableOpacity>
     );
 
@@ -293,12 +293,12 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                             </TouchableOpacity>
                         </View>
                     </View>
- 
+
                     {/* Avatar + name */}
                     <View style={styles.heroBottom}>
                         <View style={styles.sellerAvatarWrap}>
                             {user.profile_image ? (
-                                <Image source={{ uri: user.profile_image }} style={styles.sellerAvatar}  />
+                                <Image source={{ uri: user.profile_image }} style={styles.sellerAvatar} />
                             ) : (
                                 <View style={[styles.sellerAvatar, styles.sellerAvatarFallback]}>
                                     <Text style={styles.sellerAvatarInitial}>
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
         height: 220,
         position: "relative",
         backgroundColor: DARK2,
-     overflow: "visible",
+        overflow: "visible",
     },
     heroPattern: {
         ...StyleSheet.absoluteFillObject,
@@ -501,16 +501,16 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: -19,
         left: 20,
-        zIndex:9000,
+        zIndex: 9000,
     },
-    sellerAvatarWrap: { position: "relative" , overflow: "visible",},
+    sellerAvatarWrap: { position: "relative", overflow: "visible", },
     sellerAvatar: {
         width: 72,
         height: 72,
         borderRadius: 20,
         borderWidth: 3,
         borderColor: GOLD,
-      zIndex:9000
+        zIndex: 9000
     },
     sellerAvatarFallback: {
         backgroundColor: DARK2,
@@ -525,8 +525,8 @@ const styles = StyleSheet.create({
         backgroundColor: DARK,
         borderRadius: 10,
         padding: 1,
-         zIndex: 2000, 
-  elevation: 5, 
+        zIndex: 2000,
+        elevation: 5,
     },
 
     sellerIdentity: {

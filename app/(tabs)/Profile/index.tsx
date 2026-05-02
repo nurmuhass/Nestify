@@ -5,6 +5,7 @@ import { ActivityIndicator, View } from "react-native";
 import BuyerProfile from "./BuyerProfile";
 import SellerProfile from "./SellerProfile";
 import { useFocusEffect, useRouter } from "expo-router";
+import PremiumLoader from "@/components/PremiumLoader";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function ProfileScreen() {
             const freshUser = result.data;
             // Update AsyncStorage so next load is also correct
             await AsyncStorage.setItem("authUser", JSON.stringify(freshUser));
-            setUser(freshUser); 
+            setUser(freshUser);
           } else {
             // Fallback to cached if API fails
             setUser(cached);
@@ -49,11 +50,7 @@ export default function ProfileScreen() {
     }, [])
   );
   if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
+    return <PremiumLoader />;
   }
 
   const isSeller = user?.is_seller == 1;

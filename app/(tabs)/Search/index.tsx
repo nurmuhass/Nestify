@@ -281,7 +281,7 @@ export default function SearchScreen() {
             {/* ── Top bar ── */}
             <View style={styles.topBar}>
                 <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={20} color="#0f172a" />
+                    <Ionicons name="chevron-back" size={20} color="#fff" />
                 </TouchableOpacity>
 
                 <Animated.View style={[styles.searchBox, { borderColor }]}>
@@ -341,7 +341,7 @@ export default function SearchScreen() {
             {/* ── Body ── */}
             {loading ? (
                 <View style={styles.center}>
-                    <ActivityIndicator size="large" color="#3b82f6" />
+                    <ActivityIndicator size="large" color="#c9a84c" />
                     <Text style={styles.loadingText}>Finding properties…</Text>
                 </View>
 
@@ -424,50 +424,50 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
     root: {
         flex: 1,
-        backgroundColor: '#f8fafc',
-        paddingTop: getStatusBarHeight()
-
+        backgroundColor: '#091530',
+        paddingTop: getStatusBarHeight(),
     },
 
     /* Top bar */
     topBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         gap: 10,
-        backgroundColor: '#fff',
+        backgroundColor: '#091530',
     },
     backBtn: {
         width: 38,
         height: 38,
         borderRadius: 12,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#0f2044',
         alignItems: 'center',
         justifyContent: 'center',
     },
+
     searchBox: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8fafc',
-        borderRadius: 14,
-        borderWidth: 1.5,
+        backgroundColor: '#0f2044',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#1e2f5a',
         paddingHorizontal: 12,
-        paddingVertical: Platform.OS === 'ios' ? 10 : 4,
+        paddingVertical: Platform.OS === 'ios' ? 12 : 6,
         gap: 8,
     },
     searchInput: {
         flex: 1,
         fontSize: 15,
-        color: '#0f172a',
-        fontWeight: '400',
+        color: '#fff',
     },
     clearBtn: {
         width: 18,
         height: 18,
         borderRadius: 9,
-        backgroundColor: '#94a3b8',
+        backgroundColor: '#c9a84c',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -476,123 +476,125 @@ const styles = StyleSheet.create({
     filters: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 14,
+        paddingHorizontal: 16,
         paddingVertical: 10,
         gap: 8,
-        backgroundColor: '#fff',
+        backgroundColor: '#091530',
     },
     filterChip: {
         paddingHorizontal: 14,
-        paddingVertical: 6,
+        paddingVertical: 7,
         borderRadius: 20,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#0f2044',
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: '#1e2f5a',
     },
     filterChipActive: {
-        backgroundColor: '#eff6ff',
-        borderColor: '#3b82f6',
+        backgroundColor: '#c9a84c',
+        borderColor: '#c9a84c',
     },
     filterText: {
         fontSize: 13,
-        color: '#64748b',
+        color: '#94a3b8',
         fontWeight: '500',
     },
     filterTextActive: {
-        color: '#3b82f6',
-        fontWeight: '600',
+        color: '#091530',
+        fontWeight: '700',
     },
+
     countBadge: {
         marginLeft: 'auto',
         paddingHorizontal: 10,
         paddingVertical: 4,
-        backgroundColor: '#eff6ff',
+        backgroundColor: '#0f2044',
         borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#c9a84c',
     },
     countText: {
         fontSize: 12,
-        color: '#3b82f6',
+        color: '#f0d98a',
         fontWeight: '600',
     },
 
     divider: {
         height: 0.5,
-        backgroundColor: '#e2e8f0',
+        backgroundColor: '#1e2f5a',
     },
 
     /* Idle / recent */
     idleWrap: {
         flex: 1,
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         paddingTop: 20,
     },
     idleHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 12,
     },
     idleTitle: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
-        color: '#64748b',
-        textTransform: 'uppercase',
-        letterSpacing: 0.6,
+        color: '#94a3b8',
+        letterSpacing: 1,
     },
     clearAll: {
         fontSize: 13,
-        color: '#3b82f6',
-        fontWeight: '500',
+        color: '#c9a84c',
+        fontWeight: '600',
     },
+
     pillsWrap: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-        marginBottom: 32,
+        marginBottom: 30,
     },
     pill: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: '#0f2044',
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: '#1e2f5a',
         borderRadius: 20,
         paddingHorizontal: 12,
         paddingVertical: 7,
-        maxWidth: 180,
     },
     pillText: {
         fontSize: 13,
-        color: '#475569',
-        flexShrink: 1,
+        color: '#e5e7eb',
     },
 
     /* Prompt */
     promptWrap: {
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 30,
         paddingHorizontal: 30,
     },
     promptIcon: {
         width: 72,
         height: 72,
         borderRadius: 36,
-        backgroundColor: '#eff6ff',
+        backgroundColor: '#0f2044',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#c9a84c',
     },
     promptTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#0f172a',
+        color: '#fff',
         marginBottom: 8,
     },
     promptSub: {
         fontSize: 14,
         color: '#94a3b8',
         textAlign: 'center',
-        lineHeight: 21,
+        lineHeight: 20,
     },
 
     /* Center states */
@@ -608,12 +610,12 @@ const styles = StyleSheet.create({
         color: '#94a3b8',
     },
 
-    /* Empty state */
+    /* Empty */
     emptyIcon: {
         width: 72,
         height: 72,
         borderRadius: 36,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#0f2044',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -621,7 +623,7 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 17,
         fontWeight: '700',
-        color: '#0f172a',
+        color: '#fff',
         marginBottom: 6,
     },
     emptySub: {
@@ -632,13 +634,13 @@ const styles = StyleSheet.create({
     emptyReset: {
         paddingHorizontal: 24,
         paddingVertical: 10,
-        backgroundColor: '#3b82f6',
+        backgroundColor: '#c9a84c',
         borderRadius: 22,
     },
     emptyResetText: {
-        color: '#fff',
+        color: '#091530',
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
     },
 
     /* Results list */
@@ -647,93 +649,102 @@ const styles = StyleSheet.create({
         paddingBottom: 40,
     },
 
-    /* Result card */
+    /* Cards */
     card: {
         flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 16,
+        backgroundColor: '#0f2044',
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: '#1e2f5a',
         overflow: 'hidden',
-        borderWidth: 0.5,
-        borderColor: '#e2e8f0',
     },
+
     cardThumb: {
-        width: 100,
-        height: 100,
-        position: 'relative',
+        width: 110,
+        height: 110,
     },
+
     cardImg: {
         width: '100%',
         height: '100%',
     },
+
     cardImgFallback: {
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#091530',
         alignItems: 'center',
         justifyContent: 'center',
     },
+
     cardTagWrap: {
         position: 'absolute',
-        bottom: 7,
-        left: 7,
-        backgroundColor: 'rgba(15,23,42,0.75)',
+        bottom: 8,
+        left: 8,
+        backgroundColor: 'rgba(201,168,76,0.9)',
         borderRadius: 6,
-        paddingHorizontal: 7,
+        paddingHorizontal: 8,
         paddingVertical: 3,
     },
     cardTag: {
         fontSize: 10,
-        color: '#fff',
-        fontWeight: '600',
-        letterSpacing: 0.3,
+        color: '#091530',
+        fontWeight: '700',
     },
+
     cardBody: {
         flex: 1,
         paddingHorizontal: 12,
         paddingVertical: 12,
-        gap: 4,
+        gap: 5,
     },
+
     cardName: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#0f172a',
-        lineHeight: 19,
+        color: '#fff',
     },
+
     cardRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 3,
+        gap: 4,
     },
+
     cardLoc: {
         fontSize: 12,
         color: '#94a3b8',
         flex: 1,
     },
+
     cardFeatures: {
         flexDirection: 'row',
         gap: 6,
         marginTop: 2,
     },
+
     featureChip: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 3,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#091530',
         borderRadius: 6,
         paddingHorizontal: 7,
         paddingVertical: 3,
     },
+
     featureText: {
         fontSize: 11,
-        color: '#64748b',
-        fontWeight: '500',
+        color: '#cbd5f5',
     },
+
     cardPrice: {
         fontSize: 15,
         fontWeight: '800',
-        color: '#1d4ed8',
+        color: '#f0d98a',
         marginTop: 4,
     },
+
     cardChevron: {
         marginRight: 12,
+        color: '#c9a84c',
     },
 });

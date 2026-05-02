@@ -1,3 +1,4 @@
+import PremiumLoader from "@/components/PremiumLoader";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
@@ -157,14 +158,14 @@ export default function EditStaff() {
           try {
             const token = await AsyncStorage.getItem("authToken");
 
-const res = await fetch(`${BASE}/NestifyAPI/delete_staff.php`, {
-  method: "POST",
-  headers: {
-    Authorization: `Token ${token}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ userId: id }),
-});
+            const res = await fetch(`${BASE}/NestifyAPI/delete_staff.php`, {
+              method: "POST",
+              headers: {
+                Authorization: `Token ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ userId: id }),
+            });
 
             const result = await res.json();
 
@@ -182,13 +183,12 @@ const res = await fetch(`${BASE}/NestifyAPI/delete_staff.php`, {
     ]);
   };
 
+
+
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={GOLD} />
-      </View>
-    );
+    return <PremiumLoader />;
   }
+
 
   return (
     <View style={styles.container}>
@@ -198,7 +198,7 @@ const res = await fetch(`${BASE}/NestifyAPI/delete_staff.php`, {
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.title}>Edit Staff</Text>
-      
+
         <TouchableOpacity onPress={handleDelete} style={{ marginLeft: "auto" }}>
           <Ionicons name="trash" size={22} color="#ff4d4d" />
         </TouchableOpacity>

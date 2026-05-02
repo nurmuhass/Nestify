@@ -1,6 +1,6 @@
 import React from 'react';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useRouter,useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,30 +15,40 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { Notification, useNotifications } from '../../../hooks/useNotifications';
 
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  danger: '#ef4444'
+};
 
 // ── Icon per notification type ────────────────────────────────────────────────
 const typeConfig: Record<
   string,
   { icon: string; bg: string; color: string }
 > = {
-  review:    { icon: 'star',               bg: '#FFF9C4', color: '#F59E0B' },
-  message:   { icon: 'chatbubble',         bg: '#E3F2FD', color: '#1976D2' },
-  purchase:  { icon: 'bag-check',          bg: '#E8F5E9', color: '#2E7D32' },
-  favorite:  { icon: 'heart',              bg: '#FCE4EC', color: '#E91E63' },
-  approval:  { icon: 'checkmark-circle',   bg: '#E8F5E9', color: '#059669' },
-  rejection: { icon: 'close-circle',       bg: '#FEECEC', color: '#DC2626' },
-  system:    { icon: 'notifications',      bg: '#F3F4F6', color: '#6B7280' },
+  review: { icon: 'star', bg: 'rgba(201, 168, 76, 0.15)', color: COLORS.gold },
+  message: { icon: 'chatbubble', bg: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6' },
+  purchase: { icon: 'bag-check', bg: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' },
+  favorite: { icon: 'heart', bg: 'rgba(236, 72, 153, 0.15)', color: '#ec4899' },
+  approval: { icon: 'checkmark-circle', bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981' },
+  rejection: { icon: 'close-circle', bg: 'rgba(239, 68, 68, 0.15)', color: COLORS.danger },
+  system: { icon: 'notifications', bg: COLORS.border, color: COLORS.textSecondary },
 };
 
 
 
 
 const formatTime = (dateString: string): string => {
-  const now  = new Date();
+  const now = new Date();
   const then = new Date(dateString);
   const diff = Math.floor((now.getTime() - then.getTime()) / 1000);
 
-  if (diff < 60)   return 'Just now';
+  if (diff < 60) return 'Just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
@@ -49,8 +59,8 @@ const isToday = (dateString: string): boolean => {
   const d = new Date(dateString);
   const n = new Date();
   return d.getDate() === n.getDate() &&
-    d.getMonth()     === n.getMonth() &&
-    d.getFullYear()  === n.getFullYear();
+    d.getMonth() === n.getMonth() &&
+    d.getFullYear() === n.getFullYear();
 };
 
 export default function NotificationsScreen() {
@@ -92,27 +102,27 @@ export default function NotificationsScreen() {
     ]);
   };
 
-useFocusEffect(
-  useCallback(() => {
-    return () => {
-      
-      if (unreadCount > 0) {
-        markAllRead();
-      }
-    };
-  }, [unreadCount])
-);
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+
+        if (unreadCount > 0) {
+          markAllRead();
+        }
+      };
+    }, [unreadCount])
+  );
 
   const handleTap = async (item: Notification) => {
     if (!item.is_read) await markRead(item.id);
     // Navigate to related content
     if (item.related_id) {
       if (item.type === 'review' || item.type === 'purchase' ||
-          item.type === 'favorite' || item.type === 'approval' ||
-          item.type === 'rejection') {
+        item.type === 'favorite' || item.type === 'approval' ||
+        item.type === 'rejection') {
         // router.push({ pathname: './Home/Company/Details/[id]', params: { id: item.related_id } });
         //  router.push(`/Home/Company/Details?id=${item.id}`)
-        
+
       } else if (item.type === 'message') {
         router.push('/Profile/Messages');
       }
@@ -120,11 +130,11 @@ useFocusEffect(
   };
 
   // Split into today / older
-  const todayItems  = notifications.filter(n => isToday(n.created_at));
-  const olderItems  = notifications.filter(n => !isToday(n.created_at));
+  const todayItems = notifications.filter(n => isToday(n.created_at));
+  const olderItems = notifications.filter(n => !isToday(n.created_at));
 
   const renderItem = ({ item }: { item: Notification }) => {
-    const cfg    = typeConfig[item.type] ?? typeConfig.system;
+    const cfg = typeConfig[item.type] ?? typeConfig.system;
     const unread = !item.is_read;
 
     return (
@@ -170,8 +180,8 @@ useFocusEffect(
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {deleting === item.id
-              ? <ActivityIndicator size="small" color="#ccc" />
-              : <Ionicons name="trash-outline" size={16} color="#ccc" />
+              ? <ActivityIndicator size="small" color={COLORS.gold} />
+              : <Ionicons name="trash-outline" size={16} color={COLORS.textSecondary} />
             }
           </TouchableOpacity>
         </View>
@@ -186,8 +196,8 @@ useFocusEffect(
   const renderList = () => {
     if (loading) {
       return (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#007bff" />
+        <View style={[styles.center]}>
+          <ActivityIndicator size="large" color={COLORS.gold} />
         </View>
       );
     }
@@ -196,7 +206,7 @@ useFocusEffect(
       return (
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="notifications-outline" size={36} color="#ccc" />
+            <Ionicons name="notifications-outline" size={36} color={COLORS.gold} />
           </View>
           <Text style={styles.emptyTitle}>No notifications yet</Text>
           <Text style={styles.emptySub}>
@@ -217,7 +227,7 @@ useFocusEffect(
         onEndReached={hasMore ? loadMore : undefined}
         onEndReachedThreshold={0.3}
         ListFooterComponent={
-          hasMore ? <ActivityIndicator style={{ marginVertical: 16 }} color="#007bff" /> : null
+          hasMore ? <ActivityIndicator style={{ marginVertical: 16 }} color={COLORS.gold} /> : null
         }
         ListHeaderComponent={
           <>
@@ -225,20 +235,20 @@ useFocusEffect(
               <>
                 {renderSectionHeader('Today')}
                 {todayItems.map(item => (
-  <React.Fragment key={item.id}>
-    {renderItem({ item })}
-  </React.Fragment>
-))}
+                  <React.Fragment key={item.id}>
+                    {renderItem({ item })}
+                  </React.Fragment>
+                ))}
               </>
             )}
             {olderItems.length > 0 && (
               <>
                 {renderSectionHeader('Earlier')}
                 {olderItems.map(item => (
-  <React.Fragment key={item.id}>
-    {renderItem({ item })}
-  </React.Fragment>
-))}
+                  <React.Fragment key={item.id}>
+                    {renderItem({ item })}
+                  </React.Fragment>
+                ))}
               </>
             )}
           </>
@@ -252,7 +262,7 @@ useFocusEffect(
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color="#111" />
+          <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
 
         <View>
@@ -265,12 +275,12 @@ useFocusEffect(
         <View style={styles.headerActions}>
           {unreadCount > 0 && (
             <TouchableOpacity style={styles.headerBtn} onPress={markAllRead}>
-              <MaterialIcons name="done-all" size={20} color="#007bff" />
+              <MaterialIcons name="done-all" size={20} color={COLORS.gold} />
             </TouchableOpacity>
           )}
           {notifications.length > 0 && (
             <TouchableOpacity style={styles.headerBtn} onPress={handleClearAll}>
-              <Ionicons name="trash-outline" size={18} color="#dc3545" />
+              <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
             </TouchableOpacity>
           )}
         </View>
@@ -284,7 +294,7 @@ useFocusEffect(
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f8fa',
+    backgroundColor: COLORS.bg,
     paddingTop: getStatusBarHeight(),
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -295,27 +305,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
-    borderBottomWidth: 0.5,
-    borderColor: '#e5e7eb',
+    backgroundColor: COLORS.card,
+    borderBottomWidth: 1,
+    borderColor: COLORS.border,
     gap: 12,
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: { fontSize: 17, fontWeight: 'bold', color: '#111' },
-  headerSub:   { fontSize: 12, color: '#007bff', marginTop: 1 },
+  headerTitle: { fontSize: 17, fontWeight: 'bold', color: COLORS.textPrimary },
+  headerSub: { fontSize: 12, color: COLORS.gold, marginTop: 1 },
   headerActions: { marginLeft: 'auto', flexDirection: 'row', gap: 6 },
   headerBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -324,7 +334,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#888',
+    color: COLORS.textSecondary,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 6,
@@ -336,17 +346,17 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
     marginHorizontal: 12,
     marginVertical: 3,
     borderRadius: 14,
     padding: 14,
-    borderWidth: 0.5,
-    borderColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   itemUnread: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#BFDBFE',
+    backgroundColor: 'rgba(201, 168, 76, 0.08)',
+    borderColor: COLORS.gold,
   },
 
   // Avatar
@@ -373,7 +383,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#fff',
+    borderColor: COLORS.card,
   },
 
   // Content
@@ -381,20 +391,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#555',
+    color: COLORS.textSecondary,
     marginBottom: 2,
   },
   titleUnread: {
     fontWeight: '700',
-    color: '#111',
+    color: COLORS.textPrimary,
   },
   message: {
     fontSize: 13,
-    color: '#666',
+    color: COLORS.textSecondary,
     lineHeight: 18,
     marginBottom: 5,
   },
-  time: { fontSize: 11, color: '#aaa' },
+  time: { fontSize: 11, color: COLORS.textSecondary, opacity: 0.7 },
 
   // Right side
   right: {
@@ -406,7 +416,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#007bff',
+    backgroundColor: COLORS.gold,
   },
   deleteBtn: { padding: 2 },
 
@@ -422,14 +432,16 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: COLORS.card,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
+  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: COLORS.textPrimary },
   emptySub: {
     fontSize: 13,
-    color: '#888',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 40,
     lineHeight: 20,

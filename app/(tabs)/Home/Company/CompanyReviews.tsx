@@ -20,34 +20,46 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { CompanyReview, useCompanyReviews } from '@/hooks/useCompanyReviews';
 
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  danger: '#ef4444'
+};
+
 const FILTERS = [
-  { label: 'All',  value: null },
-  { label: '5 ★',  value: 5 },
-  { label: '4 ★',  value: 4 },
-  { label: '3 ★',  value: 3 },
-  { label: '2 ★',  value: 2 },
-  { label: '1 ★',  value: 1 },
+  { label: 'All', value: null },
+  { label: '5 ★', value: 5 },
+  { label: '4 ★', value: 4 },
+  { label: '3 ★', value: 3 },
+  { label: '2 ★', value: 2 },
+  { label: '1 ★', value: 1 },
 ];
 
 const formatTime = (d: string) => {
   const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-  if (diff < 60)     return 'Just now';
-  if (diff < 3600)   return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400)  return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 export default function CompanyReviewsScreen() {
   const router = useRouter();
-  const { company_id, company_name } = useLocalSearchParams() as {
+  const { company_id, company_name, company_image } = useLocalSearchParams() as {
     company_id: string;
     company_name: string;
+    company_image: string;
   };
   const companyId = Number(company_id);
 
-  const [modalVisible,   setModalVisible]   = useState(false);
-  const [editingReview,  setEditingReview]  = useState<CompanyReview | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingReview, setEditingReview] = useState<CompanyReview | null>(null);
 
   const {
     reviews, summary, loading, submitting,
@@ -78,7 +90,7 @@ export default function CompanyReviewsScreen() {
         onPress={() => applyFilter(filterRating === star ? null : star)}
       >
         <Text style={styles.ratingBarStar}>{star}</Text>
-        <MaterialIcons name="star" size={12} color="#F59E0B" />
+        <MaterialIcons name="star" size={12} color={COLORS.gold} />
         <View style={styles.ratingBarTrack}>
           <View style={[styles.ratingBarFill, { width: `${pct}%` as any }]} />
         </View>
@@ -98,7 +110,7 @@ export default function CompanyReviewsScreen() {
               key={i}
               name="star"
               size={18}
-              color={i <= Math.round(summary?.average ?? 0) ? '#F59E0B' : '#E5E7EB'}
+              color={i <= Math.round(summary?.average ?? 0) ? COLORS.gold : COLORS.border}
             />
           ))}
         </View>
@@ -147,7 +159,7 @@ export default function CompanyReviewsScreen() {
                   key={i}
                   name="star"
                   size={13}
-                  color={i <= item.rating ? '#F59E0B' : '#E5E7EB'}
+                  color={i <= item.rating ? COLORS.gold : COLORS.border}
                 />
               ))}
               <Text style={styles.reviewTime}> · {formatTime(item.created_at)}</Text>
@@ -159,13 +171,13 @@ export default function CompanyReviewsScreen() {
                 style={styles.actionBtn}
                 onPress={() => { setEditingReview(item); setModalVisible(true); }}
               >
-                <Ionicons name="pencil-outline" size={15} color="#007bff" />
+                <Ionicons name="pencil-outline" size={15} color={COLORS.gold} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => handleDelete(item.id)}
               >
-                <Ionicons name="trash-outline" size={15} color="#dc3545" />
+                <Ionicons name="trash-outline" size={15} color={COLORS.danger} />
               </TouchableOpacity>
             </View>
           )}
@@ -201,7 +213,7 @@ export default function CompanyReviewsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color="#111" />
+          <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Reviews</Text>
@@ -213,15 +225,15 @@ export default function CompanyReviewsScreen() {
           style={styles.writeBtn}
           onPress={() => { setEditingReview(null); setModalVisible(true); }}
         >
-          <Ionicons name={hasReviewed ? 'pencil-outline' : 'add'} size={17} color="#007bff" />
+          <Ionicons name={hasReviewed ? 'pencil-outline' : 'add'} size={17} color={COLORS.gold} />
           <Text style={styles.writeBtnText}>{hasReviewed ? 'Edit' : 'Review'}</Text>
         </TouchableOpacity>
       </View>
 
-         <View style={styles.ownerSection}>
-        <Image source={require('@/assets/images/anderson.jpg')} style={styles.ownerImage} />
+      <View style={styles.ownerSection}>
+        <Image source={{ uri: company_image }} style={styles.ownerImage} />
         <View>
-          <Text style={styles.ownerName}>Mandella</Text>
+          <Text style={styles.ownerName}>{company_name}</Text>
           <Text style={{ color: 'gray' }}>Owner</Text>
         </View>
         <Ionicons name="chatbubble-ellipses-outline" size={24} style={{ marginLeft: 'auto' }} />
@@ -273,10 +285,10 @@ export default function CompanyReviewsScreen() {
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator style={{ marginTop: 40 }} color="#007bff" />
+            <ActivityIndicator style={{ marginTop: 40 }} color={COLORS.gold} />
           ) : (
             <View style={styles.empty}>
-              <Ionicons name="star-outline" size={44} color="#ccc" />
+              <Ionicons name="star-outline" size={44} color={COLORS.gold} />
               <Text style={styles.emptyTitle}>No reviews yet</Text>
               <Text style={styles.emptySub}>
                 Be the first to share your experience with this agent
@@ -292,7 +304,7 @@ export default function CompanyReviewsScreen() {
         }
         ListFooterComponent={
           hasMore
-            ? <ActivityIndicator style={{ marginVertical: 20 }} color="#007bff" />
+            ? <></>
             : null
         }
         renderItem={({ item }) => {
@@ -315,103 +327,104 @@ export default function CompanyReviewsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f8fa', paddingTop: getStatusBarHeight() },
+  container: { flex: 1, backgroundColor: COLORS.bg, paddingTop: getStatusBarHeight() },
 
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 16, paddingVertical: 14,
-    backgroundColor: '#fff', borderBottomWidth: 0.5, borderColor: '#e5e7eb',
+    backgroundColor: COLORS.card, borderBottomWidth: 1, borderColor: COLORS.border,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.border, alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#111' },
-  headerSub:   { fontSize: 12, color: '#888', marginTop: 1 },
+  headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.textPrimary },
+  headerSub: { fontSize: 12, color: COLORS.textSecondary, marginTop: 1 },
   writeBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 20, borderWidth: 1, borderColor: '#007bff',
+    borderRadius: 20, borderWidth: 1, borderColor: COLORS.gold,
   },
-  writeBtnText: { fontSize: 13, fontWeight: '600', color: '#007bff' },
+  writeBtnText: { fontSize: 13, fontWeight: '600', color: COLORS.gold },
 
   summaryCard: {
     flexDirection: 'row', gap: 16,
-    backgroundColor: '#fff', margin: 16, borderRadius: 16,
-    padding: 16, borderWidth: 0.5, borderColor: '#e5e7eb',
+    backgroundColor: COLORS.card, margin: 16, borderRadius: 16,
+    padding: 16, borderWidth: 1, borderColor: COLORS.border,
   },
-  summaryLeft:  { alignItems: 'center', justifyContent: 'center', minWidth: 80 },
-  avgScore:     { fontSize: 44, fontWeight: '800', color: '#111', lineHeight: 50 },
+  summaryLeft: { alignItems: 'center', justifyContent: 'center', minWidth: 80 },
+  avgScore: { fontSize: 44, fontWeight: '800', color: COLORS.gold, lineHeight: 50 },
   summaryStars: { flexDirection: 'row', gap: 2, marginVertical: 4 },
-  summaryTotal: { fontSize: 12, color: '#888' },
+  summaryTotal: { fontSize: 12, color: COLORS.textSecondary },
   summaryRight: { flex: 1, gap: 6, justifyContent: 'center' },
   ratingBarRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  ratingBarStar: { fontSize: 12, color: '#555', width: 10, textAlign: 'right' },
+  ratingBarStar: { fontSize: 12, color: COLORS.textSecondary, width: 10, textAlign: 'right' },
   ratingBarTrack: {
-    flex: 1, height: 6, backgroundColor: '#f3f4f6',
+    flex: 1, height: 6, backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 3, overflow: 'hidden',
   },
-  ratingBarFill: { height: '100%', backgroundColor: '#F59E0B', borderRadius: 3 },
-  ratingBarCount: { fontSize: 11, color: '#888', width: 24, textAlign: 'right' },
+  ratingBarFill: { height: '100%', backgroundColor: COLORS.gold, borderRadius: 3 },
+  ratingBarCount: { fontSize: 11, color: COLORS.textSecondary, width: 24, textAlign: 'right' },
 
   filterList: { paddingHorizontal: 16, paddingBottom: 10, gap: 8 },
   filterPill: {
     paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20,
-    backgroundColor: '#f3f4f6', borderWidth: 0.5, borderColor: '#e5e7eb',
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
   },
-  filterPillActive: { backgroundColor: '#007bff', borderColor: '#007bff' },
-  filterText:       { fontSize: 13, color: '#555', fontWeight: '500' },
-  filterTextActive: { color: '#fff' },
+  filterPillActive: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
+  filterText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
+  filterTextActive: { color: COLORS.bg, fontWeight: '600' },
 
   sectionLabel: {
-    fontSize: 13, fontWeight: '700', color: '#888',
+    fontSize: 13, fontWeight: '700', color: COLORS.textSecondary,
     marginHorizontal: 16, marginTop: 8, marginBottom: 6,
     textTransform: 'uppercase', letterSpacing: 0.5,
   },
   ownerSection: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#eef6ff',
-    padding: 10, borderRadius: 12, marginBottom: 20,marginTop: 10, marginHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card,
+    padding: 10, borderRadius: 12, marginBottom: 20, marginTop: 10, marginHorizontal: 16,
+    borderWidth: 1, borderColor: COLORS.border,
   },
   ownerImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
-  ownerName: { fontWeight: 'bold', fontSize: 16 },
+  ownerName: { fontWeight: 'bold', fontSize: 16, color: COLORS.textPrimary },
   reviewCard: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 14,
+    backgroundColor: COLORS.card, borderRadius: 14, padding: 14,
     marginHorizontal: 16, marginBottom: 10,
-    borderWidth: 0.5, borderColor: '#e5e7eb',
+    borderWidth: 1, borderColor: COLORS.border,
   },
-  reviewCardOwn: { borderColor: '#BFDBFE', backgroundColor: '#EFF6FF' },
+  reviewCardOwn: { borderColor: COLORS.gold, backgroundColor: 'rgba(201, 168, 76, 0.1)' },
   ownBadge: {
-    alignSelf: 'flex-start', backgroundColor: '#DBEAFE',
+    alignSelf: 'flex-start', backgroundColor: COLORS.gold,
     borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 8,
   },
-  ownBadgeText: { fontSize: 11, fontWeight: '700', color: '#1D4ED8' },
+  ownBadgeText: { fontSize: 11, fontWeight: '700', color: COLORS.bg },
   reviewHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 },
   avatar: { width: 40, height: 40, borderRadius: 20 },
   avatarFallback: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#B5D4F4', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center',
   },
-  avatarInitial:  { fontSize: 16, fontWeight: '600', color: '#0C447C' },
-  reviewerInfo:   { flex: 1 },
-  reviewerName:   { fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 3 },
-  starsRow:       { flexDirection: 'row', alignItems: 'center' },
-  reviewTime:     { fontSize: 11, color: '#aaa' },
-  reviewActions:  { flexDirection: 'row', gap: 6 },
+  avatarInitial: { fontSize: 16, fontWeight: '600', color: COLORS.bg },
+  reviewerInfo: { flex: 1 },
+  reviewerName: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 3 },
+  starsRow: { flexDirection: 'row', alignItems: 'center' },
+  reviewTime: { fontSize: 11, color: COLORS.textSecondary },
+  reviewActions: { flexDirection: 'row', gap: 6 },
   actionBtn: {
     width: 30, height: 30, borderRadius: 8,
-    backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.border, alignItems: 'center', justifyContent: 'center',
   },
-  reviewComment: { fontSize: 13, color: '#444', lineHeight: 20 },
-  readMore:      { fontSize: 12, color: '#007bff', marginTop: 4, fontWeight: '600' },
-  reviewImgs:    { marginTop: 10 },
-  reviewImg:     { width: 80, height: 80, borderRadius: 8, marginRight: 8 },
+  reviewComment: { fontSize: 13, color: COLORS.textPrimary, lineHeight: 20 },
+  readMore: { fontSize: 12, color: COLORS.gold, marginTop: 4, fontWeight: '600' },
+  reviewImgs: { marginTop: 10 },
+  reviewImg: { width: 80, height: 80, borderRadius: 8, marginRight: 8, borderColor: COLORS.border, borderWidth: 1 },
 
   empty: { alignItems: 'center', paddingTop: 60, gap: 12, paddingHorizontal: 40 },
-  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
-  emptySub:   { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: COLORS.textPrimary },
+  emptySub: { fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20 },
   emptyBtn: {
     marginTop: 4, paddingHorizontal: 24, paddingVertical: 10,
-    borderRadius: 20, backgroundColor: '#007bff',
+    borderRadius: 20, backgroundColor: COLORS.gold,
   },
-  emptyBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  emptyBtnText: { color: COLORS.bg, fontWeight: '600', fontSize: 14 },
 });

@@ -22,7 +22,7 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
     const router = useRouter();
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const isPremium = user?.planType === "premium";
+    const isPremium = user?.plan_type === "premium";
 
     useFocusEffect(
         useCallback(() => {
@@ -202,7 +202,7 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
                     </View>
 
                     {loading ? (
-                        <ActivityIndicator color="#007bff" style={{ marginTop: 20 }} />
+                        <ActivityIndicator color="#c9a84c" style={{ marginTop: 20 }} />
                     ) : saved.length === 0 ? (
                         <View style={styles.buyerEmpty}>
                             <Ionicons name="heart-outline" size={32} color="#ddd" />

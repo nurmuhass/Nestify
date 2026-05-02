@@ -20,6 +20,14 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import PricingModal from "../../../components/PricingModal";
+import { Ionicons } from "@expo/vector-icons";
+
+
+// Add these constants above the component
+const GOLD = "#C9A84C";
+const NAVY = "#1C2B4A";
+const LIGHT = "#F8F9FB";
+const BLUE = "#2563EB";  // keep your existing blue for highlights
 
 // Multi-step form component
 const index = () => {
@@ -400,7 +408,7 @@ const index = () => {
       setUser(userObj);
       console.log("User data:", userObj);
       // Only show pricing modal if user plan is not premium
-      if (userObj.planType !== "premium") {
+      if (userObj.plan_type !== "premium") {
         setPricingVisible(true);
       } else {
         setPricingVisible(false);
@@ -429,7 +437,7 @@ const index = () => {
   //   };
 
   const pickImage = async () => {
-    const maxImages = user.planType === "premium" ? 15 : 2;
+    const maxImages = user.plan_type === "premium" ? 15 : 2;
 
     if (formData.images.length >= maxImages) {
       Alert.alert(
@@ -481,7 +489,7 @@ const index = () => {
   // Define the steps of the form
   const steps = [
     {
-      title: "Fill detail of your real estate",
+      title: "Fill detail of your real estate property",
       render: () => (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -559,7 +567,7 @@ const index = () => {
                       style={[
                         styles.toggleButton,
                         formData.listingType === type &&
-                          styles.toggleButtonActive,
+                        styles.toggleButtonActive,
                       ]}
                       onPress={() => handleChange("listingType", type)}
                     >
@@ -578,61 +586,68 @@ const index = () => {
 
                 {(formData.listingType === "Sell" ||
                   formData.listingType === "Both") && (
-                  <>
-                    <Text style={styles.sectionTitle}>Sell Price</Text>
-                    <View style={styles.priceInputContainer}>
-                      <TextInput
-                        style={styles.priceInput}
-                        value={formData.sellPrice}
-                        onChangeText={(text) => handleChange("sellPrice", text)}
-                        keyboardType="numeric"
-                        placeholder="Enter Sell Price"
-                      />
-                      <Text style={styles.currencyLabel}>N</Text>
-                    </View>
-                  </>
-                )}
+                    <>
+                      <Text style={styles.sectionTitle}>Sell Price</Text>
+                      <View style={styles.priceInputContainer}>
+                        <TextInput
+                          style={styles.priceInput}
+                          value={formData.sellPrice}
+                          onChangeText={(text) => handleChange("sellPrice", text)}
+                          keyboardType="numeric"
+                          placeholder="Enter Sell Price"
+                        />
+                        <Text style={styles.currencyLabel}>N</Text>
+                      </View>
+                    </>
+                  )}
 
                 {(formData.listingType === "Rent" ||
                   formData.listingType === "Both") && (
-                  <>
-                    <Text
-                      style={{
-                        marginTop: 2,
-                        marginBottom: 8,
-                        fontSize: 16,
-                        color: "#4B5563",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Rent Price
-                    </Text>
-                    <View style={styles.priceInputContainer}>
-                      <TextInput
-                        style={styles.priceInput}
-                        value={formData.rentPrice}
-                        onChangeText={(text) => handleChange("rentPrice", text)}
-                        keyboardType="numeric"
-                        placeholder="Enter Rent Price"
-                      />
-                      <Text style={styles.currencyLabel}>N</Text>
-                    </View>
-                  </>
-                )}
+                    <>
+                      <Text
+                        style={{
+                          marginTop: 2,
+                          marginBottom: 8,
+                          fontSize: 16,
+                          color: "#4B5563",
+                          fontWeight: "500",
+                        }}
+                      >
+                        Rent Price
+                      </Text>
+                      <View style={styles.priceInputContainer}>
+                        <TextInput
+                          style={styles.priceInput}
+                          value={formData.rentPrice}
+                          onChangeText={(text) => handleChange("rentPrice", text)}
+                          keyboardType="numeric"
+                          placeholder="Enter Rent Price"
+                        />
+                        <Text style={styles.currencyLabel}>N</Text>
+                      </View>
+                    </>
+                  )}
               </View>
 
               <View style={styles.formField}>
-                <TextInput
-                  value={formData.description}
-                  onChangeText={(text) => handleChange("description", text)}
-                  placeholder="Enter full description"
-                  multiline
-                  numberOfLines={4} // Adjust the number of visible lines
-                  style={[
-                    styles.input,
-                    { height: 100, textAlignVertical: "top" },
-                  ]} // Custom styling
-                />
+                <Text style={styles.label}>Description</Text>
+                <View style={styles.textAreaWrapper}>
+                  <Ionicons
+                    name="document-text-outline"
+                    size={18}
+                    color="#9ca3af"
+                    style={styles.textAreaIcon}
+                  />
+                  <TextInput
+                    value={formData.description}
+                    onChangeText={(text) => handleChange("description", text)}
+                    placeholder="Enter full description..."
+                    placeholderTextColor="#9ca3af"
+                    multiline
+                    textAlignVertical="top"
+                    style={styles.textArea}
+                  />
+                </View>
               </View>
             </View>
           </ScrollView>
@@ -656,7 +671,7 @@ const index = () => {
             }}
           >
             You can select upto{" "}
-            {user ? (user.planType === "premium" ? 15 : 2) : ""} images
+            {user ? (user.plan_type === "premium" ? 15 : 2) : ""} images
           </Text>
 
           <View
@@ -669,7 +684,7 @@ const index = () => {
           >
             <Text style={{ color: "blue", fontSize: 14 }}>
               {user
-                ? user.planType === "freemium"
+                ? user.plan_type === "freemium"
                   ? "Upgrade to Premium to upload more images "
                   : ""
                 : ""}
@@ -728,96 +743,98 @@ const index = () => {
     {
       title: "Where is the location?",
       render: () => (
-   
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <SafeAreaProvider style={{ flex: 1,
-    padding: 10,}}>
-              <Text style={styles.stepTitle}>
-                Where is the <Text style={styles.highlight}>location</Text>?
+
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <SafeAreaProvider style={{
+            flex: 1,
+            padding: 10,
+          }}>
+            <Text style={styles.stepTitle}>
+              Where is the <Text style={styles.highlight}>location</Text>?
+            </Text>
+
+            <View style={{ padding: 6 }}>
+              <Text style={{ marginBottom: 8 }}>Select State</Text>
+              <DropDownPicker
+                open={openState}
+                value={state}
+                items={stateItems}
+                setOpen={setOpenState}
+                listMode="MODAL"
+                setValue={(callback) => {
+                  const value =
+                    typeof callback === "function"
+                      ? callback(state)
+                      : callback;
+                  setState(value);
+                  const selected = stateItems.find(
+                    (item) => item.value === value,
+                  );
+                  handleChange("state", selected ? selected.label : value);
+                }}
+                setItems={setStateItems}
+                placeholder="Select a state"
+                searchable={true}
+                zIndex={2000}
+
+                dropDownContainerStyle={{
+                  maxHeight: 500,
+                }}
+              />
+
+              <Text style={{ marginTop: 20, marginBottom: 1 }}>
+                Select City{" "}
               </Text>
+              <DropDownPicker
+                open={openCity}
+                value={city}
+                items={cityItems}
+                setOpen={setOpenCity}
+                listMode="MODAL"
+                setValue={(callback) => {
+                  const value =
+                    typeof callback === "function"
+                      ? callback(city)
+                      : callback;
+                  setCity(value);
+                  const selected = cityItems.find(
+                    (item) => item.value === value,
+                  );
+                  handleChange("city", selected ? selected.label : value);
+                }}
+                setItems={setCityItems}
+                placeholder="Select City"
+                searchable={true}
+                zIndex={1800}
 
-              <View style={{ padding: 6 }}>
-                <Text style={{ marginBottom: 8 }}>Select State</Text>
-                <DropDownPicker
-                  open={openState}
-                  value={state}
-                  items={stateItems}
-                  setOpen={setOpenState}
-                  listMode="MODAL"
-                  setValue={(callback) => {
-                    const value =
-                      typeof callback === "function"
-                        ? callback(state)
-                        : callback;
-                    setState(value);
-                    const selected = stateItems.find(
-                      (item) => item.value === value,
-                    );
-                    handleChange("state", selected ? selected.label : value);
-                  }}
-                  setItems={setStateItems}
-                  placeholder="Select a state"
-                  searchable={true}
-                  zIndex={2000}
-              
-                  dropDownContainerStyle={{
-                    maxHeight: 500,
-                  }}
-                />
+                dropDownContainerStyle={{
+                  maxHeight: 900,
+                }}
+              />
+            </View>
 
-                <Text style={{ marginTop: 20, marginBottom: 1 }}>
-                  Select City{" "}
-                </Text>
-                <DropDownPicker
-                  open={openCity}
-                  value={city}
-                  items={cityItems}
-                  setOpen={setOpenCity}
-                  listMode="MODAL"
-                  setValue={(callback) => {
-                    const value =
-                      typeof callback === "function"
-                        ? callback(city)
-                        : callback;
-                    setCity(value);
-                    const selected = cityItems.find(
-                      (item) => item.value === value,
-                    );
-                    handleChange("city", selected ? selected.label : value);
-                  }}
-                  setItems={setCityItems}
-                  placeholder="Select City"
-                  searchable={true}
-                         zIndex={1800}
-            
-                  dropDownContainerStyle={{
-                    maxHeight: 900,
-                  }}
-                />
-              </View>
+            <View style={styles.formField}>
+              <Text style={{ marginTop: 5, marginBottom: 5, marginLeft: 12 }}>
+                Enter Landmark / Area
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  padding: 14,
+                  borderRadius: 4,
+                  paddingLeft: 5,
+                  marginHorizontal: 10,
+                  borderColor: "#555",
+                  borderWidth: 1,
+                }}
+                value={formData.location}
+                onChangeText={(text) => handleChange("location", text)}
+                placeholder="Landmark / Area"
+              />
+            </View>
+          </SafeAreaProvider>
+        </ScrollView>
 
-              <View style={styles.formField}>
-                <Text style={{ marginTop: 5, marginBottom: 5, marginLeft: 12 }}>
-                  Enter Landmark / Area
-                </Text>
-                <TextInput
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    padding: 14,
-                    borderRadius: 4,
-                    paddingLeft: 5,
-                    marginHorizontal: 10,
-                    borderColor: "#555",
-                    borderWidth: 1,
-                  }}
-                  value={formData.location}
-                  onChangeText={(text) => handleChange("location", text)}
-                  placeholder="Landmark / Area"
-                />
-              </View>
-            </SafeAreaProvider>
-          </ScrollView>
-       
       ),
     },
     {
@@ -865,7 +882,7 @@ const index = () => {
                       style={[
                         styles.categoryButton,
                         formData.Furnishing === category &&
-                          styles.categoryButtonActive,
+                        styles.categoryButtonActive,
                       ]}
                       onPress={() => handleChange("Furnishing", category)}
                     >
@@ -1004,9 +1021,9 @@ const index = () => {
                   width: 24,
                   height: 24,
                   borderWidth: 2,
-                  borderColor: "#2563EB",
+                  borderColor: "#374151",
                   borderRadius: 4,
-                  backgroundColor: formData.managedByUs ? "#2563EB" : "#FFF",
+                  backgroundColor: formData.managedByUs ? "#374151" : "#FFF",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -1057,7 +1074,7 @@ const index = () => {
         </View>
         <Text style={styles.modalTitle}>Your listing is now published</Text>
         <Text style={styles.modalText}>
-          Lorem ipsum dolor sit amet, consectetur.
+          Your Property has now been submitted for review.you can find it in your profile. We will review and publish it within 24 hours.
         </Text>
         <View style={styles.modalButtons}>
           <TouchableOpacity
@@ -1158,24 +1175,32 @@ const index = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8F9FB",   // was #FFFFFF
     paddingTop: getStatusBarHeight(),
+    paddingBottom: 50,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  backButton: {
-    padding: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    backgroundColor: "#fff",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#e5e7eb",
   },
   headerTitle: {
     marginLeft: 16,
     fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: "700",
+    color: "#111",
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
+    justifyContent: "center",
   },
   stepContainer: {
     flex: 1,
@@ -1185,44 +1210,52 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 22,
+    fontWeight: "800",
     marginBottom: 20,
-    color: "#1F2937",
+    color: "#111",
+    lineHeight: 30,
   },
   highlight: {
-    color: "#2563EB",
+    color: GOLD,
   },
   navigation: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 15,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderTopWidth: 0.5,
+    borderTopColor: "#e5e7eb",
+    backgroundColor: "#fff",
     position: "absolute",
     bottom: 0,
-    height: 70,
+    height: 72,
     width: "100%",
   },
   backButtonCircle: {
-    width: 26,
-    height: 26,
+    width: 46,
+    height: 46,
     borderRadius: 23,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#f3f4f6",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
   nextButton: {
-    backgroundColor: "#2563EB",
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
+    backgroundColor: NAVY,
+    borderRadius: 14,
+    paddingVertical: 13,
+    paddingHorizontal: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   nextButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
   },
   imageGrid: {
     flexDirection: "row",
@@ -1245,14 +1278,18 @@ const styles = StyleSheet.create({
     width: "48%",
     aspectRatio: 1,
     margin: "1%",
-    borderRadius: 12,
-    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#e5e7eb",
+    borderStyle: "dashed",
   },
   addImageText: {
-    fontSize: 24,
-    color: "#9CA3AF",
+    fontSize: 28,
+    color: GOLD,
+    fontWeight: "300",
   },
   removeImageBtn: {
     position: "absolute",
@@ -1264,6 +1301,30 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+  },
+  imageContainer: {
+    width: "48%",
+    aspectRatio: 1,
+    margin: "1%",
+    borderRadius: 14,
+    overflow: "hidden",
+    position: "relative",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  thumbnailBadge: {
+    position: "absolute",
+    bottom: 7,
+    left: 7,
+    backgroundColor: GOLD,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  thumbnailText: {
+    color: "#1A1A2E",
+    fontSize: 10,
+    fontWeight: "800",
   },
   removeImageText: {
     fontSize: 16,
@@ -1321,11 +1382,55 @@ const styles = StyleSheet.create({
     position: "relative",
     alignContent: "center",
   },
+
   input: {
-    backgroundColor: "#F3F4F6",
-    padding: 12,
-    borderRadius: 8,
-    paddingLeft: 40,
+    backgroundColor: "#fff",
+    padding: 13,
+    borderRadius: 12,
+    paddingLeft: 42,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    fontSize: 14,
+    color: "#111",
+  },
+  label: {
+    fontWeight: "700",
+    marginBottom: 6,
+    marginTop: 14,
+    fontSize: 13,
+    color: "#374151",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+
+  textAreaWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',       // icon sits at top
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  textAreaIcon: {
+    marginRight: 10,
+    marginTop: 2,                   // aligns icon with first line of text
+  },
+  textArea: {
+    flex: 1,
+    minHeight: 110,
+    fontSize: 14,
+    color: '#111827',
+    lineHeight: 22,
+    textAlignVertical: 'top',       // Android: text starts at top
+    paddingTop: 0,                  // remove default Android padding
   },
   inputIcon: {
     position: "absolute",
@@ -1347,19 +1452,23 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#fff",
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
   toggleButtonActive: {
-    backgroundColor: "#2563EB",
+    backgroundColor: NAVY,
+    borderColor: NAVY,
   },
   toggleText: {
-    color: "#6B7280",
-    fontWeight: "500",
+    color: "#888",
+    fontWeight: "600",
+    fontSize: 13,
   },
   toggleTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "500",
+    color: "#fff",
+    fontWeight: "700",
   },
   categoryContainer: {
     flexDirection: "row",
@@ -1370,27 +1479,44 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#fff",
     marginRight: 8,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
   categoryButtonActive: {
-    backgroundColor: "#EC4899",
+    backgroundColor: NAVY,
+    borderColor: NAVY,
   },
   categoryText: {
-    color: "#6B7280",
+    color: "#888",
+    fontSize: 13,
   },
   categoryTextActive: {
-    color: "#FFFFFF",
+    color: "#fff",
+    fontWeight: "600",
   },
   priceInputContainer: {
-    position: "relative",
+
     marginBottom: 16,
   },
   priceInput: {
-    backgroundColor: "#F3F4F6",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: "#fff",
+    padding: 13,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    fontSize: 14,
+    color: "#111",
+  },
+  currencyLabel: {
+    position: "absolute",
+    right: 14,
+    top: 13,
+    color: GOLD,
+    fontSize: 16,
+    fontWeight: "700",
   },
   label: {
     marginTop: 16,
@@ -1399,46 +1525,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#111827",
   },
-  currencyLabel: {
-    position: "absolute",
-    right: 12,
-    top: 12,
-    color: "#6B7280",
-    fontSize: 16,
-  },
+
   counterContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 0.5,
+    borderColor: "#e5e7eb",
   },
   counterLabel: {
-    color: "#4B5563",
-    fontSize: 16,
-  },
-  counterControls: {
-    flexDirection: "row",
-    alignItems: "center",
+    color: "#111",
+    fontSize: 14,
+    fontWeight: "600",
   },
   counterButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#E5E7EB",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: NAVY,
     justifyContent: "center",
     alignItems: "center",
   },
   counterButtonText: {
-    fontSize: 16,
-    color: "#4B5563",
+    fontSize: 18,
+    color: "#fff",
+    fontWeight: "700",
+    lineHeight: 22,
   },
   counterValue: {
     fontSize: 16,
-    color: "#4B5563",
-    paddingHorizontal: 12,
+    color: "#111",
+    fontWeight: "700",
+    paddingHorizontal: 14,
+    minWidth: 36,
+    textAlign: "center",
   },
   roomsContainer: {
     flexDirection: "row",
@@ -1497,38 +1621,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 24,
-    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 28,
+    width: "85%",
     alignItems: "center",
-  },
-  errorIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#4B5563",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  errorIconText: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    fontWeight: "bold",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
   successIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundImage: "linear-gradient(to right, #3B82F6, #EC4899)",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#14532d",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
   },
   successIconText: {
-    color: "#FFFFFF",
+    color: GOLD,
+    fontSize: 26,
+    fontWeight: "800",
+  },
+  errorIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#7f1d1d",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  errorIconText: {
+    color: "#fff",
     fontSize: 24,
+    fontWeight: "800",
+  },
+  finishButton: {
+    flex: 1,
+    padding: 13,
+    borderRadius: 12,
+    backgroundColor: NAVY,
+    alignItems: "center",
+  },
+  retryButton: {
+    flex: 1,
+    padding: 13,
+    borderRadius: 12,
+    backgroundColor: NAVY,
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 18,

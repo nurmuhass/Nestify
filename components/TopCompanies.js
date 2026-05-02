@@ -48,44 +48,95 @@ export default function TopCompanies() {
   }
 
   return (
-    <View style={{ marginTop: 20 ,marginBottom:20}}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20 }}>
-        <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Top Real Estate Companies</Text>
+  <View style={{ marginTop: 20, marginBottom: 20 }}>
 
-         <TouchableOpacity
-                      onPress={() =>
-                        router.push("Home/Company/AllCompanies")
-                      }
-                    >
-  <Text style={{ color: '#007bff' }}>explore</Text>
+  {/* Header */}
+  <View style={{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    alignItems: 'center'
+  }}>
+    <Text style={{
+      fontWeight: '700',
+      fontSize: 18,
+      color: '#0f2044'
+    }}>
+      Top Real Estate Companies
+    </Text>
 
-                    </TouchableOpacity>
-      
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10, paddingLeft: 20 }}>
-        {companies.map((company, index) => (
-          <TouchableOpacity key={index} style={{ alignItems: 'center', marginRight: 15 }}
-          
-              onPress={() =>
-                        router.push({ pathname: '/Home/CompanyScreen', params: { id: String(company.id) } })
-                      }>
-            <View style={{ backgroundColor: '#f0f0f0', borderRadius: 30, padding: 3 }}>
-<Image source={{uri:company.profile_image}} style={{ width: 60, height: 60, borderRadius: 30,borderColor:'grey', }} />
-            </View>
-            
-           <Text
-    style={{
-      width:90,
-      flexShrink: 1,
-      numberOfLines: 1,
-      ellipsizeMode: 'tail',
-    }}
-    numberOfLines={1}
-    ellipsizeMode="tail"
-  >{company.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+    <TouchableOpacity
+      onPress={() => router.push("Home/Company/AllCompanies")}
+    >
+      <Text style={{
+        color: '#c9a84c',
+        fontWeight: '600',
+        fontSize: 13
+      }}>
+        Explore →
+      </Text>
+    </TouchableOpacity>
+  </View>
+
+  {/* Scroll */}
+  <ScrollView
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    style={{ marginTop: 14 }}
+    contentContainerStyle={{ paddingLeft: 20 }}
+  >
+    {companies.map((company, index) => (
+      <TouchableOpacity
+        key={index}
+        style={{
+          alignItems: 'center',
+          marginRight: 16
+        }}
+        onPress={() =>
+          router.push({
+            pathname: '/Home/CompanyScreen',
+            params: { id: String(company.id) }
+          })
+        }
+      >
+
+        {/* Avatar Card */}
+        <View style={{
+          backgroundColor: '#f8f6f2',
+          borderRadius: 40,
+          padding: 4,
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+          elevation: 3
+        }}>
+          <Image
+            source={{ uri: company.profile_image }}
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+            }}
+          />
+        </View>
+
+        {/* Name */}
+        <Text
+          numberOfLines={1}
+          style={{
+            width: 90,
+            marginTop: 6,
+            fontSize: 12,
+            color: '#444',
+            textAlign: 'center'
+          }}
+        >
+          {company.name}
+        </Text>
+
+      </TouchableOpacity>
+    ))}
+  </ScrollView>
+</View>
   );
 }

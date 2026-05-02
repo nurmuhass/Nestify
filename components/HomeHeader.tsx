@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     backgroundColor: '#0f2044',
     borderRadius: 24,
-    padding: 22,
+    padding: 10,
     overflow: 'hidden',
   },
   deco1: {
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   locContainer: {
     flex: 1,
-    marginRight: 40,
+    marginRight: 100,
   },
   locPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,

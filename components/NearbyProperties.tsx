@@ -243,7 +243,7 @@ export default function NearbyEstates() {
       )}
 
       {/* ── View more button ── */}
-      {filteredProperties.length >= 6 && (
+      {/* {filteredProperties.length >= 6 && (
         <TouchableOpacity
           style={styles.viewMore}
           onPress={() => router.push({ pathname: '/Home/Properties/AllPropertiesScreen' })}
@@ -251,7 +251,7 @@ export default function NearbyEstates() {
           <Text style={styles.viewMoreText}>View all properties</Text>
           <Ionicons name="arrow-forward" size={14} color="#c9a84c" />
         </TouchableOpacity>
-      )}
+      )} */}
     </View>
   );
 }
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0a0a0f',
+    color: '#fff',
     letterSpacing: -0.2,
   },
   sectionLink: {
@@ -293,13 +293,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#0f2044',
     borderWidth: 1,
     borderColor: '#e8e4dd',
   },
   tabActive: {
-    backgroundColor: '#0f2044',
-    borderColor: '#0f2044',
+    backgroundColor: '#fff',
+    borderColor: '#fff',
   },
   tabText: {
     fontSize: 13,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   tabTextActive: {
-    color: '#ffffff',
+    color: '#0f2044',
   },
 
   /* Category underline tabs */
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     marginBottom: -0.5,
   },
   catBtnActive: {
-    borderBottomColor: '#0f2044',
+    borderBottomColor: '#fff',
   },
   catText: {
     fontSize: 13,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   catTextActive: {
-    color: '#0f2044',
+    color: '#fff',
     fontWeight: '600',
   },
 

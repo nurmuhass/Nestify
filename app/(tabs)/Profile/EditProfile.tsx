@@ -20,6 +20,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { AuthContext } from '../../../store';
 import { useToast } from '@/components/Toast';
+import PremiumLoader from '@/components/PremiumLoader';
 
 type UserType = {
   id?: number | string;
@@ -402,13 +403,12 @@ const EditProfile = () => {
     router.replace('/(auth)/Login');
   };
 
+
+
   if (loading) {
-    return (
-      <View style={styles.loaderWrap}>
-        <ActivityIndicator size="large" color="#c9a84c" />
-      </View>
-    );
+    return <PremiumLoader />;
   }
+
 
   return (
     <View style={styles.container}>

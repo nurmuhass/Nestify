@@ -18,9 +18,9 @@ import { Conversation, useInbox } from '@/hooks/useChat';
 const formatTime = (d: string | null) => {
   if (!d) return '';
   const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-  if (diff < 60)     return 'Now';
-  if (diff < 3600)   return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400)  return `${Math.floor(diff / 3600)}h`;
+  if (diff < 60) return 'Now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 };
@@ -41,14 +41,14 @@ export default function MessagesScreen() {
   const getOtherParty = (conv: Conversation) => {
     const isBuyer = conv.buyer_id === userId;
     return {
-      name:   isBuyer ? (conv.seller_company || conv.seller_name) : conv.buyer_name,
+      name: isBuyer ? (conv.seller_company || conv.seller_name) : conv.buyer_name,
       avatar: isBuyer ? conv.seller_avatar : conv.buyer_avatar,
-      role:   isBuyer ? 'Seller' : 'Buyer',
+      role: isBuyer ? 'Seller' : 'Buyer',
     };
   };
 
   const renderItem = ({ item }: { item: Conversation }) => {
-    const other   = getOtherParty(item);
+    const other = getOtherParty(item);
     const hasUnread = item.unread_count > 0;
 
     return (
@@ -127,7 +127,7 @@ export default function MessagesScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#007bff" />
+          <ActivityIndicator size="large" color="#c9a84c" />
         </View>
       ) : (
         <FlatList
@@ -158,7 +158,7 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#091530',
     paddingTop: getStatusBarHeight(),
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   headerTitle: { fontSize: 17, fontWeight: 'bold', color: '#111' },
-  headerSub:   { fontSize: 12, color: '#007bff', marginTop: 1 },
+  headerSub: { fontSize: 12, color: '#007bff', marginTop: 1 },
 
   convItem: {
     flexDirection: 'row',
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   separator: { height: 0.5, backgroundColor: '#f3f4f6', marginLeft: 80 },
 
   avatarWrap: { position: 'relative' },
-  avatar:     { width: 52, height: 52, borderRadius: 26 },
+  avatar: { width: 52, height: 52, borderRadius: 26 },
   avatarFallback: {
     width: 52, height: 52, borderRadius: 26,
     backgroundColor: '#B5D4F4',
@@ -212,16 +212,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 2,
   },
-  convName:      { fontSize: 15, fontWeight: '500', color: '#111', flex: 1 },
-  convNameBold:  { fontWeight: '700' },
-  convTime:      { fontSize: 11, color: '#aaa' },
-  convProperty:  { fontSize: 11, color: '#007bff', marginBottom: 3 },
+  convName: { fontSize: 15, fontWeight: '500', color: '#111', flex: 1 },
+  convNameBold: { fontWeight: '700' },
+  convTime: { fontSize: 11, color: '#aaa' },
+  convProperty: { fontSize: 11, color: '#007bff', marginBottom: 3 },
   convBottom: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  lastMessage:     { fontSize: 13, color: '#888', flex: 1 },
+  lastMessage: { fontSize: 13, color: '#888', flex: 1 },
   lastMessageBold: { color: '#333', fontWeight: '600' },
   unreadBadge: {
     minWidth: 20, height: 20, borderRadius: 10,
@@ -240,5 +240,5 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   emptyTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
-  emptySub:   { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 20 },
+  emptySub: { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 20 },
 });

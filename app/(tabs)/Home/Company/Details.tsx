@@ -22,6 +22,22 @@ import LikeButton from '@/components/LikeButton';
 import { useCompanyReviews } from '@/hooks/useCompanyReviews';
 import { initiateChat } from '@/hooks/useChat';
 import PricingModal from '@/components/PricingModal';
+import PremiumLoader from '@/components/PremiumLoader';
+
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.08)',
+  borderStrong: 'rgba(201,168,76,0.25)',
+  mutedCard: '#0b1a33',
+  success: '#22c55e',
+  danger: '#ef4444',
+};
+
 
 
 interface CompanyData {
@@ -33,9 +49,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SIDE_MARGIN = SCREEN_WIDTH * 0.04;
 const CAROUSEL_WIDTH = SCREEN_WIDTH - SIDE_MARGIN * 2;
 
- const formatPrice = (price: any) => {
-    return Number(String(price).replace(/,/g, '')).toLocaleString();
-  };
+const formatPrice = (price: any) => {
+  return Number(String(price).replace(/,/g, '')).toLocaleString();
+};
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -45,7 +61,7 @@ const formatDate = (dateString: string) => {
     year: "numeric",
   });
 };
- 
+
 
 export default function PropertyDetails() {
   const router = useRouter();
@@ -55,13 +71,13 @@ export default function PropertyDetails() {
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-   const [activeIndex, setActiveIndex] = useState(0);
-const [chatLoading, setChatLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [chatLoading, setChatLoading] = useState(false);
   const [pricingVisible, setPricingVisible] = useState(false);
 
-const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
-  Number(property?.user_id)
-);
+  const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
+    Number(property?.user_id)
+  );
 
   // Truncate text to a specific length
   const truncateText = (text: string, maxLength: number = 50) => {
@@ -70,60 +86,60 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
   };
 
   const handleChatAction = async (type: 'chat' | 'inspection') => {
-  const userJson = await AsyncStorage.getItem('authUser');
-  if (!userJson) return;
-  const user = JSON.parse(userJson);
+    const userJson = await AsyncStorage.getItem('authUser');
+    if (!userJson) return;
+    const user = JSON.parse(userJson);
 
-  // Premium check — freemium users see upgrade prompt
-  if (user.planType !== 'premium') {
-    Alert.alert(
-      '⭐ Premium Feature',
-      'Chat with sellers is available for premium members only. Upgrade to unlock unlimited messaging.',
-      [
-        { text: 'Not now', style: 'cancel' },
-        {
-          text: 'Upgrade',
-          onPress: () => setPricingVisible(true),
-        },
-      ]
+    // Premium check — freemium users see upgrade prompt
+    if (user.plan_type !== 'premium') {
+      Alert.alert(
+        '⭐ Premium Feature',
+        'Chat with sellers is available for premium members only. Upgrade to unlock unlimited messaging.',
+        [
+          { text: 'Not now', style: 'cancel' },
+          {
+            text: 'Upgrade',
+            onPress: () => setPricingVisible(true),
+          },
+        ]
+      );
+      return;
+    }
+
+    setChatLoading(true);
+    const openingMessage = type === 'inspection'
+      ? `Hi, I'd like to book an inspection for "${property.propertyName}". Are you available?`
+      : `Hi, I'm interested in "${property.propertyName}". Is it still available?`;
+
+    const result = await initiateChat(
+      property.user_id,   // seller
+      property.id,        // property
+      openingMessage
     );
-    return;
-  }
+    setChatLoading(false);
 
-  setChatLoading(true);
-  const openingMessage = type === 'inspection'
-    ? `Hi, I'd like to book an inspection for "${property.propertyName}". Are you available?`
-    : `Hi, I'm interested in "${property.propertyName}". Is it still available?`;
-
-  const result = await initiateChat(
-    property.user_id,   // seller
-    property.id,        // property
-    openingMessage
-  );
-  setChatLoading(false);
-
-  if (result.success && result.conversationId) {
-    router.push({
-      pathname: '../ChatRoom',
-      params: {
-        conversation_id: result.conversationId,
-        property_name:   property.propertyName,
-        property_id:     property.id,
-      },
-    });
-  } else if (result.notPremium) {
-    // Server-side premium check failed too
-    Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat with sellers.');
-  } else {
-    Alert.alert('Error', result.msg ?? 'Could not start chat');
-  }
-};
+    if (result.success && result.conversationId) {
+      router.push({
+        pathname: '../ChatRoom',
+        params: {
+          conversation_id: result.conversationId,
+          property_name: property.propertyName,
+          property_id: property.id,
+        },
+      });
+    } else if (result.notPremium) {
+      // Server-side premium check failed too
+      Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat with sellers.');
+    } else {
+      Alert.alert('Error', result.msg ?? 'Could not start chat');
+    }
+  };
 
   useEffect(() => {
     if (id) {
       fetchPropertyById();
     }
-  }, [id]); 
+  }, [id]);
 
   useEffect(() => {
     if (property) {
@@ -150,14 +166,14 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
 
   const fetchPropertyById = async () => {
     try {
-        const token = await AsyncStorage.getItem('authToken');
+      const token = await AsyncStorage.getItem('authToken');
       const response = await fetch(
         `https://insighthub.com.ng/NestifyAPI/get_property_by_id.php?id=${id}`,
         {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-       'Authorization': `Token ${token}`,
+            'Authorization': `Token ${token}`,
           },
         }
       );
@@ -180,35 +196,17 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
 
 
   const fetchCompanyProfile = async () => {
-  try {
-    if (!property || !property.user_id) {
-      Alert.alert('Error', 'Property data not available');
-      return;
-    }
-
-    const token = await AsyncStorage.getItem('authToken');
-    const user = property.user_id;
-
-    const response = await fetch(
-      `https://insighthub.com.ng/NestifyAPI/get_user_by_id.php?id=${user}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Token ${token}`,
-        },
+    try {
+      if (!property || !property.user_id) {
+        Alert.alert('Error', 'Property data not available');
+        return;
       }
-    );
 
-    const result = await response.json();
-    console.log('Company Profile Response:', result);
+      const token = await AsyncStorage.getItem('authToken');
+      const user = property.user_id;
 
-    if (result.status === 'success') {
-      setCompanyData(result.data);
-
-      // Fetch review summary
-      const summaryResponse = await fetch(
-        `https://insighthub.com.ng/NestifyAPI/company_reviews.php?action=list&company_id=${user}&page=1&limit=0`,
+      const response = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_user_by_id.php?id=${user}`,
         {
           method: 'GET',
           headers: {
@@ -217,18 +215,36 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
           },
         }
       );
-      const summaryResult = await summaryResponse.json();
-      if (summaryResult.status === 'success') {
-        setCompanyData(prev => ({ ...prev, review_count: summaryResult.summary.total, average_rating: summaryResult.summary.average }));
+
+      const result = await response.json();
+      console.log('Company Profile Response:', result);
+
+      if (result.status === 'success') {
+        setCompanyData(result.data);
+
+        // Fetch review summary
+        const summaryResponse = await fetch(
+          `https://insighthub.com.ng/NestifyAPI/company_reviews.php?action=list&company_id=${user}&page=1&limit=0`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Token ${token}`,
+            },
+          }
+        );
+        const summaryResult = await summaryResponse.json();
+        if (summaryResult.status === 'success') {
+          setCompanyData(prev => ({ ...prev, review_count: summaryResult.summary.total, average_rating: summaryResult.summary.average }));
+        }
+      } else {
+        Alert.alert('Error', result.msg);
       }
-    } else {
-      Alert.alert('Error', result.msg);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      Alert.alert('Error', errorMessage);
     }
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-    Alert.alert('Error', errorMessage);
-  }
-};
+  };
 
   // 2) Carousel logic
   const scrollRef = useRef<ScrollView>(null);
@@ -260,13 +276,12 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
 
 
 
+
+
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
+    return <PremiumLoader />;
   }
+
   if (error) {
     return (
       <View style={styles.center}>
@@ -279,7 +294,7 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
 
   }
 
-  
+
 
   const images: string[] = property.images ?? [];
 
@@ -287,29 +302,29 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
     property.status === "available"
       ? "#28a745"
       : property.status === "sold"
-      ? "#dc3545"
-      : "#6c757d";
+        ? "#dc3545"
+        : "#6c757d";
 
   const statusLabel =
     property.status === "available"
       ? "Available"
       : property.status === "sold"
-      ? "Sold"
-      : "Unavailable";
+        ? "Sold"
+        : "Unavailable";
 
   const listingLabel =
     property.listingType === "Rent"
       ? "Rent"
       : property.listingType === "Sell"
-      ? "For Sale"
-      : "Rent / Sell";
+        ? "For Sale"
+        : "Rent / Sell";
 
   const priceDisplay =
     property.listingType === "Sell"
       ? `₦${formatPrice(property.sellPrice)}`
       : property.listingType === "Rent"
-      ? `₦${formatPrice(property.rentPrice)}`
-      : `₦${formatPrice(property.sellPrice)} / ₦${formatPrice(property.rentPrice)}`;
+        ? `₦${formatPrice(property.rentPrice)}`
+        : `₦${formatPrice(property.sellPrice)} / ₦${formatPrice(property.rentPrice)}`;
 
   const priceSub =
     property.listingType === "Rent"
@@ -337,7 +352,7 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
   ].filter((d) => d.val);
 
 
- return (
+  return (
     <FlatList
       data={[]}
       renderItem={() => null}
@@ -372,7 +387,7 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
                   <Image
                     key={idx}
                     source={{ uri: `https://insighthub.com.ng/${imgPath}` }}
-                    style={{ width: CAROUSEL_WIDTH, height: 450 }} 
+                    style={{ width: CAROUSEL_WIDTH, height: 450 }}
                     resizeMode="cover"
                   />
                 ))
@@ -394,23 +409,23 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
             {/* Top icons */}
             <View style={styles.heroTop}>
               <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={20} color="#000" />
+                <Ionicons name="arrow-back" size={20} color="#fff" />
               </TouchableOpacity>
               <View style={styles.heroActions}>
                 <TouchableOpacity style={styles.actBtn}>
                   <AntDesign name="upload" size={17} color="#fff" />
                 </TouchableOpacity>
-              <TouchableOpacity
-  style={styles.actBtn}
-  onPress={() => {}} // handled internally by LikeButton
->
-  <LikeButton
-    propertyId={Number(id)}
-    variant="minimal"
-    size={17}
-    color="red"
-  />
-</TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actBtn}
+                  onPress={() => { }} // handled internally by LikeButton
+                >
+                  <LikeButton
+                    propertyId={Number(id)}
+                    variant="minimal"
+                    size={17}
+                    color="red"
+                  />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -471,37 +486,37 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
             <View style={styles.locRow}>
               <Ionicons name="location-outline" size={14} color="#888" />
               <Text style={styles.locText}>
-               📍 {[property.city, property.state, property.country]
+                📍 {[property.city, property.state, property.country]
                   .filter(Boolean)
                   .join(", ")}
               </Text>
             </View>
 
             {/* CTA Buttons */}
- <View style={styles.btnRow}>
-  <TouchableOpacity
-    style={styles.btnChat}
-    onPress={() => handleChatAction('chat')}
-    disabled={chatLoading}
-  >
-    {chatLoading
-      ? <ActivityIndicator size="small" color="#111" />
-      : <Text style={styles.btnChatText}>💬 Chat With Seller</Text>
-    }
-  </TouchableOpacity>
+            <View style={styles.btnRow}>
+              <TouchableOpacity
+                style={styles.btnChat}
+                onPress={() => handleChatAction('chat')}
+                disabled={chatLoading}
+              >
+                {chatLoading
+                  ? <ActivityIndicator size="small" color="#C9A84C" />
+                  : <Text style={styles.btnChatText}>💬 Chat With Seller</Text>
+                }
+              </TouchableOpacity>
 
-  <TouchableOpacity
-    style={styles.btnBook}
-    onPress={() => handleChatAction('inspection')}
-    disabled={chatLoading}
-  >
-    
-      {chatLoading
-      ? <ActivityIndicator size="small" color="#111" />
-      : <Text style={styles.btnBookText}>📅 Book Inspection</Text>
-    }
-  </TouchableOpacity>
-</View>
+              <TouchableOpacity
+                style={styles.btnBook}
+                onPress={() => handleChatAction('inspection')}
+                disabled={chatLoading}
+              >
+
+                {chatLoading
+                  ? <ActivityIndicator size="small" color="#C9A84C" />
+                  : <Text style={styles.btnBookText}>📅 Book Inspection</Text>
+                }
+              </TouchableOpacity>
+            </View>
 
             {/* Agent Card */}
             <View style={styles.agentCard}>
@@ -599,131 +614,132 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
 
             <View style={styles.divider} />
 
-  
-
- 
 
 
-{/* ── Reviews ── */}
-<Text style={styles.secTitle}>Agent Reviews</Text>
 
-{/* Summary row */}
-{summary && summary.total > 0 && (
-  <View style={styles.reviewSummary}>
-    <Text style={styles.reviewRating}>⭐ {summary.average.toFixed(1)}</Text>
-    <Text style={styles.reviewSub}>From {summary.total} reviewer{summary.total !== 1 ? 's' : ''}</Text>
-  </View>
-)}
 
-{/* Preview cards — max 2 */}
-{reviewsLoading ? (
-  <ActivityIndicator style={{ marginVertical: 10 }} color="#007bff" />
-) : reviews.length === 0 ? (
-  <View style={styles.reviewCard}>
-    <Text style={{ color: '#aaa', fontSize: 13, textAlign: 'center', paddingVertical: 10 }}>
-      No reviews yet for this agent
-    </Text>
-  </View>
-) : (
-  reviews.slice(0, 2).map(item => (
-    <View key={item.id} style={styles.reviewCard}>
-      <View style={styles.rvUserRow}>
-        {item.reviewer_avatar ? (
-          <Image
-            source={{ uri: item.reviewer_avatar }}
-            style={styles.rvAvatar}
-          />
-        ) : (
-          <View style={[styles.rvAvatar, {
-            backgroundColor: '#B5D4F4',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }]}>
-            <Text style={[styles.rvInitials, { color: '#0C447C' }]}>
-              {(item.reviewer_name ?? '?')[0].toUpperCase()}
-            </Text>
+
+            {/* ── Reviews ── */}
+            <Text style={styles.secTitle}>Agent Reviews</Text>
+
+            {/* Summary row */}
+            {summary && summary.total > 0 && (
+              <View style={styles.reviewSummary}>
+                <Text style={styles.reviewRating}>⭐ {summary.average.toFixed(1)}</Text>
+                <Text style={styles.reviewSub}>From {summary.total} reviewer{summary.total !== 1 ? 's' : ''}</Text>
+              </View>
+            )}
+
+            {/* Preview cards — max 2 */}
+            {reviewsLoading ? (
+              <ActivityIndicator style={{ marginVertical: 10 }} color="#C9A84C" />
+            ) : reviews.length === 0 ? (
+              <View style={styles.reviewCard}>
+                <Text style={{ color: '#aaa', fontSize: 13, textAlign: 'center', paddingVertical: 10 }}>
+                  No reviews yet for this agent
+                </Text>
+              </View>
+            ) : (
+              reviews.slice(0, 2).map(item => (
+                <View key={item.id} style={styles.reviewCard}>
+                  <View style={styles.rvUserRow}>
+                    {item.reviewer_avatar ? (
+                      <Image
+                        source={{ uri: item.reviewer_avatar }}
+                        style={styles.rvAvatar}
+                      />
+                    ) : (
+                      <View style={[styles.rvAvatar, {
+                        backgroundColor: '#B5D4F4',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }]}>
+                        <Text style={[styles.rvInitials, { color: '#0C447C' }]}>
+                          {(item.reviewer_name ?? '?')[0].toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                    <View>
+                      <Text style={styles.rvName}>{item.reviewer_name}</Text>
+                      <View style={{ flexDirection: 'row', gap: 2, marginTop: 2 }}>
+                        {[1, 2, 3, 4, 5].map((_, i) => (
+                          <MaterialIcons
+                            key={i}
+                            name="star"
+                            size={12}
+                            color={i < item.rating ? '#ffc107' : '#ddd'}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={styles.rvText} numberOfLines={2}>
+                    {item.comment}
+                  </Text>
+                </View>
+              ))
+            )}
+
+            {/* View all button */}
+            <TouchableOpacity
+              style={styles.viewAllBtn}
+              onPress={() =>
+                router.push({
+                  pathname: './CompanyReviews',
+                  params: {
+                    company_id: property?.user_id,
+                    company_name: companyData?.company_name,
+                    company_image: companyData?.profile_image,
+                  },
+                })
+              }
+            >
+              <Text style={styles.viewAllText}>
+                {summary && summary.total > 2
+                  ? `View all ${summary.total} reviews`
+                  : 'View all reviews'}
+              </Text>
+            </TouchableOpacity>
+
+
+
+
+            {/* Nearby Listings */}
+            <Text style={styles.sectionTitle}>Nearby From this Location</Text>
+            <NearbyProperties />
+
+
+            <PricingModal
+              visible={pricingVisible}
+              onSelectPlan={(planKey) => {
+                setPricingVisible(false);
+                // navigate to your payment/upgrade flow, passing planKey
+                // router.push(`./upgrade?plan=${planKey}`);
+                switch (planKey) {
+                  case "freemium":
+                    setPricingVisible(false);
+                    break;
+                  case "single":
+                    router.push("/upgrade/single");
+                    break;
+                  case "monthly":
+                    router.push("/upgrade/monthly");
+                    break;
+                  case "semi":
+                    router.push("/upgrade/semiannual");
+                    break;
+                  case "annual":
+                    router.push("/upgrade/annual");
+                    break;
+                  default:
+                    router.push("/upgrade");
+                }
+              }}
+              onClose={() => setPricingVisible(false)}
+            />
+
           </View>
-        )}
-        <View>
-          <Text style={styles.rvName}>{item.reviewer_name}</Text>
-          <View style={{ flexDirection: 'row', gap: 2, marginTop: 2 }}>
-            {[1, 2, 3, 4, 5].map((_, i) => (
-              <MaterialIcons
-                key={i}
-                name="star"
-                size={12}
-                color={i < item.rating ? '#ffc107' : '#ddd'}
-              />
-            ))}
-          </View>
-        </View>
-      </View>
-      <Text style={styles.rvText} numberOfLines={2}>
-        {item.comment}
-      </Text>
-    </View>
-  ))
-)}
 
-{/* View all button */}
-<TouchableOpacity
-  style={styles.viewAllBtn}
-  onPress={() =>
-    router.push({
-      pathname: './CompanyReviews',
-      params: {
-        company_id:   property?.user_id,
-        company_name: companyData?.company_name,
-      },
-    })
-  }
->
-  <Text style={styles.viewAllText}>
-    {summary && summary.total > 2
-      ? `View all ${summary.total} reviews`
-      : 'View all reviews'}
-  </Text>
-</TouchableOpacity>
-
- 
-
-
-    {/* Nearby Listings */}
-        <Text style={styles.sectionTitle}>Nearby From this Location</Text>
-        <NearbyProperties />
-
-
-  <PricingModal
-        visible={pricingVisible}
-        onSelectPlan={(planKey) => {
-          setPricingVisible(false);
-          // navigate to your payment/upgrade flow, passing planKey
-          // router.push(`./upgrade?plan=${planKey}`);
-          switch (planKey) {
-            case "freemium":
-              setPricingVisible(false);
-              break;
-            case "single":
-              router.push("/upgrade/single");
-              break;
-            case "monthly":
-              router.push("/upgrade/monthly");
-              break;
-            case "semi":
-              router.push("/upgrade/semiannual");
-              break;
-            case "annual":
-              router.push("/upgrade/annual");
-              break;
-            default:
-              router.push("/upgrade");
-          }
-        }}
-        onClose={() => setPricingVisible(false)}
-      />
-
-          </View>
-          
         </>
       }
     />
@@ -732,236 +748,401 @@ const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.bg,
     paddingTop: getStatusBarHeight(),
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.bg,
+  },
 
   // ── Hero ──
-  heroContainer: { position: "relative", marginBottom: 4 },
+  heroContainer: {
+    position: 'relative',
+    marginBottom: 4,
+    backgroundColor: COLORS.bg,
+  },
   heroTop: {
-    position: "absolute",
+    position: 'absolute',
     top: 16,
     left: SIDE_MARGIN + 12,
     right: SIDE_MARGIN + 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 20,
   },
   backBtn: {
     width: 38,
     height: 38,
-    borderRadius: 10,
-    backgroundColor: "#e9ecf2",
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  heroActions: { flexDirection: "row", gap: 8 },
+  heroActions: { flexDirection: 'row', gap: 8 },
   actBtn: {
     width: 38,
     height: 38,
-    borderRadius: 10,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: 12,
+    backgroundColor: 'rgba(15,32,68,0.82)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   heroBottom: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 14,
     left: SIDE_MARGIN + 12,
     right: SIDE_MARGIN + 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    zIndex: 20,
   },
-  badges: { flexDirection: "row", gap: 8 },
+  badges: { flexDirection: 'row', gap: 8 },
   badge: {
-    color: "#fff",
+    color: COLORS.bg,
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: '700',
     paddingVertical: 5,
     paddingHorizontal: 12,
     borderRadius: 10,
-    overflow: "hidden",
+    overflow: 'hidden',
+    backgroundColor: COLORS.gold,
   },
-  thumbsCol: { flexDirection: "column", gap: 5 },
+  thumbsCol: { flexDirection: 'column', gap: 5 },
   thumb: {
     width: 42,
     height: 42,
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.6)",
+    borderColor: 'rgba(255,255,255,0.55)',
   },
   moreThumb: {
     width: 42,
     height: 42,
     borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: 'rgba(9,21,48,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  moreText: { color: "#fff", fontWeight: "bold", fontSize: 13 },
+  moreText: { color: COLORS.textPrimary, fontWeight: '700', fontSize: 13 },
   dots: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 14,
     left: 0,
     right: 0,
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 5,
+    zIndex: 20,
   },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.4)" },
-  dotActive: { width: 18, borderRadius: 3, backgroundColor: "#fff" },
- sectionTitle: { fontSize: 16, fontWeight: 'bold', marginVertical: 10 },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  dotActive: {
+    width: 18,
+    borderRadius: 3,
+    backgroundColor: COLORS.gold,
+  },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginVertical: 10,
+    color: COLORS.textPrimary,
+  },
+
   // ── Body ──
-  body: { padding: 16 },
+  body: {
+    padding: 16,
+    backgroundColor: COLORS.bg,
+  },
   titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
   },
   propTitle: {
     flex: 1,
     fontSize: 19,
-    fontWeight: "bold",
-    color: "#111",
+    fontWeight: '800',
+    color: COLORS.textPrimary,
     marginRight: 10,
+    lineHeight: 25,
   },
-  priceCol: { alignItems: "flex-end" },
-  price: { fontSize: 16, fontWeight: "bold", color: "#007bff" },
-  priceSub: { fontSize: 11, color: "#999", marginTop: 2 },
+  priceCol: { alignItems: 'flex-end' },
+  price: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.gold,
+  },
+  priceSub: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
   locRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
     marginBottom: 14,
   },
-  locText: { fontSize: 13, color: "#666" },
-  btnRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
+  locText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+
+  // CTA
+  btnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
   btnChat: {
     flex: 1,
-    paddingVertical: 11,
-    backgroundColor: "#e9ecf2",
-    borderRadius: 8,
-    alignItems: "center",
+    paddingVertical: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  btnChatText: { fontSize: 12, fontWeight: "600", color: "#111", textTransform: "uppercase" },
+  btnChatText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    textTransform: 'uppercase',
+  },
   btnBook: {
     flex: 1,
-    paddingVertical: 11,
-    backgroundColor: "#007bff",
-    borderRadius: 8,
-    alignItems: "center",
+    paddingVertical: 12,
+    backgroundColor: COLORS.gold,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.gold,
   },
-  btnBookText: { fontSize: 12, fontWeight: "600", color: "#fff", textTransform: "uppercase" },
+  btnBookText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.bg,
+    textTransform: 'uppercase',
+  },
 
   // Agent
   agentCard: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 14,
+    borderColor: COLORS.border,
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: COLORS.card,
+    marginBottom: 16,
   },
-  agentImg: { width: 42, height: 42, borderRadius: 21 },
+  agentImg: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+  },
   agentAvatar: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "#B5D4F4",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: COLORS.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  agentInitials: { fontSize: 16, fontWeight: "600", color: "#0C447C" },
-  agentName: { fontWeight: "bold", fontSize: 14, color: "#111" },
-  agentLoc: { fontSize: 12, color: "#777" },
+  agentInitials: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.bg,
+  },
+  agentName: {
+    fontWeight: '700',
+    fontSize: 14,
+    color: COLORS.textPrimary,
+  },
+  agentLoc: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
 
-  divider: { height: 0.5, backgroundColor: "#e0e0e0", marginVertical: 14 },
-  secTitle: { fontSize: 15, fontWeight: "bold", color: "#111", marginBottom: 10 },
+  divider: {
+    height: 0.5,
+    backgroundColor: COLORS.border,
+    marginVertical: 14,
+  },
+  secTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 10,
+  },
 
   // Specs
-  specsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 },
+  specsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
+  },
   specChip: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 5,
-    backgroundColor: "#f3f4f6",
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  specVal: { fontSize: 13, fontWeight: "600", color: "#111" },
-  specLbl: { fontSize: 11, color: "#888" },
+  specVal: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  specLbl: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+  },
 
   // Details grid
   infoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 14,
   },
   infoItem: {
-    width: "48%",
-    backgroundColor: "#f3f4f6",
-    borderRadius: 8,
+    width: '48%',
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
     padding: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  infoLbl: { fontSize: 11, color: "#888", marginBottom: 2 },
-  infoVal: { fontSize: 13, fontWeight: "600", color: "#111" },
+  infoLbl: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  infoVal: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
 
-  desc: { fontSize: 13, color: "#555", lineHeight: 20, marginBottom: 14 },
+  desc: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
 
   // Location boxes
   locBox: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    backgroundColor: "#f3f4f6",
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
     padding: 10,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  locBoxText: { fontSize: 13, color: "#555", flex: 1 },
+  locBoxText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    flex: 1,
+  },
 
   // Reviews
   reviewSummary: {
-    backgroundColor: "#FFB6C1",
+    backgroundColor: COLORS.card,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
   },
-  reviewRating: { fontSize: 18, fontWeight: "bold", color: "#791F1F" },
-  reviewSub: { color: "#A32D2D", fontSize: 12, marginTop: 2 },
+  reviewRating: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.goldLight,
+  },
+  reviewSub: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
   reviewCard: {
-    backgroundColor: "#f8f8f8",
+    backgroundColor: COLORS.card,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  rvUserRow: { flexDirection: "row", gap: 10, marginBottom: 6, alignItems: "center" },
+  rvUserRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 6,
+    alignItems: 'center',
+  },
   rvAvatar: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#C0DD97",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: COLORS.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  rvInitials: { fontSize: 13, fontWeight: "600", color: "#27500A" },
-  rvName: { fontWeight: "bold", fontSize: 13, color: "#111" },
-  rvText: { fontSize: 13, color: "#444", lineHeight: 19 },
+  rvInitials: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.bg,
+  },
+  rvName: {
+    fontWeight: '700',
+    fontSize: 13,
+    color: COLORS.textPrimary,
+  },
+  rvText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 19,
+  },
   viewAllBtn: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: COLORS.gold,
     padding: 11,
-    borderRadius: 8,
-    alignItems: "center",
+    borderRadius: 10,
+    alignItems: 'center',
     marginBottom: 30,
+    backgroundColor: 'transparent',
   },
-  viewAllText: { color: "#007bff", fontWeight: "bold", fontSize: 13 },
+  viewAllText: {
+    color: COLORS.gold,
+    fontWeight: '700',
+    fontSize: 13,
+  },
 });
 

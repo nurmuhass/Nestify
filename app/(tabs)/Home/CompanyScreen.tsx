@@ -16,6 +16,18 @@ import {
   View
 } from "react-native";
 import { initiateChat } from '@/hooks/useChat';
+import PremiumLoader from "@/components/PremiumLoader";
+
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  danger: '#ef4444'
+};
 /**
  * Dummy data (ready to use)
  */
@@ -244,7 +256,7 @@ export default function EstateCompanyScreen() {
     if (!userJson) return;
     const currentUser = JSON.parse(userJson);
 
-    if (currentUser.planType !== 'premium') {
+    if (currentUser.plan_type !== 'premium') {
       Alert.alert(
         '⭐ Premium Feature',
         'Chat with agents is available for premium members only.',
@@ -393,7 +405,7 @@ export default function EstateCompanyScreen() {
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.favoriteButton}>
-            <Ionicons name="heart-outline" size={20} color="#ff4d4d" />
+            <Ionicons name="heart-outline" size={20} color={COLORS.danger} />
           </TouchableOpacity>
 
           {/* Floating logo */}
@@ -437,13 +449,13 @@ export default function EstateCompanyScreen() {
               disabled={chatLoading}
             >
               {chatLoading
-                ? <ActivityIndicator size="small" color="#0a84ff" />
-                : <Ionicons name="chatbubble-ellipses-outline" size={16} color="#0a84ff" />
+                ? <ActivityIndicator size="small" color={COLORS.gold} />
+                : <Ionicons name="chatbubble-ellipses-outline" size={16} color={COLORS.gold} />
               }
               <Text style={styles.ctaTextOutline}>Chat</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.ctaBtnOutline} onPress={onDownloadBrochure}>
-              <Ionicons name="download-outline" size={16} color="#0a84ff" />
+              <Ionicons name="download-outline" size={16} color={COLORS.gold} />
               <Text style={styles.ctaTextOutline}>Brochure</Text>
             </TouchableOpacity>
           </View>
@@ -461,7 +473,7 @@ export default function EstateCompanyScreen() {
           <View style={styles.amenitiesRow}>
             {company.amenities.map((a) => (
               <View key={a.id} style={styles.amenityBox}>
-                <Ionicons name={a.icon as any} size={18} color="#0a84ff" />
+                <Ionicons name={a.icon as any} size={18} color="#091530" />
                 <Text style={styles.amenityText}>{a.name}</Text>
               </View>
             ))}
@@ -499,7 +511,7 @@ export default function EstateCompanyScreen() {
                 <Image source={{ uri: item.image_path }} style={styles.estateImage} />
                 <Text style={styles.estateName}>{item.name}</Text>
                 <Text style={styles.estateMeta}>
-                  {item.city} • 17 properties
+                  {item.city} • {item.properties} properties
                 </Text>
               </TouchableOpacity>
             )}
@@ -540,12 +552,9 @@ export default function EstateCompanyScreen() {
   }, [company, companyDetails, Estates, onBookInspection, onChatWithAgent, onDownloadBrochure, onOpenWebsite, router]);
 
 
+
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
+    return <PremiumLoader />;
   }
 
   if (!companyDetails) {
@@ -579,10 +588,10 @@ export default function EstateCompanyScreen() {
 const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 40,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.bg,
     paddingHorizontal: 12,
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: COLORS.bg },
 
   /* Cover */
   coverImage: { width: "100%", height: 220, borderRadius: 6, marginBottom: 12 },
@@ -590,7 +599,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 18,
     left: 14,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     padding: 8,
     borderRadius: 20,
   },
@@ -598,7 +607,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 18,
     right: 14,
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(0,0,0,0.4)",
     padding: 8,
     borderRadius: 20,
     elevation: 2,
@@ -612,27 +621,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 3,
-    borderColor: "#fff",
+    borderColor: COLORS.card,
     elevation: 3,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.card,
   },
   logo: { width: "100%", height: "100%" },
 
   /* Sections */
   section: { paddingVertical: 8, paddingHorizontal: 4 },
   sectionNoPadTop: { paddingTop: 0 },
-  title: { fontSize: 20, fontWeight: "700", color: "#111", marginTop: 18 },
-  subtitle: { marginTop: 6, color: "#666", fontSize: 13 },
+  title: { fontSize: 20, fontWeight: "700", color: COLORS.textPrimary, marginTop: 18 },
+  subtitle: { marginTop: 6, color: COLORS.textSecondary, fontSize: 13 },
   statsRow: { flexDirection: "row", marginTop: 12 },
   statItem: { marginRight: 18 },
-  statValue: { fontSize: 16, fontWeight: "700", color: "#0a84ff" },
-  statLabel: { color: "#666", fontSize: 12 },
+  statValue: { fontSize: 16, fontWeight: "700", color: COLORS.gold },
+  statLabel: { color: COLORS.textSecondary, fontSize: 12 },
 
   ctaRow: { flexDirection: "row", marginTop: 12, justifyContent: "space-between" },
   ctaBtnPrimary: {
     flex: 1,
     marginRight: 8,
-    backgroundColor: "#0a84ff",
+    backgroundColor: COLORS.gold,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: "center",
@@ -645,7 +654,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     marginRight: 4,
     borderWidth: 1,
-    borderColor: "#0a84ff",
+    borderColor: COLORS.gold,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: "center",
@@ -653,11 +662,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
   },
-  ctaTextPrimary: { color: "#fff", fontWeight: "700", marginLeft: 6 },
-  ctaTextOutline: { color: "#0a84ff", fontWeight: "700" },
+  ctaTextPrimary: { color: COLORS.bg, fontWeight: "700", marginLeft: 6 },
+  ctaTextOutline: { color: COLORS.gold, fontWeight: "700" },
 
-  sectionTitle: { fontSize: 16, fontWeight: "700", marginBottom: 8, color: "#222" },
-  bodyText: { color: "#444", lineHeight: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", marginBottom: 8, color: COLORS.gold },
+  bodyText: { color: COLORS.textSecondary, lineHeight: 20 },
 
   /* Amenities */
   amenitiesRow: { flexDirection: "row", flexWrap: "wrap" },
@@ -666,12 +675,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
-    backgroundColor: "#f1f5ff",
+    backgroundColor: COLORS.card,
     borderRadius: 10,
     marginBottom: 8,
     marginRight: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  amenityText: { marginLeft: 8, fontSize: 13, color: "#222" },
+  amenityText: { marginLeft: 8, fontSize: 13, color: COLORS.textSecondary },
 
   /* Estates (horizontal) */
   estateCard: {
@@ -680,36 +691,38 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 10,
-    backgroundColor: "#fff",
-    elevation: 2,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   estateImage: { width: "100%", height: 100 },
-  estateName: { fontWeight: "700", padding: 8, fontSize: 14 },
-  estateMeta: { color: "#666", paddingHorizontal: 8, paddingBottom: 10, fontSize: 12 },
+  estateName: { fontWeight: "700", padding: 8, fontSize: 14, color: COLORS.textPrimary },
+  estateMeta: { color: COLORS.textSecondary, paddingHorizontal: 8, paddingBottom: 10, fontSize: 12 },
 
   /* Gallery */
   galleryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   galleryImg: { width: "48%", height: 110, borderRadius: 10, marginBottom: 8 },
 
   /* Contact */
-  contactText: { marginTop: 6, fontSize: 14, color: "#333" },
-  linkText: { color: "#0a84ff", fontWeight: "700" },
+  contactText: { marginTop: 6, fontSize: 14, color: COLORS.textSecondary },
+  linkText: { color: COLORS.gold, fontWeight: "700" },
 
   /* Properties (grid) */
   propertyCard: {
     width: "48%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.card,
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 12,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   propertyImage: { width: "100%", height: 110 },
   propertyBody: { padding: 8 },
-  propertyTitle: { fontWeight: "700", fontSize: 13, color: "#111" },
-  propertyPrice: { color: "#0a84ff", fontWeight: "800", marginTop: 6 },
-  propertyMeta: { color: "#666", fontSize: 12, marginTop: 6 },
-  propertyLocation: { color: "#666", fontSize: 12, marginTop: 2 },
+  propertyTitle: { fontWeight: "700", fontSize: 13, color: COLORS.textPrimary },
+  propertyPrice: { color: COLORS.gold, fontWeight: "800", marginTop: 6 },
+  propertyMeta: { color: COLORS.textSecondary, fontSize: 12, marginTop: 6 },
+  propertyLocation: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
 
   /* small helpers */
   rowSpace: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

@@ -1,42 +1,49 @@
 {
   "expo": {
-    "name": "SiliconValley",
-    "slug": "SiliconValley",
+    "name": "Nestify",
+    "slug": "nestify",
     "version": "1.0.0",
     "orientation": "portrait",
+
     "icon": "./assets/images/icon.png",
-    "scheme": "siliconvalley",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+
+    "scheme": "nestify",
+    "userInterfaceStyle": "dark",
+
     "ios": {
       "supportsTablet": true
     },
+
     "android": {
+      "package": "com.nurmuhass.nestify",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#091530"
+      },
+      "statusBar": {
+        "backgroundColor": "#091530",
+        "barStyle": "light-content"
       },
       "edgeToEdgeEnabled": true
     },
+
     "web": {
       "bundler": "metro",
-      "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#091530", "dark": {
+      "backgroundColor": "#091530"
+    }
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    ]
   }
 }

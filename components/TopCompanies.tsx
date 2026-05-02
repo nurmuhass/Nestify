@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0a0a0f',
+    color: '#fff',
     letterSpacing: -0.2,
   },
   sectionLink: {

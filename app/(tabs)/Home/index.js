@@ -68,7 +68,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#faf8f4',
+    backgroundColor: '#0f2044',
     paddingTop: getStatusBarHeight(),
   },
 });

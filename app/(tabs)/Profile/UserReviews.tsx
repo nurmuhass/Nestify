@@ -18,21 +18,33 @@ import {
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { CompanyReview, ReviewSummary, useCompanyReviews } from '@/hooks/useCompanyReviews';
+import PremiumLoader from '@/components/PremiumLoader';
+
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  danger: '#ef4444'
+};
 
 const FILTERS = [
-  { label: 'All',  value: null },
-  { label: '5 ★',  value: 5 },
-  { label: '4 ★',  value: 4 },
-  { label: '3 ★',  value: 3 },
-  { label: '2 ★',  value: 2 },
-  { label: '1 ★',  value: 1 },
+  { label: 'All', value: null },
+  { label: '5 ★', value: 5 },
+  { label: '4 ★', value: 4 },
+  { label: '3 ★', value: 3 },
+  { label: '2 ★', value: 2 },
+  { label: '1 ★', value: 1 },
 ];
 
 const formatTime = (d: string) => {
   const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-  if (diff < 60)     return 'Just now';
-  if (diff < 3600)   return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400)  return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
   return new Date(d).toLocaleDateString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric',
@@ -77,7 +89,7 @@ export default function UserReviewsScreen() {
         onPress={() => applyFilter(filterRating === star ? null : star)}
       >
         <Text style={styles.ratingBarStar}>{star}</Text>
-        <MaterialIcons name="star" size={12} color="#F59E0B" />
+        <MaterialIcons name="star" size={12} color={COLORS.gold} />
         <View style={styles.ratingBarTrack}>
           <View style={[styles.ratingBarFill, { width: `${pct}%` as any }]} />
         </View>
@@ -97,7 +109,7 @@ export default function UserReviewsScreen() {
               key={i}
               name="star"
               size={18}
-              color={i <= Math.round(s.average) ? '#F59E0B' : '#E5E7EB'}
+              color={i <= Math.round(s.average) ? COLORS.gold : COLORS.border}
             />
           ))}
         </View>
@@ -145,7 +157,7 @@ export default function UserReviewsScreen() {
                   key={i}
                   name="star"
                   size={13}
-                  color={i <= item.rating ? '#F59E0B' : '#E5E7EB'}
+                  color={i <= item.rating ? COLORS.gold : COLORS.border}
                 />
               ))}
               <Text style={styles.reviewTime}> · {formatTime(item.created_at)}</Text>
@@ -155,16 +167,16 @@ export default function UserReviewsScreen() {
           {/* Star badge */}
           <View style={[
             styles.starBadge,
-            { backgroundColor: item.rating >= 4 ? '#FEF9C3' : item.rating === 3 ? '#FEF3C7' : '#FEE2E2' }
+            { backgroundColor: COLORS.gold }
           ]}>
             <MaterialIcons
               name="star"
               size={13}
-              color={item.rating >= 4 ? '#D97706' : item.rating === 3 ? '#F59E0B' : '#DC2626'}
+              color={COLORS.bg}
             />
             <Text style={[
               styles.starBadgeText,
-              { color: item.rating >= 4 ? '#92400E' : item.rating === 3 ? '#B45309' : '#991B1B' }
+              { color: COLORS.bg }
             ]}>
               {item.rating}.0
             </Text>
@@ -184,26 +196,23 @@ export default function UserReviewsScreen() {
 
         {item.images?.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewImgs}>
-                  {item.images.map((img, i) => (
-                <Image
-                  key={`${img}-${i}`}
-                  source={{ uri: `https://insighthub.com.ng/${img}` }}
-                  style={styles.reviewImg}
-                  resizeMode="cover"
-                />
-              ))}
+            {item.images.map((img, i) => (
+              <Image
+                key={`${img}-${i}`}
+                source={{ uri: `https://insighthub.com.ng/${img}` }}
+                style={styles.reviewImg}
+                resizeMode="cover"
+              />
+            ))}
           </ScrollView>
         )}
       </View>
     );
   };
 
+
   if (!userId) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
+    return <PremiumLoader />;
   }
 
   return (
@@ -212,7 +221,7 @@ export default function UserReviewsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color="#111" />
+          <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>My Reviews</Text>
@@ -222,7 +231,7 @@ export default function UserReviewsScreen() {
         </View>
         {summary && summary.total > 0 && (
           <View style={styles.headerBadge}>
-            <MaterialIcons name="star" size={14} color="#F59E0B" />
+            <MaterialIcons name="star" size={14} color={COLORS.gold} />
             <Text style={styles.headerBadgeText}>
               {summary.average.toFixed(1)}
             </Text>
@@ -232,7 +241,7 @@ export default function UserReviewsScreen() {
 
       <FlatList
         data={reviews}
-       keyExtractor={(item, index) => `${item.id}-${index}`}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         showsVerticalScrollIndicator={false}
         refreshing={loading}
         onRefresh={refresh}
@@ -276,7 +285,7 @@ export default function UserReviewsScreen() {
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator style={{ marginTop: 60 }} color="#007bff" />
+            <ActivityIndicator style={{ marginTop: 60 }} color={COLORS.gold} />
           ) : (
             <View style={styles.empty}>
               <View style={styles.emptyIcon}>
@@ -291,10 +300,10 @@ export default function UserReviewsScreen() {
         }
         ListFooterComponent={
           hasMore
-            ? <ActivityIndicator style={{ marginVertical: 20 }} color="#007bff" />
+            ? <></>
             : reviews.length > 0
-            ? <Text style={styles.endText}>You have seen all reviews</Text>
-            : null
+              ? <Text style={styles.endText}>You have seen all reviews</Text>
+              : null
         }
         renderItem={({ item }) => <ReviewItem item={item} />}
       />
@@ -306,7 +315,7 @@ export default function UserReviewsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f8fa',
+    backgroundColor: COLORS.bg,
     paddingTop: getStatusBarHeight(),
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -318,80 +327,80 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
-    borderBottomWidth: 0.5,
-    borderColor: '#e5e7eb',
+    backgroundColor: COLORS.card,
+    borderBottomWidth: 1,
+    borderColor: COLORS.border,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: COLORS.border,
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#111' },
-  headerSub:   { fontSize: 12, color: '#888', marginTop: 1 },
+  headerTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.textPrimary },
+  headerSub: { fontSize: 12, color: COLORS.textSecondary, marginTop: 1 },
   headerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#FEF9C3',
+    backgroundColor: COLORS.gold,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
   },
-  headerBadgeText: { fontSize: 13, fontWeight: '700', color: '#92400E' },
+  headerBadgeText: { fontSize: 13, fontWeight: '700', color: COLORS.bg },
 
   // Summary
   summaryCard: {
     flexDirection: 'row',
     gap: 16,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
     margin: 16,
     borderRadius: 16,
     padding: 16,
-    borderWidth: 0.5,
-    borderColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   summaryLeft: {
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 80,
   },
-  avgScore:     { fontSize: 44, fontWeight: '800', color: '#111', lineHeight: 50 },
+  avgScore: { fontSize: 44, fontWeight: '800', color: COLORS.gold, lineHeight: 50 },
   summaryStars: { flexDirection: 'row', gap: 2, marginVertical: 4 },
-  summaryTotal: { fontSize: 12, color: '#888' },
+  summaryTotal: { fontSize: 12, color: COLORS.textSecondary },
   summaryRight: { flex: 1, gap: 6, justifyContent: 'center' },
   ratingBarRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  ratingBarStar: { fontSize: 12, color: '#555', width: 10, textAlign: 'right' },
+  ratingBarStar: { fontSize: 12, color: COLORS.textSecondary, width: 10, textAlign: 'right' },
   ratingBarTrack: {
-    flex: 1, height: 6, backgroundColor: '#f3f4f6',
+    flex: 1, height: 6, backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 3, overflow: 'hidden',
   },
-  ratingBarFill: { height: '100%', backgroundColor: '#F59E0B', borderRadius: 3 },
-  ratingBarCount: { fontSize: 11, color: '#888', width: 24, textAlign: 'right' },
+  ratingBarFill: { height: '100%', backgroundColor: COLORS.gold, borderRadius: 3 },
+  ratingBarCount: { fontSize: 11, color: COLORS.textSecondary, width: 24, textAlign: 'right' },
 
   // Filters
   filterList: { paddingHorizontal: 16, paddingBottom: 10, gap: 8 },
   filterPill: {
     paddingHorizontal: 16, paddingVertical: 7,
-    borderRadius: 20, backgroundColor: '#f3f4f6',
-    borderWidth: 0.5, borderColor: '#e5e7eb',
+    borderRadius: 20, backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.border,
   },
-  filterPillActive: { backgroundColor: '#007bff', borderColor: '#007bff' },
-  filterText:       { fontSize: 13, color: '#555', fontWeight: '500' },
-  filterTextActive: { color: '#fff' },
+  filterPillActive: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
+  filterText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
+  filterTextActive: { color: COLORS.bg, fontWeight: '600' },
 
   sectionLabel: {
-    fontSize: 13, fontWeight: '700', color: '#888',
+    fontSize: 13, fontWeight: '700', color: COLORS.textSecondary,
     marginHorizontal: 16, marginTop: 4, marginBottom: 6,
     textTransform: 'uppercase', letterSpacing: 0.5,
   },
 
   // Review card
   reviewCard: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
     borderRadius: 14, padding: 14,
     marginHorizontal: 16, marginBottom: 10,
-    borderWidth: 0.5, borderColor: '#e5e7eb',
+    borderWidth: 1, borderColor: COLORS.border,
   },
   reviewHeader: {
     flexDirection: 'row', alignItems: 'flex-start',
@@ -400,23 +409,23 @@ const styles = StyleSheet.create({
   avatar: { width: 42, height: 42, borderRadius: 21 },
   avatarFallback: {
     width: 42, height: 42, borderRadius: 21,
-    backgroundColor: '#B5D4F4',
+    backgroundColor: COLORS.gold,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarInitial:  { fontSize: 16, fontWeight: '600', color: '#0C447C' },
-  reviewerInfo:   { flex: 1 },
-  reviewerName:   { fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 3 },
-  starsRow:       { flexDirection: 'row', alignItems: 'center' },
-  reviewTime:     { fontSize: 11, color: '#aaa' },
+  avatarInitial: { fontSize: 16, fontWeight: '600', color: COLORS.bg },
+  reviewerInfo: { flex: 1 },
+  reviewerName: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 3 },
+  starsRow: { flexDirection: 'row', alignItems: 'center' },
+  reviewTime: { fontSize: 11, color: COLORS.textSecondary },
   starBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 2,
     paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20,
   },
   starBadgeText: { fontSize: 12, fontWeight: '700' },
-  reviewComment:  { fontSize: 13, color: '#444', lineHeight: 20 },
-  readMore:       { fontSize: 12, color: '#007bff', marginTop: 4, fontWeight: '600' },
-  reviewImgs:     { marginTop: 10 },
-  reviewImg:      { width: 80, height: 80, borderRadius: 8, marginRight: 8 },
+  reviewComment: { fontSize: 13, color: COLORS.textPrimary, lineHeight: 20 },
+  readMore: { fontSize: 12, color: COLORS.gold, marginTop: 4, fontWeight: '600' },
+  reviewImgs: { marginTop: 10 },
+  reviewImg: { width: 80, height: 80, borderRadius: 8, marginRight: 8, borderColor: COLORS.border, borderWidth: 1 },
 
   // Empty state
   empty: {
@@ -425,16 +434,18 @@ const styles = StyleSheet.create({
   },
   emptyIcon: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: COLORS.card,
     alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
+  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: COLORS.textPrimary },
   emptySub: {
-    fontSize: 13, color: '#888',
+    fontSize: 13, color: COLORS.textSecondary,
     textAlign: 'center', lineHeight: 20,
   },
   endText: {
-    fontSize: 12, color: '#ccc',
+    fontSize: 12, color: COLORS.textSecondary,
     textAlign: 'center', marginVertical: 20,
   },
 });

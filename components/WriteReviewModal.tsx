@@ -17,19 +17,30 @@ import {
   View,
 } from 'react-native';
 
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  danger: '#ef4444'
+};
+
 interface ExistingReview {
-  id:      number;
-  rating:  number;
+  id: number;
+  rating: number;
   comment: string;
 }
 
 interface Props {
-  visible:      boolean;
-  onClose:      () => void;
-  onSubmit:     (rating: number, comment: string, images: any[]) => Promise<{ success: boolean; msg: string }>;
-  onUpdate?:    (reviewId: number, rating: number, comment: string) => Promise<{ success: boolean; msg: string }>;
-  existing?:    ExistingReview | null;
-  submitting:   boolean;
+  visible: boolean;
+  onClose: () => void;
+  onSubmit: (rating: number, comment: string, images: any[]) => Promise<{ success: boolean; msg: string }>;
+  onUpdate?: (reviewId: number, rating: number, comment: string) => Promise<{ success: boolean; msg: string }>;
+  existing?: ExistingReview | null;
+  submitting: boolean;
   entityLabel?: string; // 'agent', 'company', 'property' — defaults to 'agent'
 }
 
@@ -45,13 +56,13 @@ export default function WriteReviewModal({
   entityLabel = 'agent',
 }: Props) {
   const isEdit = !!existing;
-  const [rating,  setRating]  = useState(existing?.rating  ?? 0);
+  const [rating, setRating] = useState(existing?.rating ?? 0);
   const [comment, setComment] = useState(existing?.comment ?? '');
-  const [images,  setImages]  = useState<any[]>([]);
+  const [images, setImages] = useState<any[]>([]);
 
   // Sync state when modal re-opens with existing data
   const handleShow = () => {
-    setRating(existing?.rating   ?? 0);
+    setRating(existing?.rating ?? 0);
     setComment(existing?.comment ?? '');
     setImages([]);
   };
@@ -69,7 +80,7 @@ export default function WriteReviewModal({
     });
     if (!result.canceled) {
       const picked = result.assets.map(a => ({
-        uri:  a.uri,
+        uri: a.uri,
         name: a.fileName ?? `review_${Date.now()}.jpg`,
         type: a.mimeType ?? 'image/jpeg',
       }));
@@ -123,7 +134,7 @@ export default function WriteReviewModal({
               {isEdit ? 'Edit your review' : `Review this ${entityLabel}`}
             </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color="#555" />
+              <Ionicons name="close" size={20} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -137,7 +148,7 @@ export default function WriteReviewModal({
                   <MaterialIcons
                     name={i <= rating ? 'star' : 'star-border'}
                     size={42}
-                    color={i <= rating ? '#F59E0B' : '#D1D5DB'}
+                    color={i <= rating ? COLORS.gold : COLORS.border}
                   />
                 </TouchableOpacity>
               ))}
@@ -151,7 +162,7 @@ export default function WriteReviewModal({
             <TextInput
               style={styles.textInput}
               placeholder={`Share your experience with this ${entityLabel}...`}
-              placeholderTextColor="#aaa"
+              placeholderTextColor={COLORS.textSecondary}
               multiline
               numberOfLines={5}
               value={comment}
@@ -174,13 +185,13 @@ export default function WriteReviewModal({
                         onPress={() => setImages(prev => prev.filter((_, j) => j !== i))}
                         hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                       >
-                        <Ionicons name="close-circle" size={20} color="#dc3545" />
+                        <Ionicons name="close-circle" size={20} color={COLORS.danger} />
                       </TouchableOpacity>
                     </View>
                   ))}
                   {images.length < 4 && (
                     <TouchableOpacity style={styles.addImgBtn} onPress={pickImages}>
-                      <Ionicons name="camera-outline" size={26} color="#888" />
+                      <Ionicons name="camera-outline" size={26} color={COLORS.gold} />
                       <Text style={styles.addImgText}>Add photo</Text>
                     </TouchableOpacity>
                   )}
@@ -200,10 +211,10 @@ export default function WriteReviewModal({
             disabled={submitting || rating === 0}
           >
             {submitting
-              ? <ActivityIndicator color="#fff" />
+              ? <ActivityIndicator color={COLORS.bg} />
               : <Text style={styles.submitText}>
-                  {isEdit ? 'Update review' : 'Submit review'}
-                </Text>
+                {isEdit ? 'Update review' : 'Submit review'}
+              </Text>
             }
           </TouchableOpacity>
 
@@ -217,56 +228,60 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
   },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     paddingBottom: 36,
     maxHeight: '92%',
+    borderTopWidth: 1,
+    borderColor: COLORS.border,
   },
   handle: {
     width: 40, height: 4, borderRadius: 2,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: COLORS.border,
     alignSelf: 'center', marginBottom: 16,
   },
   header: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', marginBottom: 20,
   },
-  title:    { fontSize: 17, fontWeight: 'bold', color: '#111' },
+  title: { fontSize: 17, fontWeight: 'bold', color: COLORS.textPrimary },
   closeBtn: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.border,
     alignItems: 'center', justifyContent: 'center',
   },
   label: {
-    fontSize: 14, fontWeight: '600', color: '#333',
+    fontSize: 14, fontWeight: '600', color: COLORS.gold,
     marginBottom: 8, marginTop: 14,
   },
-  starsRow:    { flexDirection: 'row', gap: 4, marginBottom: 4 },
-  ratingLabel: { fontSize: 13, color: '#F59E0B', fontWeight: '600', marginBottom: 4 },
+  starsRow: { flexDirection: 'row', gap: 4, marginBottom: 4 },
+  ratingLabel: { fontSize: 13, color: COLORS.gold, fontWeight: '600', marginBottom: 4 },
   textInput: {
-    borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12,
-    padding: 12, fontSize: 14, color: '#111', minHeight: 110,
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
+    padding: 12, fontSize: 14, color: COLORS.textPrimary, minHeight: 110,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  charCount: { fontSize: 11, color: '#aaa', textAlign: 'right', marginTop: 4 },
+  charCount: { fontSize: 11, color: COLORS.textSecondary, textAlign: 'right', marginTop: 4 },
   imagesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  imgWrap:   { position: 'relative' },
-  previewImg: { width: 74, height: 74, borderRadius: 10 },
-  removeImg:  { position: 'absolute', top: -8, right: -8 },
+  imgWrap: { position: 'relative' },
+  previewImg: { width: 74, height: 74, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border },
+  removeImg: { position: 'absolute', top: -8, right: -8 },
   addImgBtn: {
     width: 74, height: 74, borderRadius: 10,
-    borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed',
+    borderWidth: 1.5, borderColor: COLORS.border, borderStyle: 'dashed',
     alignItems: 'center', justifyContent: 'center', gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
-  addImgText:  { fontSize: 11, color: '#888' },
+  addImgText: { fontSize: 11, color: COLORS.textSecondary },
   submitBtn: {
-    backgroundColor: '#007bff', borderRadius: 12,
+    backgroundColor: COLORS.gold, borderRadius: 12,
     paddingVertical: 14, alignItems: 'center', marginTop: 16,
   },
-  submitBtnDisabled: { backgroundColor: '#93C5FD' },
-  submitText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  submitBtnDisabled: { backgroundColor: COLORS.textSecondary, opacity: 0.5 },
+  submitText: { color: COLORS.bg, fontSize: 15, fontWeight: '700' },
 });
