@@ -6,7 +6,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   StyleSheet,
   Text,
@@ -15,12 +14,14 @@ import {
   View,
 } from "react-native";
 import { getStatusBarHeight } from "react-native-status-bar-height";
+import { useToast } from "@/components/Toast";
 
 const BASE = "https://insighthub.com.ng";
 const GOLD = "#C9A84C";
 const DARK = "#0F0F1A";
 
 export default function EditStaff() {
+  const { show } = useToast();
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
@@ -59,7 +60,11 @@ export default function EditStaff() {
           setImage(u.profile_image || null);
         }
       } catch (err) {
-        Alert.alert("Error", "Failed to load staff");
+        show({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to load staff',
+        });
       } finally {
         setLoading(false);
       }
@@ -72,7 +77,11 @@ export default function EditStaff() {
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert("Permission required");
+      show({
+        type: 'error',
+        title: 'Permission required',
+        message: 'Please allow photo library access.',
+      });
       return;
     }
 
@@ -89,7 +98,11 @@ export default function EditStaff() {
   // ── UPDATE STAFF ───────────────────────────────────
   const handleUpdate = async () => {
     if (!name || !email || !phone) {
-      Alert.alert("Error", "All fields are required");
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'All fields are required',
+      });
       return;
     }
 
@@ -131,13 +144,25 @@ export default function EditStaff() {
       const result = await res.json();
 
       if (result.status === "success") {
-        Alert.alert("Success", "Staff updated successfully");
+        show({
+          type: 'success',
+          title: 'Success',
+          message: 'Staff updated successfully',
+        });
         router.back();
       } else {
-        Alert.alert("Error", result.msg);
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg,
+        });
       }
     } catch (err) {
-      Alert.alert("Error", "Update failed");
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'Update failed',
+      });
     } finally {
       setUpdating(false);
     }
@@ -146,14 +171,12 @@ export default function EditStaff() {
 
   // delete staff
   const handleDelete = async () => {
-    Alert.alert("Confirm", "Are you sure you want to delete this staff?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
+    show({
+      type: 'warning',
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to delete this staff?',
+      action: {
+        label: 'Delete',
         onPress: async () => {
           try {
             const token = await AsyncStorage.getItem("authToken");
@@ -170,17 +193,29 @@ export default function EditStaff() {
             const result = await res.json();
 
             if (result.status === "success") {
-              Alert.alert("Success", "Staff deleted successfully");
+              show({
+                type: 'success',
+                title: 'Success',
+                message: 'Staff deleted successfully',
+              });
               router.back();
             } else {
-              Alert.alert("Error", result.msg);
+              show({
+                type: 'error',
+                title: 'Error',
+                message: result.msg,
+              });
             }
           } catch (err) {
-            Alert.alert("Error", "Delete failed");
+            show({
+              type: 'error',
+              title: 'Error',
+              message: 'Delete failed',
+            });
           }
         },
       },
-    ]);
+    });
   };
 
 

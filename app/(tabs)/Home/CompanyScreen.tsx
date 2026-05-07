@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   Linking,
@@ -17,6 +16,7 @@ import {
 } from "react-native";
 import { initiateChat } from '@/hooks/useChat';
 import PremiumLoader from "@/components/PremiumLoader";
+import { useToast } from "@/components/Toast";
 
 const COLORS = {
   bg: '#091530',
@@ -123,6 +123,7 @@ const estateCompany = {
 /* ----------------------------- Screen ----------------------------- */
 
 export default function EstateCompanyScreen() {
+  const { show } = useToast();
   const router = useRouter();
   const [company] = useState(estateCompany); // using dummy directly for now
 
@@ -176,12 +177,12 @@ export default function EstateCompanyScreen() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
         setLoading(false)
       }
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -209,11 +210,11 @@ export default function EstateCompanyScreen() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
       }
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -241,11 +242,11 @@ export default function EstateCompanyScreen() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
       }
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -257,14 +258,15 @@ export default function EstateCompanyScreen() {
     const currentUser = JSON.parse(userJson);
 
     if (currentUser.plan_type !== 'premium') {
-      Alert.alert(
-        '⭐ Premium Feature',
-        'Chat with agents is available for premium members only.',
-        [
-          { text: 'Not now', style: 'cancel' },
-          { text: 'Upgrade', onPress: () => router.push('/Subscription') },
-        ]
-      );
+      show({
+        type: 'warning',
+        title: '⭐ Premium Feature',
+        message: 'Chat with agents is available for premium members only.',
+        action: {
+          label: 'Upgrade',
+          onPress: () => router.push('/Subscription'),
+        },
+      });
       return;
     }
 
@@ -296,29 +298,27 @@ export default function EstateCompanyScreen() {
         },
       });
     } else if (result.notPremium) {
-      Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat.');
+      show({ type: 'error', title: 'Premium Required', message: result.msg ?? 'Upgrade to chat.' });
     } else {
-      Alert.alert('Error', result.msg ?? 'Could not start chat');
+      show({ type: 'error', title: 'Error', message: result.msg ?? 'Could not start chat' });
     }
   };
 
   // CTA handlers (replace with real flows)
   const onBookInspection = useCallback(() => {
-    Alert.alert(
-      "Book Inspection",
-      "Booking flow not implemented yet. Open contact options?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Call",
-          onPress: () => {
-            Linking.openURL(`tel:${companyDetails.phone}`).catch(() =>
-              Alert.alert("Could not open dialer")
-            );
-          },
+    show({
+      type: 'info',
+      title: 'Book Inspection',
+      message: 'Booking flow not implemented yet. Open contact options?',
+      action: {
+        label: 'Call',
+        onPress: () => {
+          Linking.openURL(`tel:${companyDetails.phone}`).catch(() =>
+            show({ type: 'error', title: 'Error', message: 'Could not open dialer' })
+          );
         },
-      ]
-    );
+      },
+    });
   }, [company]);
 
   const onChatWithAgent = useCallback(() => {
@@ -328,13 +328,13 @@ export default function EstateCompanyScreen() {
   const onDownloadBrochure = useCallback(() => {
     const url = company.brochure;
     Linking.openURL(url).catch(() =>
-      Alert.alert("Could not open brochure URL")
+      show({ type: 'error', title: 'Error', message: 'Could not open brochure URL' })
     );
   }, [company]);
 
   const onOpenWebsite = useCallback(() => {
     Linking.openURL(companyDetails?.website).catch(() =>
-      Alert.alert("Could not open website")
+      show({ type: 'error', title: 'Error', message: 'Could not open website' })
     );
   }, [company]);
 

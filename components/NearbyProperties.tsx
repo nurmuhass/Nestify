@@ -4,7 +4,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   ScrollView,
   StyleSheet,
@@ -12,11 +11,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useToast } from './Toast';
 import PropertyGrid from './PropertyGrid'; // ← your existing grid component
 
 const { width: SW } = Dimensions.get('window');
 
-/* ── Types (your originals) ───────────────────────────────────── */
 type Property = {
   id: number | string;
   propertyName: string;
@@ -38,25 +37,26 @@ type Category = {
 const LISTING_TABS = ['All', 'For Rent', 'For Sell'];
 
 export default function NearbyEstates() {
+  const { show } = useToast();
   const router = useRouter();
 
   // ── state (your originals) ─────────────────────────────────
-  const [properties,     setProperties]     = useState<Property[]>([]);
-  const [categories,     setCategories]     = useState<Category[]>([]);
-  const [loading,        setLoading]        = useState(true);
-  const [loadingMore,    setLoadingMore]    = useState(false);
-  const [error,          setError]          = useState<string | null>(null);
-  const [page,           setPage]           = useState(1);
-  const [hasMore,        setHasMore]        = useState(true);
-  const [activeTab,      setActiveTab]      = useState('All');
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [activeTab, setActiveTab] = useState('All');
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [user,           setUser]           = useState(null);
-  const [seed]                              = useState(Math.floor(Math.random() * 99999));
+  const [user, setUser] = useState(null);
+  const [seed] = useState(Math.floor(Math.random() * 99999));
 
   /* ── your original auth check ─────────────────────────────── */
   useEffect(() => {
     const checkAuth = async () => {
-      const token   = await AsyncStorage.getItem('authToken');
+      const token = await AsyncStorage.getItem('authToken');
       const userJson = await AsyncStorage.getItem('authUser');
       if (!token || !userJson) {
         setLoading(false);
@@ -68,20 +68,25 @@ export default function NearbyEstates() {
     checkAuth();
   }, []);
 
-  /* ── your original initial load ───────────────────────────── */
-  useEffect(() => {
-    fetchCategories();
-    fetchNearby(1);
-  }, []);
 
-  /* ── your original focus refetch ──────────────────────────── */
+
+
+
   useFocusEffect(
     useCallback(() => {
       if (user) fetchNearby(1);
     }, [user])
   );
 
-  /* ── your original fetchCategories ────────────────────────── */
+
+  useEffect(() => {
+    if (user) {
+      setPage(1);
+      fetchNearby(1);
+      fetchCategories();
+    }
+  }, [activeTab, activeCategory, user]);
+
   const fetchCategories = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
@@ -98,20 +103,31 @@ export default function NearbyEstates() {
       if (result.status === 'success') {
         setCategories(result.categories || []);
       } else {
-        Alert.alert('Error', result.msg || 'Failed to load categories');
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg || 'Failed to load categories',
+        });
       }
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Something went wrong');
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err?.message || 'Something went wrong',
+      });
     }
   };
 
-  /* ── your original fetchNearby ────────────────────────────── */
   const fetchNearby = async (pageToLoad = 1) => {
     try {
       pageToLoad === 1 ? setLoading(true) : setLoadingMore(true);
       const token = await AsyncStorage.getItem('authToken');
+      const apiListingType =
+        activeTab === 'For Rent' ? 'Rent' :
+          activeTab === 'For Sell' ? 'Sell' : 'All';
+
       const response = await fetch(
-        `https://insighthub.com.ng/NestifyAPI/get_properties.php?page=${pageToLoad}&limit=10&seed=${seed}`,
+        `https://insighthub.com.ng/NestifyAPI/get_nearby_properties.php?page=${pageToLoad}&limit=10&listing_type=${encodeURIComponent(apiListingType)}&category=${encodeURIComponent(activeCategory)}`,
         {
           method: 'GET',
           headers: {
@@ -131,11 +147,19 @@ export default function NearbyEstates() {
         });
         if (result.meta) setHasMore(pageToLoad < result.meta.pages);
       } else {
-        Alert.alert('Error', result.msg || 'Failed to fetch properties');
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg || 'Failed to fetch properties',
+        });
       }
     } catch (err: any) {
       setError(err?.message || 'Something went wrong');
-      Alert.alert('Error', err?.message || 'Something went wrong');
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err?.message || 'Something went wrong',
+      });
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -151,15 +175,8 @@ export default function NearbyEstates() {
     }
   };
 
-  /* ── your original filter logic ───────────────────────────── */
-  const filteredProperties = useMemo(() => {
-    return properties.filter((item) => {
-      if (activeTab === 'For Rent' && !['Rent', 'Both'].includes(item.listingType)) return false;
-      if (activeTab === 'For Sell' && !['Sell', 'Both'].includes(item.listingType)) return false;
-      if (activeCategory !== 'All' && String(item.propertyCategory) !== activeCategory) return false;
-      return true;
-    });
-  }, [properties, activeTab, activeCategory]);
+
+  const filteredProperties = properties;
 
   if (loading) return null;
 
@@ -195,7 +212,7 @@ export default function NearbyEstates() {
         ))}
       </ScrollView>
 
-      {/* ── Category chips (underline style) ── */}
+      {/* ── Category chips  ── */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -234,7 +251,7 @@ export default function NearbyEstates() {
           )}
         </View>
       ) : (
-        /* ── your existing PropertyGrid — completely untouched ── */
+
         <PropertyGrid
           properties={filteredProperties}
           onEndReached={handleLoadMore}

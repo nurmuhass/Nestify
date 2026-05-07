@@ -6,7 +6,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -23,6 +22,8 @@ import { useCompanyReviews } from '@/hooks/useCompanyReviews';
 import { initiateChat } from '@/hooks/useChat';
 import PricingModal from '@/components/PricingModal';
 import PremiumLoader from '@/components/PremiumLoader';
+import { useToast } from '@/components/Toast';
+import GetRelatedProperties from '@/components/GetRelatedProperties';
 
 const COLORS = {
   bg: '#091530',
@@ -64,6 +65,7 @@ const formatDate = (dateString: string) => {
 
 
 export default function PropertyDetails() {
+  const { show } = useToast();
   const router = useRouter();
   const { id } = useLocalSearchParams() as { id: string };
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
@@ -92,17 +94,15 @@ export default function PropertyDetails() {
 
     // Premium check — freemium users see upgrade prompt
     if (user.plan_type !== 'premium') {
-      Alert.alert(
-        '⭐ Premium Feature',
-        'Chat with sellers is available for premium members only. Upgrade to unlock unlimited messaging.',
-        [
-          { text: 'Not now', style: 'cancel' },
-          {
-            text: 'Upgrade',
-            onPress: () => setPricingVisible(true),
-          },
-        ]
-      );
+      show({
+        type: 'warning',
+        title: '⭐ Premium Feature',
+        message: 'Chat with sellers is available for premium members only. Upgrade to unlock unlimited messaging.',
+        action: {
+          label: 'Upgrade',
+          onPress: () => setPricingVisible(true),
+        },
+      });
       return;
     }
 
@@ -129,9 +129,9 @@ export default function PropertyDetails() {
       });
     } else if (result.notPremium) {
       // Server-side premium check failed too
-      Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat with sellers.');
+      show({ type: 'error', title: 'Premium Required', message: result.msg ?? 'Upgrade to chat with sellers.' });
     } else {
-      Alert.alert('Error', result.msg ?? 'Could not start chat');
+      show({ type: 'error', title: 'Error', message: result.msg ?? 'Could not start chat' });
     }
   };
 
@@ -184,11 +184,11 @@ export default function PropertyDetails() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
       }
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -198,7 +198,7 @@ export default function PropertyDetails() {
   const fetchCompanyProfile = async () => {
     try {
       if (!property || !property.user_id) {
-        Alert.alert('Error', 'Property data not available');
+        show({ type: 'error', title: 'Error', message: 'Property data not available' });
         return;
       }
 
@@ -238,11 +238,11 @@ export default function PropertyDetails() {
           setCompanyData(prev => ({ ...prev, review_count: summaryResult.summary.total, average_rating: summaryResult.summary.average }));
         }
       } else {
-        Alert.alert('Error', result.msg);
+        show({ type: 'error', title: 'Error', message: result.msg });
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      Alert.alert('Error', errorMessage);
+      show({ type: 'error', title: 'Error', message: errorMessage });
     }
   };
 
@@ -359,6 +359,7 @@ export default function PropertyDetails() {
       keyExtractor={(_, i) => i.toString()}
       showsVerticalScrollIndicator={false}
       style={styles.container}
+      contentContainerStyle={{ flexGrow: 1 }}
       ListHeaderComponent={
         <>
           {/* ── Hero Carousel ── */}
@@ -704,17 +705,17 @@ export default function PropertyDetails() {
 
 
 
-            {/* Nearby Listings */}
-            <Text style={styles.sectionTitle}>Nearby From this Location</Text>
-            <NearbyProperties />
+            {/* similar Listings */}
+
+
+            <GetRelatedProperties propertyId={property?.id} />
 
 
             <PricingModal
               visible={pricingVisible}
               onSelectPlan={(planKey) => {
                 setPricingVisible(false);
-                // navigate to your payment/upgrade flow, passing planKey
-                // router.push(`./upgrade?plan=${planKey}`);
+
                 switch (planKey) {
                   case "freemium":
                     setPricingVisible(false);

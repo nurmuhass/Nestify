@@ -182,9 +182,11 @@ export default function RegisterScreen() {
   const [showPw,   setShowPw]   = useState(false);
   const [isSeller, setIsSeller] = useState(false);
   const [loading,  setLoading]  = useState(false);
+  const [sellerType, setSellerType] = useState<'company' | 'agent' | 'owner' | null>(null);
 
   const [CompanyName,    setCompanyName]    = useState('');
-  const [licenseNumber,  setLicenseNumber]  = useState('');
+  const [rcNumber,       setRcNumber]       = useState('');
+  const [nin,            setNin]            = useState('');
 
   const [country]    = useState('NG');
   const [state,      setState]      = useState(null);
@@ -195,7 +197,7 @@ export default function RegisterScreen() {
   const [openCity,   setOpenCity]   = useState(false);
   const { show } = useToast();
 
-  /* ── your original effects ── */
+
   useEffect(() => {
     const states = State.getStatesOfCountry('NG').map((s) => ({
       label: s.name,
@@ -218,26 +220,190 @@ export default function RegisterScreen() {
     }
   }, [state]);
 
+  /* ── Validation helpers ── */
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
+  const validatePhoneNumber = (phone: string) => {
+    // Nigerian phone numbers typically 11 digits (including 0) or 13 (with +234)
+    const phoneRegex = /^(\+234|0)[789]\d{9}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const validatePassword = (password: string) => {
+    // Minimum 8 chars, at least 1 uppercase, 1 lowercase, 1 number
+    return password.length >= 8;
+  };
+
+  const validateNIN = (nin: string) => {
+    // Nigerian NIN: 11 digits
+    return nin.length === 11 && /^\d+$/.test(nin);
+  };
+
+  const validateRCNumber = (rc: string) => {
+    // RC Number typically 6 digits
+    return rc.length >= 5 && /^[A-Z0-9]+$/.test(rc);
+  };
+
+  const validateCompanyName = (companyName: string) => {
+    // At least 3 characters
+    return companyName.trim().length >= 3;
+  };
 
 const handleRegister = async () => {
-  if (!name || !email || !phone || !password || !state || !city) {
+  // ── Basic field validation ──
+  if (!name.trim()) {
     show({
       type: 'error',
-      title: 'Error',
-      message: 'Please fill all required fields',
+      title: 'Validation Error',
+      message: 'Please enter your full name',
     });
     return;
   }
 
-  if (isSeller && (!CompanyName || !licenseNumber)) {
-  show({
-    type: 'warning',
-    title: 'Incomplete',
-    message: 'Please fill company details',
-  });
-  return;
-}
+  if (!email.trim()) {
+    show({
+      type: 'error',
+      title: 'Validation Error',
+      message: 'Please enter your email address',
+    });
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    show({
+      type: 'error',
+      title: 'Invalid Email',
+      message: 'Please enter a valid email address',
+    });
+    return;
+  }
+
+  if (!phone.trim()) {
+    show({
+      type: 'error',
+      title: 'Validation Error',
+      message: 'Please enter your phone number',
+    });
+    return;
+  }
+
+  if (!validatePhoneNumber(phone)) {
+    show({
+      type: 'error',
+      title: 'Invalid Phone',
+      message: 'Please enter a valid Nigerian phone number (e.g., 0803, +2348)',
+    });
+    return;
+  }
+
+  if (!password.trim()) {
+    show({
+      type: 'error',
+      title: 'Validation Error',
+      message: 'Please enter a password',
+    });
+    return;
+  }
+
+  if (!validatePassword(password)) {
+    show({
+      type: 'error',
+      title: 'Weak Password',
+      message: 'Password must be at least 8 characters long',
+    });
+    return;
+  }
+
+  if (!state) {
+    show({
+      type: 'error',
+      title: 'Validation Error',
+      message: 'Please select your state',
+    });
+    return;
+  }
+
+  if (!city) {
+    show({
+      type: 'error',
+      title: 'Validation Error',
+      message: 'Please select your city',
+    });
+    return;
+  }
+
+  // ── Seller validation ──
+  if (isSeller) {
+    if (!sellerType) {
+      show({
+        type: 'warning',
+        title: 'Incomplete',
+        message: 'Please select seller type: Company, Agent, or Owner',
+      });
+      return;
+    }
+    
+    if (sellerType === 'company') {
+      if (!CompanyName.trim()) {
+        show({
+          type: 'error',
+          title: 'Validation Error',
+          message: 'Please enter your company name',
+        });
+        return;
+      }
+
+      if (!validateCompanyName(CompanyName)) {
+        show({
+          type: 'error',
+          title: 'Invalid Company Name',
+          message: 'Company name must be at least 3 characters',
+        });
+        return;
+      }
+
+      if (!rcNumber.trim()) {
+        show({
+          type: 'error',
+          title: 'Validation Error',
+          message: 'Please enter your RC Number',
+        });
+        return;
+      }
+
+      if (!validateRCNumber(rcNumber)) {
+        show({
+          type: 'error',
+          title: 'Invalid RC Number',
+          message: 'RC Number must contain 5+ alphanumeric characters',
+        });
+        return;
+      }
+    }
+    
+    if (sellerType === 'agent' || sellerType === 'owner') {
+      if (!nin.trim()) {
+        show({
+          type: 'error',
+          title: 'Validation Error',
+          message: `Please enter your NIN (National Identification Number)`,
+        });
+        return;
+      }
+
+      if (!validateNIN(nin)) {
+        show({
+          type: 'error',
+          title: 'Invalid NIN',
+          message: 'NIN must be exactly 11 digits',
+        });
+        return;
+      }
+    }
+  }
 
   const selectedState = stateItems.find((item: any) => item.value === state);
   const stateName = selectedState ? selectedState.label : state;
@@ -253,8 +419,14 @@ const handleRegister = async () => {
   };
 
   if (isSeller) {
-    form.companyName = CompanyName;
-    form.licenseNumber = licenseNumber;
+    form.sellerType = sellerType;
+    if (sellerType === 'company') {
+      form.companyName = CompanyName;
+      form.rcNumber = rcNumber;
+    } else if (sellerType === 'agent' || sellerType === 'owner') {
+      form.nin = nin;
+      form.companyName = name; // For agents/owners, we can use their name as company name in the profile to simplify things
+    }
   }
 
   setLoading(true);
@@ -264,17 +436,17 @@ const handleRegister = async () => {
   if (res.error) {
     show({
       type: 'error',
-      title: 'Registration Failed',
+      title: 'Registration Failed', 
       message: res.error,
     });
   } else {
     show({
       type: 'success',
       title: 'Account Created 🎉',
-      message: 'Registration successful',
+      message: 'Registration successful. Complete your profile to get the best experience.',
     });
 
-    router.replace('/(tabs)/Home');
+    router.replace('/(tabs)/Profile/EditProfile');
   }
 };
   return (
@@ -439,8 +611,8 @@ const handleRegister = async () => {
                 <Ionicons name="business-outline" size={18} color={GOLD} />
               </View>
               <View>
-                <Text style={styles.toggleLabel}>Company / Agent</Text>
-                <Text style={styles.toggleSub}>Register as a real estate company or agent</Text>
+                <Text style={styles.toggleLabel}>Company / Agent / Owner</Text>
+                <Text style={styles.toggleSub}>Register as a real estate company agent or Property Owner</Text>
               </View>
             </View>
             <Switch
@@ -451,10 +623,50 @@ const handleRegister = async () => {
             />
           </View>
 
-          {/* ── Seller fields ── */}
+          {/* ── Seller type selection ── */}
           {isSeller && (
             <View style={[styles.card, { marginTop: 12 }]}>
-              <SectionLabel text="Company Details" />
+              <SectionLabel text="Seller Type" />
+              <View style={styles.sellerTypeContainer}>
+                {['company', 'agent', 'owner'].map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.sellerTypeBtn,
+                      sellerType === type && styles.sellerTypeBtnActive,
+                    ]}
+                    onPress={() => {
+                      setSellerType(type as 'company' | 'agent' | 'owner');
+                      // Reset fields when type changes
+                      setCompanyName('');
+                      setRcNumber('');
+                      setNin('');
+                    }}
+                  >
+                    <Ionicons
+                      name={type === 'company' ? 'business' : type === 'agent' ? 'briefcase' : 'person'}
+                      size={16}
+                      color={sellerType === type ? NAVY2 : GOLD}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      style={[
+                        styles.sellerTypeBtnText,
+                        sellerType === type && styles.sellerTypeBtnTextActive,
+                      ]}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* ── Company Details ── */}
+          {isSeller && sellerType === 'company' && (
+            <View style={[styles.card, { marginTop: 12 }]}>
+              <SectionLabel text="Company Information" />
               <FloatingInput
                 label="Company Name"
                 value={CompanyName}
@@ -462,9 +674,23 @@ const handleRegister = async () => {
                 autoCapitalize="words"
               />
               <FloatingInput
-                label="RC Number / NIN"
-                value={licenseNumber}
-                onChangeText={setLicenseNumber}
+                label="RC Number"
+                value={rcNumber}
+                onChangeText={setRcNumber}
+                autoCapitalize="characters"
+              />
+            </View>
+          )}
+
+          {/* ── Agent / Owner Details ── */}
+          {isSeller && (sellerType === 'agent' || sellerType === 'owner') && (
+            <View style={[styles.card, { marginTop: 12 }]}>
+              <SectionLabel text={sellerType === 'agent' ? 'Agent Information' : 'Owner Information'} />
+              <FloatingInput
+                label="NIN (National ID Number)"
+                value={nin}
+                onChangeText={setNin}
+                autoCapitalize="characters"
               />
             </View>
           )}
@@ -624,5 +850,36 @@ const styles = StyleSheet.create({
   terms: {
     fontSize: 11, color: 'rgba(255,255,255,0.28)',
     textAlign: 'center', lineHeight: 17,
+  },
+
+  /* ── Seller type selector ── */
+  sellerTypeContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 8,
+  },
+  sellerTypeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(201,168,76,0.4)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  sellerTypeBtnActive: {
+    backgroundColor: GOLD,
+    borderColor: GOLD,
+  },
+  sellerTypeBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: GOLD,
+  },
+  sellerTypeBtnTextActive: {
+    color: NAVY2,
   },
 });

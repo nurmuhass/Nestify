@@ -5,10 +5,11 @@
 import { ScrollView, View } from "react-native";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import { useFocusEffect, useRouter } from "expo-router";
-import { Alert, ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useToast } from "@/components/Toast";
 
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ const DARK2 = "#16213E";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 function BuyerProfile({ user, onSettings, onMessages }: any) {
+    const { show } = useToast();
     const router = useRouter();
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -72,17 +74,15 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
     };
 
     const handleBecomeSeller = () => {
-        Alert.alert(
-            "Become a Seller",
-            "Switch to a seller account to list properties, manage estates and connect with buyers. This will upgrade your account type.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Continue",
-                    onPress: () => router.push("/BecomeASeller"),
-                },
-            ]
-        );
+        show({
+            type: 'info',
+            title: 'Become a Seller',
+            message: 'Switch to a seller account to list properties, manage estates and connect with buyers. This will upgrade your account type.',
+            action: {
+                label: 'Continue',
+                onPress: () => router.push("/BecomeASeller"),
+            },
+        });
     };
 
     const QUICK_STATS = [

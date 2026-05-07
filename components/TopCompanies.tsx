@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -11,10 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useToast } from './Toast';
 
 const BASE_URL = 'https://insighthub.com.ng/';
 
 export default function TopCompanies() {
+  const { show } = useToast();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -35,17 +36,25 @@ export default function TopCompanies() {
             'Content-Type': 'application/json',
             Authorization: 'Token ' + (token ?? ''),
           },
-        }
+        } 
       );
       const result = await response.json();
       if (result.status === 'success') {
         setCompanies(result.companies || []);
-        console.log('Companies data:', result.companies || []);
+        // console.log('Companies data:', result.companies || []);
       } else {
-        Alert.alert('Error', result.msg || 'Failed to load companies');
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg || 'Failed to load companies',
+        });
       }
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message,
+      });
     } finally {
       setLoading(false);
     }

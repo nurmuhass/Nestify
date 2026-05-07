@@ -1,10 +1,8 @@
-// components/WriteReviewModal.tsx
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -16,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useToast } from './Toast';
 
 const COLORS = {
   bg: '#091530',
@@ -55,6 +54,7 @@ export default function WriteReviewModal({
   submitting,
   entityLabel = 'agent',
 }: Props) {
+  const { show } = useToast();
   const isEdit = !!existing;
   const [rating, setRating] = useState(existing?.rating ?? 0);
   const [comment, setComment] = useState(existing?.comment ?? '');
@@ -70,7 +70,11 @@ export default function WriteReviewModal({
   const pickImages = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please allow access to your photo library.');
+      show({
+        type: 'error',
+        title: 'Permission required',
+        message: 'Please allow access to your photo library.',
+      });
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -90,11 +94,19 @@ export default function WriteReviewModal({
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      Alert.alert('Rating required', 'Please tap a star to rate.');
+      show({
+        type: 'warning',
+        title: 'Rating required',
+        message: 'Please tap a star to rate.',
+      });
       return;
     }
     if (comment.trim().length < 10) {
-      Alert.alert('Too short', 'Please write at least 10 characters.');
+      show({
+        type: 'warning',
+        title: 'Too short',
+        message: 'Please write at least 10 characters.',
+      });
       return;
     }
 
@@ -103,13 +115,21 @@ export default function WriteReviewModal({
       : await onSubmit(rating, comment, images);
 
     if (result.success) {
-      Alert.alert('Done!', result.msg);
+      show({
+        type: 'success',
+        title: 'Done!',
+        message: result.msg,
+      });
       onClose();
       setRating(0);
       setComment('');
       setImages([]);
     } else {
-      Alert.alert('Error', result.msg);
+      show({
+        type: 'error',
+        title: 'Error',
+        message: result.msg,
+      });
     }
   };
 

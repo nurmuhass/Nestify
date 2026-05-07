@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
+
   FlatList,
   StyleSheet,
   Text,
@@ -12,12 +12,14 @@ import {
   View,
 } from "react-native";
 import EstateCard from "../../../../components/EstateCard";
+import { useToast } from '@/components/Toast';
 
 export default function AllEstatesScreen() {
   const { companyId } = useLocalSearchParams();
   const [estates, setEstates] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const { show } = useToast();
 
   useEffect(() => {
     fetchEstates();
@@ -46,10 +48,10 @@ export default function AllEstatesScreen() {
         setEstates(data);
         console.log("Fetched Estates:", data);
       } else {
-        Alert.alert("Error", result.msg || "Failed to load estates");
+        show({ type: 'error', title: 'Error', message: result.msg || 'Failed to load estates' });
       }
     } catch (err) {
-      Alert.alert("Error", err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,7 @@ export default function AllEstatesScreen() {
           renderItem={({ item }) => (
             <EstateCard
               item={item}
-              totalCount={estates.length} 
+              totalCount={estates.length}
               onPress={() => router.push(`/Home/EstateCompanyDetails?id=${item.id}`)}
             />
           )}

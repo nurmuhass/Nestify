@@ -31,8 +31,11 @@ type UserType = {
   state?: string;
   address?: string;
   is_seller?: number | boolean;
+  seller_type?: 'company' | 'agent' | 'owner' | string;
   company_name?: string;
   license_number?: string;
+  rc_number?: string;
+  nin?: string;
   about?: string;
   website?: string;
   profileImage?: string;
@@ -58,7 +61,9 @@ const EditProfile = () => {
   const [coverImage, setCoverImage] = useState<string | null>(null);
 
   const [isSeller, setIsSeller] = useState(false);
-  const [licenseNumber, setLicenseNumber] = useState('');
+  const [sellerType, setSellerType] = useState<'company' | 'agent' | 'owner' | null>(null);
+  const [companyName, setCompanyName] = useState('');
+  const [sellerIdNumber, setSellerIdNumber] = useState('');
   const [about, setAbout] = useState('');
   const [website, setWebsite] = useState('');
 
@@ -106,16 +111,40 @@ const EditProfile = () => {
         setAddress(userObj.address || '');
 
 
-        const sellerFlag = userObj.is_seller == 1 || userObj.is_seller === true;
+        const sellerFlag = userObj.is_seller == 1 || userObj.is_seller === true || userObj.isSeller === true;
         setIsSeller(sellerFlag);
 
-        setLicenseNumber(userObj.license_number || '');
+        let sellerTypeValue = String(userObj.seller_type || userObj.sellerType || '').toLowerCase();
+        if (!['company', 'agent', 'owner'].includes(sellerTypeValue)) {
+          if (userObj.company_name || userObj.companyName) sellerTypeValue = 'company';
+          else if (userObj.rc_number) sellerTypeValue = 'company';
+          else if (userObj.nin) sellerTypeValue = sellerFlag ? 'agent' : null;
+        }
+
+        // Default to 'company' if isSeller but no type detected
+        const finalSellerType = sellerFlag && !sellerTypeValue ? 'company' : (
+          sellerTypeValue === 'company' || sellerTypeValue === 'agent' || sellerTypeValue === 'owner'
+            ? (sellerTypeValue as 'company' | 'agent' | 'owner')
+            : null
+        );
+
+        setSellerType(finalSellerType);
+        setCompanyName(userObj.company_name || userObj.companyName || '');
+
+        // Load seller ID number based on final seller type
+        if (finalSellerType === 'company') {
+          setSellerIdNumber(userObj.rc_number || userObj.license_number || '');
+        } else if (finalSellerType === 'agent' || finalSellerType === 'owner') {
+          setSellerIdNumber(userObj.nin || userObj.license_number || '');
+        } else {
+          setSellerIdNumber(userObj.license_number || '');
+        }
+
         setAbout(userObj.about || '');
         setWebsite(userObj.website || '');
 
-
         setProfileImage(userObj.profileImage || userObj.profile_image || null);
-        setCoverImage(userObj.cover_image || null);
+        setCoverImage(userObj.cover_image || userObj.coverImage || null);
 
         setRawUser(userObj);
 
@@ -274,11 +303,31 @@ const EditProfile = () => {
   };
 
   const handleUpdateProfile = async () => {
+    const currentProfileImage = profileImage || user?.profile_image || user?.profileImage;
+
     if (!name.trim() || !email.trim() || !phone.trim()) {
       show({
         type: 'error',
         title: 'Missing fields',
         message: 'Name, email, and phone are required.',
+      });
+      return;
+    }
+
+    if (!address.trim()) {
+      show({
+        type: 'error',
+        title: 'Address required',
+        message: 'Please enter your full address.',
+      });
+      return;
+    }
+
+    if (!currentProfileImage) {
+      show({
+        type: 'error',
+        title: 'Profile image required',
+        message: 'Please upload a profile image before updating your profile.',
       });
       return;
     }
@@ -292,13 +341,26 @@ const EditProfile = () => {
       return;
     }
 
-    if (isSeller && !licenseNumber.trim()) {
-      show({
-        type: 'warning',
-        title: 'Seller details',
-        message: 'License number is required for seller accounts.',
-      });
-      return;
+    if (isSeller) {
+      if (!sellerType) {
+        show({
+          type: 'warning',
+          title: 'Seller details',
+          message: 'Seller type is required to update seller information.',
+        });
+        return;
+      }
+
+      if (!sellerIdNumber.trim()) {
+        show({
+          type: 'warning',
+          title: 'Seller details',
+          message: sellerType === 'company'
+            ? 'RC number is required for company sellers.'
+            : 'NIN is required for agent or owner sellers.',
+        });
+        return;
+      }
     }
 
     setUpdating(true);
@@ -320,16 +382,22 @@ const EditProfile = () => {
       formData.append('email', email.trim());
       formData.append('phone', phone.trim());
       formData.append('address', address.trim());
-      console.log('address label to submit:', address); // Debug log
+
 
       if (stateLabel) {
         formData.append('state', stateLabel);
       }
-
+ 
       formData.append('city', city);
 
       if (isSeller) {
-        formData.append('license_number', licenseNumber.trim());
+        if (sellerType === 'company') {
+          formData.append('rc_number', sellerIdNumber.trim());
+          formData.append('company_name', companyName.trim());
+        } else {
+          formData.append('nin', sellerIdNumber.trim());
+        }
+        formData.append('seller_type', sellerType ?? '');
         formData.append('about', about.trim());
         formData.append('website', website.trim());
       }
@@ -378,7 +446,7 @@ const EditProfile = () => {
         });
 
         // Navigate back to profile page after successful update
-        router.back();
+        router.replace('/(tabs)/Profile');
       } else {
         show({
           type: 'error',
@@ -421,7 +489,7 @@ const EditProfile = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
         >
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)/Profile')}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
 
@@ -573,14 +641,33 @@ const EditProfile = () => {
 
           {isSeller && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Company Details</Text>
+              <Text style={styles.sectionTitle}>Seller Details</Text>
+
+              {sellerType === 'company' && (
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="business-outline" size={18} color="#98a2b3" />
+                  <TextInput
+                    value={companyName}
+                    onChangeText={setCompanyName}
+                    placeholder="Company Name"
+                    placeholderTextColor="#98a2b3"
+                    style={styles.input}
+                  />
+                </View>
+              )}
 
               <View style={styles.inputWrapper}>
                 <Ionicons name="card-outline" size={18} color="#98a2b3" />
                 <TextInput
-                  value={licenseNumber}
-                  onChangeText={setLicenseNumber}
-                  placeholder="License Number"
+                  value={sellerIdNumber}
+                  onChangeText={setSellerIdNumber}
+                  placeholder={
+                    sellerType === 'company'
+                      ? 'RC Number'
+                      : sellerType === 'agent' || sellerType === 'owner'
+                      ? 'NIN'
+                      : 'NIN / RC Number'
+                  }
                   placeholderTextColor="#98a2b3"
                   style={styles.input}
                 />
@@ -591,7 +678,7 @@ const EditProfile = () => {
                 <TextInput
                   value={website}
                   onChangeText={setWebsite}
-                  placeholder="Website"
+                  placeholder="Website(optional)"
                   placeholderTextColor="#98a2b3"
                   autoCapitalize="none"
                   style={styles.input}
@@ -603,7 +690,7 @@ const EditProfile = () => {
                 <TextInput
                   value={about}
                   onChangeText={setAbout}
-                  placeholder="About your company"
+                  placeholder="About your company(optional)"
                   placeholderTextColor="#98a2b3"
                   multiline
                   textAlignVertical="top"

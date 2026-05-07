@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { City, Country, State } from "country-state-city";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useEffect, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -18,9 +18,9 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { getStatusBarHeight } from "react-native-status-bar-height";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons as Icon, Ionicons } from "@expo/vector-icons";
+import { useToast } from "../../../components/Toast";
 import PricingModal from "../../../components/PricingModal";
-import { Ionicons } from "@expo/vector-icons";
 
 
 // Add these constants above the component
@@ -30,15 +30,48 @@ const LIGHT = "#F8F9FB";
 const BLUE = "#2563EB";  // keep your existing blue for highlights
 
 // Multi-step form component
-const index = () => {
+const PublishProperty = () => {
+  const { show } = useToast();
   // State to track the current step
   const [currentStep, setCurrentStep] = useState(0);
 
   const [pricingVisible, setPricingVisible] = useState(false);
+
+  type FormDataType = {
+    images: string[];
+    thumbnail: string | null;
+    propertyName: string;
+    listingType: string;
+    Furnishing: string;
+    sellPrice: string;
+    rentPrice: string;
+    rentPeriod: string;
+    bedrooms: number;
+    Toilet: number;
+    BQ: number;
+    balconies: number;
+    totalRooms: string;
+    description: string;
+    propertyCategory: string;
+    propertySubCategory: string;
+    country: string;
+    state: string;
+    city: string;
+    size: string;
+    status: string;
+    documentType: string;
+    condition: string;
+    salesType: string;
+    location: string;
+    parkingspace: number;
+    managedByUs: boolean;
+    [key: string]: any; // Add index signature for dynamic property access
+  };
+
   // State for form data
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataType>({
     images: [],
-    thumbnail: "",
+    thumbnail: null,
     propertyName: "",
     listingType: "Sell", // or 'Rent'
     Furnishing: "Unfurnished", // or 'Furnished'
@@ -66,7 +99,7 @@ const index = () => {
     managedByUs: false,
   });
 
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCategories();
@@ -93,10 +126,19 @@ const index = () => {
       if (result.status === "success") {
         setCategories(result.categories);
       } else {
-        Alert.alert("Error", result.msg || "Failed to load categories");
+        show({
+          type: "error",
+          title: "Error",
+          message: result.msg || "Failed to load categories",
+        });
       }
     } catch (err) {
-      Alert.alert("Error", err.message);
+      const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
+      show({
+        type: "error",
+        title: "Error",
+        message: errorMsg,
+      });
     }
   };
 
@@ -106,19 +148,19 @@ const index = () => {
   const [city, setCity] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const [countryItems, setCountryItems] = useState([]);
-  const [stateItems, setStateItems] = useState([]);
-  const [cityItems, setCityItems] = useState([]);
+  const [countryItems, setCountryItems] = useState<{ label: string, value: string }[]>([]);
+  const [stateItems, setStateItems] = useState<{ label: string, value: string }[]>([]);
+  const [cityItems, setCityItems] = useState<{ label: string, value: string }[]>([]);
 
   const [openState, setOpenState] = useState(false);
   const [openCity, setOpenCity] = useState(false);
 
-  const [selectedType, setSelectedType] = useState("");
-  const [condition, setCondition] = useState("");
-  const [selectedSalesType, setSelectedSalesType] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [condition, setCondition] = useState<string | null>(null);
+  const [selectedSalesType, setSelectedSalesType] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
-  const handleStatusChange = (value) => {
+  const handleStatusChange = (value: string | null) => {
     setSelectedStatus(value);
     handleChange("status", value); // keep formData in sync
   };
@@ -127,11 +169,13 @@ const index = () => {
 
   const [openCategory, setOpenCategory] = useState(false);
   const [categoryValue, setCategoryValue] = useState(null);
-  const [categoryItems, setCategoryItems] = useState([]);
+  const [categoryItems, setCategoryItems] = useState<{ label: string, value: string | number }[]>([]);
 
   const [openSub, setOpenSub] = useState(false);
   const [subValue, setSubValue] = useState(null);
-  const [subItems, setSubItems] = useState([]);
+  const [subItems, setSubItems] = useState<{ label: string, value: string | number }[]>([]);
+
+  const [authLoaded, setAuthLoaded] = useState(false);
 
   useEffect(() => {
     if (categories.length > 0) {
@@ -146,10 +190,10 @@ const index = () => {
 
   useEffect(() => {
     if (categoryValue) {
-      const selected = categories.find((c) => c.id == categoryValue);
+      const selected = categories.find((c) => c.id === categoryValue);
 
       if (selected) {
-        const subs = selected.subcategories.map((s) => ({
+        const subs = selected.subcategories.map((s: any) => ({
           label: s.name,
           value: s.id,
         }));
@@ -161,19 +205,19 @@ const index = () => {
     }
 
     setSubValue(null);
-  }, [categoryValue]);
+  }, [categoryValue, categories]);
 
-  const onValueChange = (itemValue) => {
+  const onValueChange = (itemValue: string | null) => {
     setSelectedType(itemValue);
     handleChange("documentType", itemValue); // keep formData in sync
   };
 
-  const handleConditionChange = (value) => {
+  const handleConditionChange = (value: string | null) => {
     setCondition(value);
     handleChange("condition", value); // keep formData in sync
   };
 
-  const handleSalesTypeChange = (value) => {
+  const handleSalesTypeChange = (value: string | null) => {
     setSelectedSalesType(value);
     handleChange("salesType", value); // keep formData in sync
   };
@@ -222,6 +266,7 @@ const index = () => {
     { label: "Off-Plan", value: "Off-Plan" },
   ]);
 
+
   // Status
   const [openStatus, setOpenStatus] = useState(false);
   const [statusValue, setStatusValue] = useState(null);
@@ -264,11 +309,11 @@ const index = () => {
   }, [state]);
 
   // State for errors/success messages
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
 
   // Function to handle form field changes
-  const handleChange = (field, value) => {
+  const handleChange = (field: string, value: any) => {
     setFormData({
       ...formData,
       [field]: value,
@@ -329,26 +374,25 @@ const index = () => {
       data.append("managed_by_us", formData.managedByUs ? "1" : "0");
 
       // 3) Append each image under a unique key, e.g. 'images[]'
-      let thumbnailFileName = "";
+      let thumbnailIndex = -1;
 
-      formData.images.forEach((uri) => {
-        const fileName = uri.split("/").pop();
+      formData.images.forEach((uri, index) => {
+        const fileName = uri.split("/").pop() || `image_${index}.jpg`;
 
         if (uri === formData.thumbnail) {
-          thumbnailFileName = fileName; // ✅ This is the real filename
+          thumbnailIndex = index;
         }
 
         data.append("images[]", {
           uri,
           name: fileName,
           type: "image/jpeg",
-        });
+        } as any);
       });
 
-      const thumbnailIndex = formData.images.findIndex(
-        (uri) => uri === formData.thumbnail,
-      );
-      data.append("thumbnailIndex", thumbnailIndex);
+      if (thumbnailIndex !== -1) {
+        data.append("thumbnailIndex", String(thumbnailIndex));
+      }
 
       const token = await AsyncStorage.getItem("authToken");
       const userJson = await AsyncStorage.getItem("authUser");
@@ -388,34 +432,43 @@ const index = () => {
         setLoading(false);
       }
     } catch (err) {
-      setError(err.message);
+      const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
+      setError(errorMsg);
       setSuccess(false);
       setLoading(false);
     }
   };
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<{ id: string; name: string; plan_type: string } | null>(null);
+
+  const checkAuth = async () => {
+    const token = await AsyncStorage.getItem('authToken');
+    const userJson = await AsyncStorage.getItem('authUser');
+    
+    if (!token || !userJson) {
+      console.log("Error", "Not authenticated");
+      return;
+    }
+    const userObj = JSON.parse(userJson);
+    setUser(userObj);
+    
+    const planType = String(userObj.plan_type || "").toLowerCase();
+    const isPremium = planType === "premium";
+    setPricingVisible(!isPremium);
+
+    setAuthLoaded(true);
+  };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = await AsyncStorage.getItem("authToken");
-      const userJson = await AsyncStorage.getItem("authUser");
-      if (!token || !userJson) {
-        console.log("Error", "Not authenticated");
-        return;
-      }
-      const userObj = JSON.parse(userJson);
-      setUser(userObj);
-      console.log("User data:", userObj);
-      // Only show pricing modal if user plan is not premium
-      if (userObj.plan_type !== "premium") {
-        setPricingVisible(true);
-      } else {
-        setPricingVisible(false);
-      }
-    };
     checkAuth();
   }, []);
+
+  // Refresh user data whenever screen comes into focus (e.g., after payment)
+  useFocusEffect(
+    useCallback(() => {
+      checkAuth();
+    }, [])
+  );
 
   //   // Function to handle form submission
   //   const handleSubmit = () => {
@@ -437,18 +490,20 @@ const index = () => {
   //   };
 
   const pickImage = async () => {
+    if (!user) return; // Guard clause to ensure user is not null
     const maxImages = user.plan_type === "premium" ? 15 : 2;
 
     if (formData.images.length >= maxImages) {
-      Alert.alert(
-        "Upgrade Required",
-        `Your current plan only allows ${maxImages} images. Upgrade to premium to add more.`,
-      );
+      show({
+        type: "warning",
+        title: "Upgrade Required",
+        message: `Your current plan only allows ${maxImages} images. Upgrade to premium to add more.`,
+      });
       return;
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
       allowsMultipleSelection: true,
       selectionLimit: maxImages - formData.images.length,
@@ -464,7 +519,7 @@ const index = () => {
   };
 
   // Function to remove an image
-  const removeImage = (index) => {
+  const removeImage = (index: number) => {
     const removed = formData.images[index];
     const newImages = [...formData.images];
     newImages.splice(index, 1);
@@ -477,7 +532,7 @@ const index = () => {
   };
 
   // Function to increment or decrement property features
-  const updateFeatureCount = (feature, increment) => {
+  const updateFeatureCount = (feature: string, increment: boolean) => {
     const currentValue = formData[feature] || 0;
     const newValue = increment
       ? currentValue + 1
@@ -499,10 +554,14 @@ const index = () => {
             style={{ marginBottom: 100 }}
           >
             <View style={styles.stepContainer}>
+   
               <Text style={styles.stepTitle}>
                 Hi {user ? user.name : ""}, Fill detail of your{" "}
+                
                 <Text style={styles.highlight}>real estate</Text>
+                {" "}
               </Text>
+            
 
               <View style={styles.inputContainer}>
                 <View style={styles.formField}>
@@ -1135,32 +1194,28 @@ const index = () => {
       </View>
 
       <PricingModal
-        visible={pricingVisible}
-        onSelectPlan={(planKey) => {
+     visible={authLoaded && pricingVisible}
+        onSelectPlan={(planKey: string) => {
           setPricingVisible(false);
-          // navigate to your payment/upgrade flow, passing planKey
+          // navigate to payment/upgrade flow, passing planKey
           // router.push(`./upgrade?plan=${planKey}`);
           switch (planKey) {
-            case "freemium":
-              setPricingVisible(false);
-              break;
-            case "single":
-              router.push("/upgrade/single");
-              break;
-            case "monthly":
-              router.push("/upgrade/monthly");
-              break;
+    case "freemium":
+      break; 
             case "semi":
-              router.push("/upgrade/semiannual");
+              router.push(`../../../upgrade/payment?plan=semi`);      
               break;
             case "annual":
-              router.push("/upgrade/annual");
-              break;
-            default:
-              router.push("/upgrade");
+              router.push(`../../../upgrade/payment?plan=annual`);
+              break;                 
+            case "monthly":
+              router.push(`../../../upgrade/payment?plan=monthly`);
+              break;       
+            default:  
+              router.push(`../../../upgrade`);      
           }
         }}
-        onClose={() => setPricingVisible(false)}
+        onClose={() => setPricingVisible(false)}  
       />
 
       {/* Error Modal */}
@@ -1301,16 +1356,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-  },
-  imageContainer: {
-    width: "48%",
-    aspectRatio: 1,
-    margin: "1%",
-    borderRadius: 14,
-    overflow: "hidden",
-    position: "relative",
-    borderWidth: 2,
-    borderColor: "transparent",
   },
   thumbnailBadge: {
     position: "absolute",
@@ -1518,14 +1563,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  label: {
-    marginTop: 16,
-    marginBottom: 4,
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#111827",
-  },
-
   counterContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1563,6 +1600,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     minWidth: 36,
     textAlign: "center",
+  },
+  counterControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   roomsContainer: {
     flexDirection: "row",
@@ -1699,49 +1741,14 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     fontWeight: "500",
   },
-  retryButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#2563EB",
-    alignItems: "center",
-  },
   retryButtonText: {
     color: "#FFFFFF",
     fontWeight: "500",
-  },
-  finishButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#2563EB",
-    alignItems: "center",
   },
   finishButtonText: {
     color: "#FFFFFF",
     fontWeight: "500",
   },
-  label: {
-    fontWeight: "bold",
-    marginBottom: 4,
-    fontSize: 14,
-    color: "#333",
-  },
-  picker: {
-    backgroundColor: "#F1F1F1",
-    borderRadius: 10,
-    marginBottom: 16,
-  },
-  thumbnailBadge: {
-    position: "absolute",
-    bottom: 5,
-    left: 5,
-    backgroundColor: "#4F46E5",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-
   pickerWrapper: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -1752,11 +1759,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 14,
     color: "#333",
-  },
-  thumbnailText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
   },
 });
 
@@ -1791,4 +1793,4 @@ const pickerStyles = {
   },
 };
 
-export default index;
+export default PublishProperty;

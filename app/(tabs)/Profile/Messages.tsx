@@ -10,12 +10,13 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View, Alert
+  View,
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { Conversation, useInbox } from '@/hooks/useChat';
 import PricingModal from '@/components/PricingModal';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { useToast } from '@/components/Toast';
 
 const formatTime = (d: string | null) => {
   if (!d) return '';
@@ -39,6 +40,7 @@ const COLORS = {
 };
 
 export default function MessagesScreen() {
+  const { show } = useToast();
   const router = useRouter();
   const [userId, setUserId] = useState<number>(0);
   const { conversations, totalUnread, loading, deleteConversation, refresh } = useInbox();
@@ -65,18 +67,15 @@ export default function MessagesScreen() {
   }, []);
 
   const handleDeleteConversation = (id: number, name: string) => {
-    Alert.alert(
-      'Delete conversation',
-      `Delete your conversation with ${name}? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteConversation(id),
-        },
-      ]
-    );
+    show({
+      type: 'warning',
+      title: 'Delete conversation',
+      message: `Delete your conversation with ${name}? This cannot be undone.`,
+      action: {
+        label: 'Delete',
+        onPress: () => deleteConversation(id),
+      },
+    });
   };
 
 

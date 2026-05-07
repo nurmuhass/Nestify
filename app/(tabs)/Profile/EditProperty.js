@@ -13,12 +13,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { getStatusBarHeight } from "react-native-status-bar-height";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons as Icon } from "@expo/vector-icons";
 import PremiumLoader from '@/components/PremiumLoader';
+import { useToast } from '@/components/Toast';
 
 const COLORS = {
   bg: '#091530',
@@ -32,6 +32,7 @@ const COLORS = {
 };
 
 const EditProperty = () => {
+  const { show } = useToast();
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
@@ -368,11 +369,19 @@ const EditProperty = () => {
               }
             }
           } else {
-            Alert.alert("Error", propResult.msg || "Failed to load property");
+            show({
+              type: 'error',
+              title: 'Error',
+              message: propResult.msg || 'Failed to load property',
+            });
           }
         }
       } catch (err) {
-        Alert.alert("Error", err.message);
+        show({
+          type: 'error',
+          title: 'Error',
+          message: err.message,
+        });
       } finally {
         setLoading(false);
       }
@@ -409,51 +418,60 @@ const EditProperty = () => {
 
 
   const handleDelete = async () => {
-    Alert.alert(
-      "Delete Property",
-      "Are you sure you want to delete this property?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setLoading(true);
+    show({
+      type: 'warning',
+      title: 'Delete Property',
+      message: 'Are you sure you want to delete this property?',
+      action: {
+        label: 'Delete',
+        onPress: async () => {
+          try {
+            setLoading(true);
 
-              const token = await AsyncStorage.getItem("authToken");
+            const token = await AsyncStorage.getItem("authToken");
 
-              const response = await fetch(
-                "https://insighthub.com.ng/NestifyAPI/delete_property.php",
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Token ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    propertyId: id,
-                  }),
-                }
-              );
-
-              const result = await response.json();
-
-              if (result.status === "success") {
-                Alert.alert("Success", "Property deleted");
-                router.back();
-              } else {
-                Alert.alert("Error", result.msg);
+            const response = await fetch(
+              "https://insighthub.com.ng/NestifyAPI/delete_property.php",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Token ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  propertyId: id,
+                }),
               }
-            } catch (err) {
-              Alert.alert("Error", err.message);
-            } finally {
-              setLoading(false);
+            );
+
+            const result = await response.json();
+
+            if (result.status === "success") {
+              show({
+                type: 'success',
+                title: 'Success',
+                message: 'Property deleted',
+              });
+              router.back();
+            } else {
+              show({
+                type: 'error',
+                title: 'Error',
+                message: result.msg,
+              });
             }
-          },
+          } catch (err) {
+            show({
+              type: 'error',
+              title: 'Error',
+              message: err.message,
+            });
+          } finally {
+            setLoading(false);
+          }
         },
-      ]
-    );
+      },
+    });
   };
 
   /* =========================
@@ -497,10 +515,11 @@ const EditProperty = () => {
     const maxImages = user?.plan_type === "premium" ? 15 : 2;
 
     if (formData.images.length >= maxImages) {
-      Alert.alert(
-        "Upgrade Required",
-        `Your current plan allows only ${maxImages} images. Upgrade to premium to add more.`
-      );
+      show({
+        type: 'warning',
+        title: 'Upgrade Required',
+        message: `Your current plan allows only ${maxImages} images. Upgrade to premium to add more.`,
+      });
       return;
     }
 
@@ -594,13 +613,25 @@ const EditProperty = () => {
       const result = await response.json();
 
       if (result.status === "success") {
-        Alert.alert("Success", "Property updated successfully");
+        show({
+          type: 'success',
+          title: 'Success',
+          message: 'Property updated successfully',
+        });
         router.back();
       } else {
-        Alert.alert("Error", result.msg);
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg,
+        });
       }
     } catch (err) {
-      Alert.alert("Error", err.message);
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message,
+      });
     } finally {
       setLoading(false);
     }

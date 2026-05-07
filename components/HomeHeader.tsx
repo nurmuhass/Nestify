@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useContext } from 'react';
 import {
   Image,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AuthContext } from '@/store';
 
 const BASE_URL = 'https://insighthub.com.ng/';
 
@@ -22,6 +23,12 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
 
   const [user, setUser] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { signOut } = useContext(AuthContext);
+
+  const handleLogout = async () => {
+    await signOut();
+    router.replace('/(auth)/Login');
+  };
 
   // 🔐 Load user info
   useEffect(() => {
@@ -36,6 +43,7 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
 
       const userObj = JSON.parse(userJson);
       setUser(userObj);
+      console.log("User loaded:", userObj);
     };
 
     checkAuth();
@@ -124,6 +132,10 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
           </TouchableOpacity>
         </View>
         <View style={styles.actions}>
+
+          <TouchableOpacity onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={19} color="rgba(255,255,255,0.68)" />
+          </TouchableOpacity>
 
           {/* 🔔 Notification Button with Badge */}
           <View style={{ position: 'relative' }}>

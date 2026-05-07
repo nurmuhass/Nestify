@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -21,6 +20,7 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Message, useMessages } from '@/hooks/useChat';
+import { useToast } from '@/components/Toast';
 
 const BASE_URL = 'https://insighthub.com.ng/';
 
@@ -215,6 +215,7 @@ const InspectionModal = ({
 
 // ── Main ChatRoom ─────────────────────────────────────────────────────────────
 export default function ChatRoom() {
+  const { show } = useToast();
   const router = useRouter();
   const { conversation_id, property_name, property_id, company_id } = useLocalSearchParams() as {
     conversation_id: string;
@@ -249,18 +250,15 @@ export default function ChatRoom() {
 
   const handleDeleteMessage = (messageId: number, isMine: boolean) => {
     if (!isMine) return; // can only delete own messages
-    Alert.alert(
-      'Delete message',
-      'Delete this message? It will be removed for everyone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteMessage(messageId),
-        },
-      ]
-    );
+    show({
+      type: 'warning',
+      title: 'Delete message',
+      message: 'Delete this message? It will be removed for everyone.',
+      action: {
+        label: 'Delete',
+        onPress: () => deleteMessage(messageId),
+      },
+    });
   };
 
 
@@ -274,7 +272,8 @@ export default function ChatRoom() {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please allow photo library access.'); return;
+      show({ type: 'warning', title: 'Permission required', message: 'Please allow photo library access.' });
+      return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,

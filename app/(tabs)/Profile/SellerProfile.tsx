@@ -5,7 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
 
-    Alert,
+
     FlatList,
     Image,
     ScrollView,
@@ -14,6 +14,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import PricingModal from "../../../components/PricingModal";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -59,7 +60,10 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
     const [staff, setStaff] = useState<any[]>([]);
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [pricingVisible, setPricingVisible] = useState(false);
     const isPremium = user?.plan_type === "premium";
+
+
 
     useFocusEffect(
         useCallback(() => {
@@ -133,6 +137,22 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
     };
 
     const TABS = ["Properties", "Pending", "Estates", "Staffs"];
+
+    // Filter tabs based on seller type - only companies can see Estates and Staffs
+    const availableTabs = TABS.filter((tab) => {
+        const sellerType = user?.seller_type || user?.sellerType || '';
+        if (sellerType !== 'company' && (tab === 'Estates' || tab === 'Staffs')) {
+            return false;
+        }
+        return true;
+    });
+
+    // Ensure activeTab is valid for current seller type
+    useEffect(() => {
+        if (!availableTabs.includes(activeTab)) {
+            setActiveTab('Properties');
+        }
+    }, [availableTabs, activeTab]);
 
     const renderPropertyCard = (item: any) => (
         <TouchableOpacity
@@ -221,7 +241,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                     <Text style={styles.staffName}>{item.name}</Text>
                     <Text style={styles.staffRole}>{item.email}</Text>
                 </View>
-
+   
                 <View style={[styles.staffBadge, { backgroundColor: item.is_active ? "#14532d" : "#374151" }]}>
                     <Text style={styles.staffBadgeText}>{item.is_active ? "Active" : "Inactive"}</Text>
                 </View>
@@ -239,7 +259,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
             return (
                 <View style={styles.emptyTab}>
                     <MaterialIcons name="inbox" size={36} color="#555" />
-                    <Text style={styles.emptyTabText}>No {activeTab.toLowerCase()} yet</Text>
+                    <Text style={styles.emptyTabText}>No {activeTab.toLowerCase()} {activeTab === "Pending" ? "properties" : ""} yet</Text>
                 </View>
             );
         }
@@ -348,10 +368,10 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                             <Text style={styles.sellerStatLbl}>{user.review_count ?? 0} Reviews</Text>
                         </View>
                         <View style={styles.sellerStatDivider} />
-                        <View style={styles.sellerStatItem}>
+                        <TouchableOpacity style={styles.sellerStatItem} onPress={() => router.push("../Profile/Wishlist")}>
                             <Text style={styles.sellerStatNum}>{saved.length}</Text>
                             <Text style={styles.sellerStatLbl}>Wishlists</Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
 
                     {/* CTA row */}
@@ -382,7 +402,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
 
                     {/* Premium banner for non-premium sellers */}
                     {!isPremium && (
-                        <PremiumBanner onUpgrade={() => router.push("/Subscription")} />
+                        <PremiumBanner onUpgrade={() => setPricingVisible(true)} />
                     )}
                 </View>
 
@@ -393,7 +413,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                     style={styles.tabScroll}
                     contentContainerStyle={styles.tabScrollContent}
                 >
-                    {TABS.map((tab) => (
+                    {availableTabs.map((tab) => (
                         <TouchableOpacity
                             key={tab}
                             style={[styles.sellerTab, activeTab === tab && styles.sellerTabActive]}
@@ -418,6 +438,26 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                 </View>
 
             </ScrollView>
+            <PricingModal
+                visible={pricingVisible}
+                onSelectPlan={(planKey: string) => {
+                    setPricingVisible(false);
+                    switch (planKey) {
+                        case "semi":
+                            router.push("../../../upgrade/payment?plan=semi");
+                            break;
+                        case "annual":
+                            router.push("../../../upgrade/payment?plan=annual");
+                            break;
+                        case "monthly":
+                            router.push("../../../upgrade/payment?plan=monthly");
+                            break;
+                        default:
+                            router.push("../../../upgrade/payment?plan=monthly");
+                    }
+                }}
+                onClose={() => setPricingVisible(false)}
+            />
         </View>
     );
 }

@@ -4,14 +4,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import PremiumLoader from '@/components/PremiumLoader';
+import { useToast } from '@/components/Toast';
 
 export default function EstateDetails() {
   const { id } = useLocalSearchParams();
   const [estate, setEstate] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [error, setError] = useState(null);
 
 
+  const { show } = useToast();
 
 
   useEffect(() => {
@@ -41,11 +44,11 @@ export default function EstateDetails() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
       }
     } catch (err) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }

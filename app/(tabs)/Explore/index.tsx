@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import {
 
-  Alert,
   FlatList,
   Image,
   ScrollView,
@@ -20,6 +19,7 @@ import CategoryTabs from '../../../components/CategoryTabs';
 import SearchBar from '../../../components/SearchBar';
 import LikeButton from '@/components/LikeButton';
 import PremiumLoader from '@/components/PremiumLoader';
+import { useToast } from '@/components/Toast';
 
 const COLORS = {
   bg: '#091530',
@@ -32,6 +32,7 @@ const COLORS = {
 };
 
 export default function ExplorePage() {
+  const { show } = useToast();
   const router = useRouter();
   const searchInputRef = useRef<TextInput>(null);
   const [properties, setProperties] = useState<Array<any>>([]);
@@ -54,7 +55,7 @@ export default function ExplorePage() {
       const token = await AsyncStorage.getItem("authToken");
 
       const response = await fetch(
-        `https://insighthub.com.ng/NestifyAPI/get_properties.php?page=${pageToLoad}&limit=10&seed=${seed}`,
+        `https://insighthub.com.ng/NestifyAPI/get_explore_properties.php?page=${pageToLoad}&limit=10&seed=${seed}`,
         {
           method: 'GET',
           headers: {
@@ -64,7 +65,13 @@ export default function ExplorePage() {
         }
       );
 
-      const result = await response.json();
+
+
+      const text = await response.text();
+
+      console.log("RAW RESPONSE:", text);
+
+      const result = JSON.parse(text);
 
       if (response.ok && result.status === 'success') {
         const data = result.data ?? result.properties ?? [];
@@ -93,7 +100,11 @@ export default function ExplorePage() {
 
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message,
+      });
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -125,7 +136,11 @@ export default function ExplorePage() {
       const result = await response.json();
       if (result.status === 'success') setCategories(result.categories || []);
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message,
+      });
     }
   };
 

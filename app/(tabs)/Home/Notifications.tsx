@@ -4,7 +4,6 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   StyleSheet,
@@ -14,6 +13,8 @@ import {
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { Notification, useNotifications } from '../../../hooks/useNotifications';
+import { useToast } from '@/components/Toast';
+import ConfirmModal from '@/components/ConfirmModal';
 
 const COLORS = {
   bg: '#091530',
@@ -61,9 +62,14 @@ const isToday = (dateString: string): boolean => {
   return d.getDate() === n.getDate() &&
     d.getMonth() === n.getMonth() &&
     d.getFullYear() === n.getFullYear();
+
 };
 
+
+
 export default function NotificationsScreen() {
+  const { show } = useToast();
+
   const router = useRouter();
   const {
     notifications,
@@ -80,28 +86,20 @@ export default function NotificationsScreen() {
 
   const [deleting, setDeleting] = useState<number | null>(null);
 
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [actionType, setActionType] = useState<'one' | 'all' | null>(null);
+
   const handleDelete = (id: number) => {
-    Alert.alert('Delete notification', 'Remove this notification?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          setDeleting(id);
-          await deleteOne(id);
-          setDeleting(null);
-        },
-      },
-    ]);
+    setSelectedId(id);
+    setActionType('one');
+    setConfirmVisible(true);
   };
 
   const handleClearAll = () => {
-    Alert.alert('Clear all', 'Remove all notifications?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear all', style: 'destructive', onPress: deleteAll },
-    ]);
+    setActionType('all');
+    setConfirmVisible(true);
   };
-
   useFocusEffect(
     useCallback(() => {
       return () => {
@@ -112,6 +110,44 @@ export default function NotificationsScreen() {
       };
     }, [unreadCount])
   );
+
+
+  const handleConfirm = async () => {
+    try {
+      if (actionType === 'one' && selectedId) {
+        setDeleting(selectedId);
+        await deleteOne(selectedId);
+
+        show({
+          type: 'success',
+          title: 'Deleted',
+          message: 'Notification removed',
+        });
+
+        setDeleting(null);
+      }
+
+      if (actionType === 'all') {
+        await deleteAll();
+
+        show({
+          type: 'success',
+          title: 'Cleared',
+          message: 'All notifications removed',
+        });
+      }
+    } catch (e) {
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'Something went wrong',
+      });
+    } finally {
+      setConfirmVisible(false);
+      setSelectedId(null);
+      setActionType(null);
+    }
+  };
 
   const handleTap = async (item: Notification) => {
     if (!item.is_read) await markRead(item.id);
@@ -285,11 +321,25 @@ export default function NotificationsScreen() {
           )}
         </View>
       </View>
+      <ConfirmModal
+        visible={confirmVisible}
+        title={actionType === 'all' ? 'Clear all notifications' : 'Delete notification'}
+        message={
+          actionType === 'all'
+            ? 'This will remove all notifications permanently.'
+            : 'This notification will be removed permanently.'
+        }
+        onCancel={() => setConfirmVisible(false)}
+        onConfirm={handleConfirm}
+        loading={deleting !== null}
+      />
+
 
       {renderList()}
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

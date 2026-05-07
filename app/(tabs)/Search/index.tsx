@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     Animated,
     FlatList,
     Image,
@@ -18,6 +17,7 @@ import {
     View,
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { useToast } from '../../../components/Toast';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type Property = {
@@ -168,6 +168,7 @@ const ResultCard = ({
 
 /* ─── Main Screen ────────────────────────────────────────────── */
 export default function SearchScreen() {
+    const { show } = useToast();
     const inputRef = useRef<TextInput>(null);
 
     const [query, setQuery] = useState('');
@@ -225,10 +226,18 @@ export default function SearchScreen() {
             if (result.status === 'success') {
                 setProperties(result.data ?? result.properties ?? []);
             } else {
-                Alert.alert('Error', result.msg || 'Failed to load properties');
+                show({
+                    type: 'error',
+                    title: 'Error',
+                    message: result.msg || 'Failed to load properties',
+                });
             }
         } catch (e: any) {
-            Alert.alert('Error', e.message);
+            show({
+                type: 'error',
+                title: 'Error',
+                message: e.message,
+            });
         } finally {
             setLoading(false);
             setFetched(true);

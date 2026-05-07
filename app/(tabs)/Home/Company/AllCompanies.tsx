@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   FlatList,
   ScrollView,
   Text,
@@ -11,8 +10,10 @@ import {
   View,
 } from "react-native";
 import CompanyCard from "../../../../components/CompanyCard";
+import { useToast } from "../../../../components/Toast";
 
 export default function AllCompanies() {
+  const { show } = useToast();
   const router = useRouter();
 
   const [search, setSearch] = useState("");
@@ -43,10 +44,10 @@ export default function AllCompanies() {
       if (result.status === "success") {
         setCompanies(result.companies || []);
       } else {
-        Alert.alert("Error", result.msg || "Failed to load companies");
+        show({ type: 'error', title: 'Error', message: result.msg || "Failed to load companies" });
       }
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     }
   };
 
@@ -73,7 +74,7 @@ export default function AllCompanies() {
         setCategories(result.categories || []);
       }
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     }
   };
 

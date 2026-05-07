@@ -1,3 +1,4 @@
+// pricing modal component for listing plans and features
 import {
     Dimensions,
     Modal,
@@ -9,24 +10,16 @@ import {
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
+const GOLD = '#C9A84C';
+const BACKDROP = 'rgba(0,0,0,0.7)';
+const SURFACE = '#0F0F1A';
+const CARD = '#161821';
+const TEXT = '#F7F7FA';
+const SUBTEXT = '#B5B5C3';
+const BORDER = '#ffffff14';
 
 const plans = [
-  {
-    key: 'freemium',
-    title: 'Freemium',
-    subtitle: '2 Listings / 2 Images',
-    price: 'Free',
-    features: ['Up to 2 listings per month', '2 images per listing', 'Pay‑per‑lead ₦200'],
-    cta: 'Continue Freemium',
-  },
-  {
-    key: 'single',
-    title: 'Premium Single',
-    subtitle: 'One‑time Listing',
-    price: '₦5,000',
-    features: ['10 images', 'Featured placement', 'Basic analytics'],
-    cta: 'Buy Single Listing',
-  },
+
   {
     key: 'monthly',
     title: 'Premium Monthly',
@@ -99,76 +92,94 @@ const CARD_WIDTH = width * 0.8;
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: BACKDROP,
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     width: CARD_WIDTH + 20,
     maxHeight: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingTop: 16,
-    paddingBottom: 8,
-    paddingHorizontal: 10,
+    backgroundColor: SURFACE,
+    borderRadius: 18,
+    paddingTop: 18,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   header: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
+    color: TEXT,
     alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   scroll: {
     alignItems: 'center',
-    paddingBottom: 16,
+    paddingBottom: 18,
   },
   card: {
     width: CARD_WIDTH,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 16,
+    backgroundColor: CARD,
+    borderRadius: 16,
+    padding: 18,
     marginBottom: 16,
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: TEXT,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
-    marginVertical: 4,
+    color: SUBTEXT,
+    marginTop: 4,
+    marginBottom: 10,
   },
   price: {
     fontSize: 24,
-    fontWeight: '700',
-    marginVertical: 8,
+    fontWeight: '800',
+    color: GOLD,
+    marginVertical: 10,
   },
   feature: {
-    fontSize: 13,
-    color: '#444',
+    fontSize: 14,
+    color: SUBTEXT,
     alignSelf: 'flex-start',
-    marginLeft: 12,
-    marginVertical: 2,
+    marginLeft: 4,
+    marginVertical: 4,
   },
   button: {
-    marginTop: 12,
-    backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 6,
+    marginTop: 16,
+    backgroundColor: GOLD,
+    paddingVertical: 13,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: SURFACE,
+    fontWeight: '700',
+    fontSize: 14,
   },
   close: {
     position: 'absolute',
-    top: 8,
-    right: 12,
+    top: 12,
+    right: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff10',
   },
   closeText: {
     fontSize: 20,
-    color: '#888',
+    color: SUBTEXT,
   },
 });

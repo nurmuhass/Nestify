@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
+
   Image,
   ScrollView,
   StyleSheet,
@@ -15,6 +15,9 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useToast } from '@/components/Toast';
+import { Animated } from 'react-native';
+import { useRef } from 'react';
 
 const BASE_URL = 'https://insighthub.com.ng';
 const GOLD = '#C9A84C';
@@ -35,12 +38,14 @@ const EditEstate = () => {
   const [location, setLocation] = useState('');
   const [about, setAbout] = useState('');
   const [image, setImage] = useState<string | null>(null);
-const [hasFetched, setHasFetched] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [facilities, setFacilities] = useState<string[]>([]);
   const [initialFacilities, setInitialFacilities] = useState<string[]>([]);
   const [deletedFacilities, setDeletedFacilities] = useState<string[]>([]);
   const [newFacilities, setNewFacilities] = useState<string[]>([]);
   const [newFacility, setNewFacility] = useState('');
+  const [lastRemoved, setLastRemoved] = useState<string | null>(null);
+  const { show } = useToast();
 
   const parseFacilities = (value: any): string[] => {
     if (!value) return [];
@@ -94,7 +99,7 @@ const [hasFetched, setHasFetched] = useState(false);
         throw new Error('Server returned invalid JSON');
       }
 
-  
+
 
       if (data.status === 'success') {
         const e = data.estate;
@@ -113,11 +118,19 @@ const [hasFetched, setHasFetched] = useState(false);
         setNewFacility('');
         setHasFetched(true);
       } else {
-        Alert.alert('Error', data.msg || 'Failed to load estate');
+        show({
+          type: 'error',
+          title: 'Error',
+          message: data.msg || 'Failed to load estate',
+        });
       }
     } catch (err) {
       console.log('FETCH ERROR:', err);
-      Alert.alert('Error', 'Failed to load estate');
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to load estate'
+      });
     } finally {
       setLoading(false);
     }
@@ -132,7 +145,11 @@ const [hasFetched, setHasFetched] = useState(false);
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permission required', 'You need to allow gallery access.');
+      show({
+        type: 'warning',
+        title: 'Permission required',
+        message: 'You need to allow gallery access.',
+      });
       return;
     }
 
@@ -147,29 +164,34 @@ const [hasFetched, setHasFetched] = useState(false);
     }
   };
 
-const addFacility = () => {
-  const value = newFacility.trim();
-  if (!value) {
-    console.log("ADD FACILITY BLOCKED: empty value");
-    return;
-  }
+  const addFacility = () => {
+    const value = newFacility.trim();
+    if (!value) {
+      console.log("ADD FACILITY BLOCKED: empty value");
+      return;
+    }
 
-  const exists = facilities.some((f) => normalize(f) === normalize(value));
-  if (exists) {
-    console.log("ADD FACILITY BLOCKED: already exists");
-    Alert.alert('Notice', 'That facility already exists.');
-    return;
-  }
+    const exists = facilities.some((f) => normalize(f) === normalize(value));
+    if (exists) {
+      console.log("ADD FACILITY BLOCKED: already exists");
 
-  console.log("ADDING FACILITY:", value); 
-  setFacilities((prev) => [...prev, value]);
-  setNewFacilities((prev) => {
-    const updated = [...prev, value];
-    console.log("NEW FACILITIES STATE NOW:", updated);  
-    return updated;
-  });
-  setNewFacility('');
-};
+      show({
+        type: 'warning',
+        title: 'Already exists',
+        message: 'That facility already exists.',
+      });
+      return;
+    }
+
+    console.log("ADDING FACILITY:", value);
+    setFacilities((prev) => [...prev, value]);
+    setNewFacilities((prev) => {
+      const updated = [...prev, value];
+      console.log("NEW FACILITIES STATE NOW:", updated);
+      return updated;
+    });
+    setNewFacility('');
+  };
   const removeFacility = (facility: string) => {
     setFacilities((prev) => prev.filter((x) => normalize(x) !== normalize(facility)));
 
@@ -195,12 +217,20 @@ const addFacility = () => {
 
   const handleUpdate = async () => {
     if (!estateId) {
-      Alert.alert('Error', 'Invalid estate id');
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'Invalid estate id',
+      });
       return;
     }
 
     if (!name.trim() || !location.trim()) {
-      Alert.alert('Error', 'Estate name and location are required');
+      show({
+        type: 'error',
+        title: 'Missing fields',
+        message: 'Estate name and location are required',
+      });
       return;
     }
 
@@ -209,7 +239,11 @@ const addFacility = () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (!token) {
-        Alert.alert('Error', 'Not authenticated');
+        show({
+          type: 'error',
+          title: 'Error',
+          message: 'Not authenticated'
+        });
         return;
       }
 
@@ -219,8 +253,8 @@ const addFacility = () => {
       formData.append('estate_location', location.trim());
       formData.append('about', about.trim());
 
-formData.append('deleted_facilities', JSON.stringify(deletedFacilities));
-formData.append('new_facilities', JSON.stringify(newFacilities));
+      formData.append('deleted_facilities', JSON.stringify(deletedFacilities));
+      formData.append('new_facilities', JSON.stringify(newFacilities));
 
       if (image && image.startsWith('file')) {
         const fileName = image.split('/').pop() || `estate_${Date.now()}.jpg`;
@@ -229,8 +263,8 @@ formData.append('new_facilities', JSON.stringify(newFacilities));
           ext === 'png'
             ? 'image/png'
             : ext === 'webp'
-            ? 'image/webp'
-            : 'image/jpeg';
+              ? 'image/webp'
+              : 'image/jpeg';
 
         formData.append('estate_image', {
           uri: image,
@@ -258,16 +292,28 @@ formData.append('new_facilities', JSON.stringify(newFacilities));
       }
 
       if (result.status === 'success') {
-          setHasFetched(false);
+        setHasFetched(false);
         await fetchEstateById();
-        Alert.alert('Success', 'Estate updated successfully');
+        show({
+          type: 'success',
+          title: 'Success',
+          message: 'Estate updated successfully'
+        });
         router.back();
       } else {
-        Alert.alert('Error', result.msg || 'Update failed');
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg || 'Update failed'
+        });
       }
     } catch (err) {
       console.log('UPDATE ERROR:', err);
-      Alert.alert('Error', 'Update failed');
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'Update failed'
+      });
     } finally {
       setUpdating(false);
     }
@@ -282,7 +328,7 @@ formData.append('new_facilities', JSON.stringify(newFacilities));
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}   keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
       <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
         <Ionicons name="arrow-back" size={24} color={GOLD} />
       </TouchableOpacity>
@@ -330,12 +376,20 @@ formData.append('new_facilities', JSON.stringify(newFacilities));
       <View style={styles.facilityList}>
         {facilities.length > 0 ? (
           facilities.map((f, idx) => (
-            <View key={`${f}-${idx}`} style={styles.facility}>
+            <Animated.View
+              key={`${f}-${idx}`}
+              style={[
+                styles.facility,
+                {
+                  transform: [{ scale: new Animated.Value(1) }],
+                },
+              ]}
+            >
               <Text style={styles.facilityText}>{f}</Text>
               <TouchableOpacity onPress={() => removeFacility(f)}>
                 <Ionicons name="close-circle" color="#ff6b6b" size={20} />
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           ))
         ) : (
           <Text style={styles.emptyText}>No facilities added yet.</Text>
@@ -353,7 +407,7 @@ formData.append('new_facilities', JSON.stringify(newFacilities));
           returnKeyType="done"
         />
         <TouchableOpacity onPress={addFacility} style={styles.addBtn}>
-          <Ionicons name="add" size={22} color={DARK} /> 
+          <Ionicons name="add" size={22} color={DARK} />
         </TouchableOpacity>
       </View>
 

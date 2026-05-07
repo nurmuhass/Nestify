@@ -97,7 +97,7 @@ export default function SavedProperties() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#c9a84c" />
       </View>
     );
   }
@@ -108,7 +108,7 @@ export default function SavedProperties() {
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#111" />
+            <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Saved Properties</Text>
         </View>
@@ -125,7 +125,7 @@ export default function SavedProperties() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <View style={styles.emptyIcon}>
-              <Ionicons name="heart-outline" size={32} color="#ccc" />
+              <Ionicons name="heart-outline" size={32} color="rgba(255,255,255,0.4)" />
             </View>
             <Text style={styles.emptyTitle}>No saved properties yet</Text>
             <Text style={styles.emptySub}>
@@ -189,7 +189,7 @@ export default function SavedProperties() {
               </Text>
 
               <View style={styles.locRow}>
-                <Ionicons name="location-outline" size={12} color="#888" />
+                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.6)" />
                 <Text style={styles.locText} numberOfLines={1}>
                   {[item.city, item.state].filter(Boolean).join(', ')}
                 </Text>
@@ -231,7 +231,7 @@ export default function SavedProperties() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f8fa',
+    backgroundColor: '#0f2044',
     paddingTop: getStatusBarHeight(),
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -243,40 +243,40 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
-    borderBottomWidth: 0.5,
-    borderColor: '#e5e7eb',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  headerTitle: { fontSize: 17, fontWeight: 'bold', color: '#111' },
+  headerTitle: { fontSize: 17, fontWeight: 'bold', color: '#fff' },
   countBadge: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 20,
   },
-  countText: { fontSize: 12, fontWeight: '600', color: '#555' },
+  countText: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
 
   list: { padding: 14, gap: 12 },
 
   // Card
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 16,
-    borderWidth: 0.5,
-    borderColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
   },
   cardImg: {
     width: '100%',
     height: 140,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     position: 'relative',
   },
   imgPlaceholder: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   statusPill: {
     position: 'absolute',
@@ -299,40 +299,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardBody: { padding: 12 },
-  cardName: { fontSize: 15, fontWeight: 'bold', color: '#111', marginBottom: 3 },
+  cardName: { fontSize: 15, fontWeight: 'bold', color: '#fff', marginBottom: 3 },
   locRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 6 },
-  locText: { fontSize: 12, color: '#666', flex: 1 },
-  price: { fontSize: 15, fontWeight: 'bold', color: '#007bff', marginBottom: 8 },
-  priceSub: { fontSize: 11, color: '#999', fontWeight: '400' },
+  locText: { fontSize: 12, color: 'rgba(255,255,255,0.6)', flex: 1 },
+  price: { fontSize: 15, fontWeight: 'bold', color: '#c9a84c', marginBottom: 8 },
+  priceSub: { fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '400' },
 
   // Chips
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 },
   chip: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 6,
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
-  chipText: { fontSize: 11, color: '#555' },
+  chipText: { fontSize: 11, color: 'rgba(255,255,255,0.7)' },
 
   // Footer
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderTopWidth: 0.5,
-    borderColor: '#e5e7eb',
+    borderTopWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     paddingTop: 10,
   },
-  savedDate: { fontSize: 11, color: '#aaa' },
+  savedDate: { fontSize: 11, color: 'rgba(255,255,255,0.5)' },
   viewBtn: {
     paddingHorizontal: 14,
     paddingVertical: 5,
     borderRadius: 20,
-    borderWidth: 0.5,
-    borderColor: '#007bff',
+    borderWidth: 1,
+    borderColor: '#c9a84c',
   },
-  viewBtnText: { fontSize: 12, fontWeight: '600', color: '#007bff' },
+  viewBtnText: { fontSize: 12, fontWeight: '600', color: '#c9a84c' },
 
   // Empty state
   empty: {
@@ -345,14 +345,14 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
+  emptyTitle: { fontSize: 15, fontWeight: 'bold', color: '#fff' },
   emptySub: {
     fontSize: 13,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     paddingHorizontal: 40,
     lineHeight: 20,

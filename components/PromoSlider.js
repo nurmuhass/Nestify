@@ -1,13 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, Image, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Text, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
+import { useToast } from './Toast';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width * 0.9;
 
 export default function PromoSlider() {
+  const { show } = useToast();
   const router = useRouter();
   const [sliders, setSliders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,26 +37,36 @@ export default function PromoSlider() {
 
       // IMPORTANT: API returns { sliders: [...], status: 'success' }
       if (response.ok && result.status === 'success') {
-setSliders(result.sliders);
-        
+        setSliders(result.sliders);
+
       } else {
         const msg = result.msg || 'Failed to load sliders';
-        Alert.alert('Error', msg);
+        show({
+          type: 'error',
+          title: 'Error',
+          message: msg,
+        });
       }
     } catch (err) {
       console.error('fetchSliders error:', err);
-      Alert.alert('Error', err.message || String(err));
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message || String(err),
+      });
     } finally {
       setLoading(false);
     }
-  }; 
+  };
 
   if (loading) {
-    return    <View style={{ height: 238,
-    alignItems: 'center',
-    justifyContent: 'center'}}>
-          <ActivityIndicator color="#c9a84c" />
-        </View>;
+    return <View style={{
+      height: 238,
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <ActivityIndicator color="#c9a84c" />
+    </View>;
   }
 
   if (!sliders || sliders.length === 0) {

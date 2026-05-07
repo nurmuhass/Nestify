@@ -56,6 +56,7 @@ export const AuthProvider = ({ children }) => {
         setToken(token);
         setUser(user);
         setIsLoggedIn(true);
+        console.log("Registration successful:", json);
         return { success: true };
       } else {
         const msg = json.msg || "Registration failed";
@@ -85,6 +86,7 @@ export const AuthProvider = ({ children }) => {
         setToken(token);
         setUser(user);
         setIsLoggedIn(true);
+        console.log("Login successful:", json);
         return { success: true };
       } else {
         const msg = json.msg || "Login failed";

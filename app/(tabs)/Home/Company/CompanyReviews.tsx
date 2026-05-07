@@ -8,7 +8,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   ScrollView,
@@ -18,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { useToast } from '@/components/Toast';
 import { CompanyReview, useCompanyReviews } from '@/hooks/useCompanyReviews';
 
 const COLORS = {
@@ -50,6 +50,7 @@ const formatTime = (d: string) => {
 };
 
 export default function CompanyReviewsScreen() {
+  const { show } = useToast();
   const router = useRouter();
   const { company_id, company_name, company_image } = useLocalSearchParams() as {
     company_id: string;
@@ -69,16 +70,18 @@ export default function CompanyReviewsScreen() {
   } = useCompanyReviews(companyId);
 
   const handleDelete = (reviewId: number) => {
-    Alert.alert('Delete review', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive',
+    show({
+      type: 'warning',
+      title: 'Delete review',
+      message: 'Are you sure?',
+      action: {
+        label: 'Delete',
         onPress: async () => {
           const r = await deleteReview(reviewId);
-          if (!r.success) Alert.alert('Error', r.msg);
+          if (!r.success) show({ type: 'error', title: 'Error', message: r.msg });
         },
       },
-    ]);
+    });
   };
 
   // ── Rating bar ────────────────────────────────────────────────────────────

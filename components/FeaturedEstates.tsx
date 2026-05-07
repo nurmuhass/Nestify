@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -13,11 +12,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useToast } from './Toast';
 
 const fmt = (v?: string | number) =>
   v ? '₦' + Number(String(v).replace(/,/g, '')).toLocaleString('en-NG') : '—';
 
 export default function FeaturedEstates() {
+  const { show } = useToast();
   const [estates, setEstates] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -44,10 +45,18 @@ export default function FeaturedEstates() {
       if (result.status === 'success') {
         setEstates(result.Estates || result.estates || []);
       } else {
-        Alert.alert('Error', result.msg || 'Failed to load estates');
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg || 'Failed to load estates',
+        });
       }
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -82,8 +91,8 @@ export default function FeaturedEstates() {
             const price = estate.sellPrice
               ? fmt(estate.sellPrice)
               : estate.rentPrice
-              ? `${fmt(estate.rentPrice)}/yr`
-              : null;
+                ? `${fmt(estate.rentPrice)}/yr`
+                : null;
 
             const tag =
               estate.listingType === 'Both'

@@ -4,7 +4,6 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   ScrollView,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { initiateChat } from '@/hooks/useChat';
 import PremiumLoader from "@/components/PremiumLoader";
+import { useToast } from "@/components/Toast";
 
 const COLORS = {
   bg: '#091530',
@@ -31,6 +31,7 @@ const COLORS = {
 
 
 export default function EstateDetails() {
+  const { show } = useToast();
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
@@ -91,11 +92,11 @@ export default function EstateDetails() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
       }
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -123,11 +124,11 @@ export default function EstateDetails() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
       }
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -158,12 +159,12 @@ export default function EstateDetails() {
       } else {
         const msg = result.msg || 'Failed to load property details';
         setError(msg);
-        Alert.alert('Error', msg);
+        show({ type: 'error', title: 'Error', message: msg });
         setLoading(false)
       }
     } catch (err: any) {
       setError(err.message);
-      Alert.alert('Error', err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -175,21 +176,22 @@ export default function EstateDetails() {
     const currentUser = JSON.parse(userJson);
 
     if (currentUser.plan_type !== 'premium') {
-      Alert.alert(
-        '⭐ Premium Feature',
-        'Chat with agents is available for premium members only.',
-        [
-          { text: 'Not now', style: 'cancel' },
-          { text: 'Upgrade', onPress: () => router.push('/Subscription') },
-        ]
-      );
+      show({
+        type: 'warning',
+        title: '⭐ Premium Feature',
+        message: 'Chat with agents is available for premium members only.',
+        action: {
+          label: 'Upgrade',
+          onPress: () => router.push('/Subscription'),
+        },
+      });
       return;
     }
 
     // Guard — make sure we have a seller
     const sellerId = estate?.company_id;
     if (!sellerId) {
-      Alert.alert('Error', 'Could not identify the company. Please try again.');
+      show({ type: 'error', title: 'Error', message: 'Could not identify the company. Please try again.' });
       return;
     }
 
@@ -213,12 +215,12 @@ export default function EstateDetails() {
           },
         });
       } else if (result.notPremium) {
-        Alert.alert('Premium Required', result.msg ?? 'Upgrade to chat.');
+        show({ type: 'error', title: 'Premium Required', message: result.msg ?? 'Upgrade to chat.' });
       } else {
-        Alert.alert('Error', result.msg ?? 'Could not start chat');
+        show({ type: 'error', title: 'Error', message: result.msg ?? 'Could not start chat' });
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'Something went wrong');
+      show({ type: 'error', title: 'Error', message: e.message ?? 'Something went wrong' });
     } finally {
       setChatLoading(false);  // ← always runs, stops the spinner
     }

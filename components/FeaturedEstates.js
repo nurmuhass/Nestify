@@ -2,9 +2,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useToast } from './Toast';
 
 export default function FeaturedEstates() {
+  const { show } = useToast();
   const [estates, setEstates] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -30,10 +32,10 @@ export default function FeaturedEstates() {
       if (result.status === "success") {
         setEstates(result.Estates || result.estates || []);
       } else {
-        Alert.alert("Error", result.msg || "Failed to load estates");
+        show({ type: 'error', title: 'Error', message: result.msg || "Failed to load estates" });
       }
     } catch (err) {
-      Alert.alert("Error", err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
