@@ -84,20 +84,21 @@ const RecentPill = ({
 );
 
 /* ─── Property result card ───────────────────────────────────── */
-const ResultCard = ({
+const PropertyCard = ({
     item,
     index,
 }: {
     item: Property;
     index: number;
 }) => {
+
     const anim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         Animated.timing(anim, {
             toValue: 1,
             duration: 320,
-            delay: index * 55,
+            delay: index * 60,
             useNativeDriver: true,
         }).start();
     }, []);
@@ -114,119 +115,320 @@ const ResultCard = ({
                 ? `₦${fmt(item.rentPrice)}/mo`
                 : `₦${fmt(item.sellPrice)}`;
 
-    const tag = item.listingType === 'Both' ? 'Sell & Rent' : item.listingType;
+    const tag =
+        item.listingType === 'Both'
+            ? 'Sell & Rent'
+            : item.listingType;
 
     return (
         <Animated.View
             style={{
                 opacity: anim,
-                transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }],
+                transform: [
+                    {
+                        translateY: anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                        }),
+                    },
+                ],
             }}
         >
             <TouchableOpacity
-                style={styles.card}
-                activeOpacity={0.88}
+                activeOpacity={0.9}
+                style={styles.newCard}
                 onPress={() =>
-                    router.push({ pathname: '/Home/Company/Details', params: { id: String(item.id) } })
+                    router.push({
+                        pathname: '/Home/Company/Details',
+                        params: { id: String(item.id) },
+                    })
                 }
             >
-                {/* Thumbnail */}
-                <View style={styles.cardThumb}>
+
+                {/* IMAGE */}
+                <View style={styles.newImageWrap}>
+
                     {thumb ? (
-                        <Image source={{ uri: thumb }} style={styles.cardImg} resizeMode="cover" />
+                        <Image
+                            source={{ uri: thumb }}
+                            style={styles.newImage}
+                            resizeMode="cover"
+                        />
                     ) : (
-                        <View style={[styles.cardImg, styles.cardImgFallback]}>
-                            <Ionicons name="home-outline" size={26} color="#cbd5e1" />
+                        <View style={styles.newFallback}>
+                            <Ionicons
+                                name="home-outline"
+                                size={34}
+                                color="#94a3b8"
+                            />
                         </View>
                     )}
-                    <View style={styles.cardTagWrap}>
-                        <Text style={styles.cardTag}>{tag}</Text>
+
+                    {/* TYPE BADGE */}
+                    <View style={styles.typeBadge}>
+                        <Text style={styles.typeBadgeText}>
+                            {tag}
+                        </Text>
                     </View>
-                    {item.owner_is_premium === 1 && (
-                        <View style={styles.premiumBadge}>
+
+                    {/* PREMIUM */}
+                    {Number(item.owner_is_premium) === 1 && (
+                        <View style={styles.premiumPill}>
                             <Ionicons
                                 name="diamond"
-                                size={10}
-                                color="#fff"
+                                size={11}
+                                color="#091530"
                             />
-                            <Text style={styles.premiumBadgeText}>
-                                PREMIUM
+                            <Text style={styles.premiumPillText}>
+                                Premium
                             </Text>
                         </View>
                     )}
+
                 </View>
 
-                {/* Info */}
-                <View style={styles.cardBody}>
-                    <Text style={styles.cardName} numberOfLines={2}>
+                {/* BODY */}
+                <View style={styles.newBody}>
+
+                    {/* TITLE */}
+                    <Text
+                        numberOfLines={2}
+                        style={styles.newTitle}
+                    >
                         {item.propertyName}
                     </Text>
 
+                    {/* COMPANY */}
                     {item.company_name ? (
-                        <Text style={styles.companyName}>
+                        <Text style={styles.newCompany}>
                             {item.company_name}
                         </Text>
                     ) : null}
 
-                    <View style={styles.cardRow}>
-                        <Ionicons name="location-outline" size={13} color="#94a3b8" />
-                        <Text style={styles.cardLoc} numberOfLines={1}>
-                            {[item.city, item.state].filter(Boolean).join(', ') || 'Nigeria'}
+                    {/* LOCATION */}
+                    <View style={styles.locationRow}>
+                        <Ionicons
+                            name="location-outline"
+                            size={14}
+                            color="#94a3b8"
+                        />
+
+                        <Text
+                            numberOfLines={1}
+                            style={styles.locationText}
+                        >
+                            {[item.city, item.state]
+                                .filter(Boolean)
+                                .join(', ')}
                         </Text>
                     </View>
 
-                    <View style={styles.metricsRow}>
+                    {/* FEATURES */}
+                    <View style={styles.featuresRow}>
 
-                        <View style={styles.metricItem}>
-                            <Ionicons
-                                name="eye-outline"
-                                size={13}
-                                color="#94a3b8"
-                            />
-                            <Text style={styles.metricText}>
-                                {item.views_count || 0}
+                        {item.bedrooms ? (
+                            <View style={styles.featureBox}>
+                                <MaterialCommunityIcons
+                                    name="bed-outline"
+                                    size={14}
+                                    color="#cbd5e1"
+                                />
+                                <Text style={styles.featureValue}>
+                                    {item.bedrooms} Beds
+                                </Text>
+                            </View>
+                        ) : null}
+
+                        {item.bathrooms ? (
+                            <View style={styles.featureBox}>
+                                <MaterialCommunityIcons
+                                    name="shower"
+                                    size={14}
+                                    color="#cbd5e1"
+                                />
+                                <Text style={styles.featureValue}>
+                                    {item.bathrooms} Baths
+                                </Text>
+                            </View>
+                        ) : null}
+
+                    </View>
+
+                    {/* FOOTER */}
+                    <View style={styles.cardFooter}>
+
+                        <View>
+                            <Text style={styles.priceLabel}>
+                                Price
+                            </Text>
+
+                            <Text style={styles.newPrice}>
+                                {price}
                             </Text>
                         </View>
 
-                        <View style={styles.metricItem}>
-                            <Ionicons
-                                name="heart-outline"
-                                size={13}
-                                color="#94a3b8"
-                            />
-                            <Text style={styles.metricText}>
-                                {item.likes_count || 0}
-                            </Text>
+                        <View style={styles.statsWrap}>
+
+                            <View style={styles.statItem}>
+                                <Ionicons
+                                    name="eye-outline"
+                                    size={14}
+                                    color="#94a3b8"
+                                />
+                                <Text style={styles.statText}>
+                                    {item.views_count || 0}
+                                </Text>
+                            </View>
+
+                            <View style={styles.statItem}>
+                                <Ionicons
+                                    name="heart-outline"
+                                    size={14}
+                                    color="#94a3b8"
+                                />
+                                <Text style={styles.statText}>
+                                    {item.likes_count || 0}
+                                </Text>
+                            </View>
+
                         </View>
 
                     </View>
 
-                    {(item.bedrooms || item.bathrooms) ? (
-                        <View style={styles.cardFeatures}>
-                            {item.bedrooms ? (
-                                <View style={styles.featureChip}>
-                                    <MaterialCommunityIcons name="bed-outline" size={12} color="#64748b" />
-                                    <Text style={styles.featureText}>{item.bedrooms}</Text>
-                                </View>
-                            ) : null}
-                            {item.bathrooms ? (
-                                <View style={styles.featureChip}>
-                                    <MaterialCommunityIcons name="shower" size={12} color="#64748b" />
-                                    <Text style={styles.featureText}>{item.bathrooms}</Text>
-                                </View>
-                            ) : null}
-                        </View>
-                    ) : null}
-
-                    <Text style={styles.cardPrice}>{price}</Text>
                 </View>
 
-                <Ionicons name="chevron-forward" size={16} color="#cbd5e1" style={styles.cardChevron} />
             </TouchableOpacity>
         </Animated.View>
     );
 };
 
+
+const CompanyCard = ({
+    item,
+    index,
+}: {
+    item: Property;
+    index: number;
+}) => {
+
+    const anim = useRef(
+        new Animated.Value(0)
+    ).current;
+
+    useEffect(() => {
+
+        Animated.timing(anim, {
+            toValue: 1,
+            duration: 300,
+            delay: index * 40,
+            useNativeDriver: true,
+        }).start();
+
+    }, []);
+
+    return (
+
+        <Animated.View
+            style={{
+                opacity: anim,
+                transform: [
+                    {
+                        translateY: anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [12, 0],
+                        }),
+                    },
+                ],
+            }}
+        >
+
+            <TouchableOpacity
+                activeOpacity={0.88}
+                style={styles.companyCard}
+                onPress={() => {
+
+                    router.push({
+                        pathname: '/Home/CompanyScreen',
+                        params: {
+                            id: String(item.company_id),
+                        },
+                    });
+
+                }}
+            >
+
+                {/* AVATAR */}
+
+                <View style={styles.companyAvatar}>
+
+                    <Ionicons
+                        name="business-outline"
+                        size={28}
+                        color="#f0d98a"
+                    />
+
+                </View>
+
+                {/* BODY */}
+
+                <View style={styles.companyBody}>
+
+                    <View style={styles.companyTopRow}>
+
+                        <Text
+                            numberOfLines={1}
+                            style={styles.companyCardName}
+                        >
+                            {item.company_name}
+                        </Text>
+
+                        {Number(item.owner_is_premium) === 1 && (
+                            <View style={styles.companyPremium}>
+                                <Ionicons
+                                    name="diamond"
+                                    size={10}
+                                    color="#091530"
+                                />
+                            </View>
+                        )}
+
+                    </View>
+
+                    <Text
+                        numberOfLines={2}
+                        style={styles.companySub}
+                    >
+                        Real estate company
+                    </Text>
+
+                    <View style={styles.companyStats}>
+
+                        <View style={styles.companyStat}>
+                            <Ionicons
+                                name="home-outline"
+                                size={13}
+                                color="#94a3b8"
+                            />
+                            <Text style={styles.companyStatText}>
+                                Listings Available
+                            </Text>
+                        </View>
+
+                    </View>
+
+                </View>
+
+                <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color="#64748b"
+                />
+
+            </TouchableOpacity>
+
+        </Animated.View>
+    );
+};
 /* ─── Main Screen ────────────────────────────────────────────── */
 export default function SearchScreen() {
     const { show } = useToast();
@@ -259,6 +461,29 @@ export default function SearchScreen() {
 
         return () => clearTimeout(t);
     }, []);
+
+    useEffect(() => {
+
+        if (!query.trim()) {
+            setProperties([]);
+            return;
+        }
+
+        const delay = setTimeout(() => {
+            searchProperties();
+        }, 500);
+
+        return () => clearTimeout(delay);
+
+    }, [
+        query,
+        searchType,
+        activeFilter,
+        minPrice,
+        maxPrice,
+        premiumOnly,
+        bedroomFilter
+    ]);
 
     /* ── Recent queries ── */
     const loadRecent = async () => {
@@ -296,9 +521,14 @@ export default function SearchScreen() {
             }
 
             if (bedroomFilter !== 'Any') {
-                params.append('bedrooms', bedroomFilter);
-            }
 
+                const bedroomValue =
+                    bedroomFilter === '5+'
+                        ? '5'
+                        : bedroomFilter;
+
+                params.append('bedrooms', bedroomValue);
+            }
             const response = await fetch(
                 `${BASE}NestifyAPI/get_smart_search.php?${params.toString()}`,
                 {
@@ -316,7 +546,7 @@ export default function SearchScreen() {
 
             if (result.status === 'success') {
 
-                setProperties(result.data || []);
+                setProperties(result.properties || []);
 
             } else {
 
@@ -358,8 +588,9 @@ export default function SearchScreen() {
 
 
     const results = properties;
+
     const isIdle = !query.trim() && fetched;
-    const isEmpty = fetched && !loading && results.length === 0 && query.trim().length > 0;
+    const isEmpty = fetched && !searching && results.length === 0 && query.trim().length > 0;
 
     /* ── Search submit ── */
     const handleSubmit = useCallback(async () => {
@@ -663,7 +894,7 @@ export default function SearchScreen() {
                     <Text style={styles.emptyTitle}>No search results</Text>
                     <Text style={styles.emptySub}>
                         No results for{' '}
-                        <Text style={{ color: '#0f172a', fontWeight: '600' }}>"{query}"</Text>
+                        <Text style={{ color: '#fff', fontWeight: '600' }}>"{query}"</Text>
                     </Text>
                     <TouchableOpacity style={styles.emptyReset} onPress={() => setQuery('')}>
                         <Text style={styles.emptyResetText}>Clear search</Text>
@@ -675,7 +906,24 @@ export default function SearchScreen() {
                 <FlatList
                     data={results}
                     keyExtractor={(item) => String(item.id)}
-                    renderItem={({ item, index }) => <ResultCard item={item} index={index} />}
+                    renderItem={({ item, index }) => {
+
+                        if (item.search_type === 'company') {
+                            return (
+                                <CompanyCard
+                                    item={item}
+                                    index={index}
+                                />
+                            );
+                        }
+
+                        return (
+                            <PropertyCard
+                                item={item}
+                                index={index}
+                            />
+                        );
+                    }}
                     contentContainerStyle={styles.listContent}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
@@ -925,11 +1173,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#1e2f5a',
         overflow: 'hidden',
+        minHeight: 105,
     },
 
     cardThumb: {
-        width: 110,
-        height: 110,
+        width: 105,
+        height: 105,
     },
 
     cardImg: {
@@ -961,8 +1210,9 @@ const styles = StyleSheet.create({
     cardBody: {
         flex: 1,
         paddingHorizontal: 12,
-        paddingVertical: 12,
+
         gap: 5,
+        paddingVertical: 10,
     },
 
     cardName: {
@@ -1160,5 +1410,222 @@ const styles = StyleSheet.create({
     metricText: {
         color: '#94a3b8',
         fontSize: 11,
+    },
+
+    newCard: {
+        backgroundColor: '#0f2044',
+        borderRadius: 24,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#1e2f5a',
+        marginBottom: 6,
+    },
+
+    newImageWrap: {
+        width: '100%',
+        height: 220,
+        position: 'relative',
+    },
+
+    newImage: {
+        width: '100%',
+        height: '100%',
+    },
+
+    newFallback: {
+        flex: 1,
+        backgroundColor: '#091530',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    typeBadge: {
+        position: 'absolute',
+        bottom: 14,
+        left: 14,
+        backgroundColor: 'rgba(15,23,42,0.82)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+
+    typeBadgeText: {
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: '700',
+    },
+
+    premiumPill: {
+        position: 'absolute',
+        top: 14,
+        right: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#f0d98a',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+
+    premiumPillText: {
+        color: '#091530',
+        fontWeight: '800',
+        fontSize: 10,
+    },
+
+    newBody: {
+        padding: 16,
+    },
+
+    newTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '800',
+        lineHeight: 24,
+    },
+
+    newCompany: {
+        color: '#c9a84c',
+        marginTop: 6,
+        fontSize: 13,
+        fontWeight: '600',
+    },
+
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+
+    locationText: {
+        color: '#94a3b8',
+        marginLeft: 6,
+        fontSize: 13,
+        flex: 1,
+    },
+
+    featuresRow: {
+        flexDirection: 'row',
+        marginTop: 16,
+        gap: 10,
+    },
+
+    featureBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#091530',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 14,
+    },
+
+    featureValue: {
+        color: '#cbd5e1',
+        marginLeft: 6,
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    cardFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        marginTop: 20,
+    },
+
+    priceLabel: {
+        color: '#64748b',
+        fontSize: 11,
+        marginBottom: 4,
+    },
+
+    newPrice: {
+        color: '#f0d98a',
+        fontSize: 22,
+        fontWeight: '800',
+    },
+
+    statsWrap: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+
+    statItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+
+    statText: {
+        color: '#94a3b8',
+        fontSize: 12,
+    },
+
+    companyCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#0f2044',
+        borderRadius: 18,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: '#1e2f5a',
+    },
+
+    companyAvatar: {
+        width: 64,
+        height: 64,
+        borderRadius: 20,
+        backgroundColor: '#091530',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    companyBody: {
+        flex: 1,
+        marginLeft: 14,
+    },
+
+    companyTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
+    companyCardName: {
+        flex: 1,
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+
+    companyPremium: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#f0d98a',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    companySub: {
+        color: '#94a3b8',
+        marginTop: 4,
+        fontSize: 13,
+    },
+
+    companyStats: {
+        flexDirection: 'row',
+        marginTop: 10,
+    },
+
+    companyStat: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+    },
+
+    companyStatText: {
+        color: '#cbd5e1',
+        fontSize: 12,
     },
 });
