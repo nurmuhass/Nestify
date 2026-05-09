@@ -246,6 +246,36 @@ export default function PropertyDetails() {
     }
   };
 
+
+  const trackedRef = useRef(false);
+
+  useEffect(() => {
+    const trackView = async () => {
+      if (trackedRef.current || !id) return;
+      trackedRef.current = true;
+
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        if (!token) return;
+
+        await fetch('https://insighthub.com.ng/NestifyAPI/track_property_view.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Token ${token}`,
+          },
+          body: JSON.stringify({
+            property_id: Number(id),
+          }),
+        });
+      } catch (error) {
+        console.log('Track view error:', error);
+      }
+    };
+
+    trackView();
+  }, [id]);
+
   // 2) Carousel logic
   const scrollRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);

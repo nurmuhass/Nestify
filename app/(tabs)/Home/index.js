@@ -7,18 +7,19 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 // ── Components ──────────────────────────────────────────────────
-import FeaturedEstates  from '../../../components/FeaturedEstates';
-import HomeHeader       from '../../../components/HomeHeader';
-import HomeSearchBar    from '../../../components/HomeSearchBar';
+import FeaturedEstates from '../../../components/FeaturedEstates';
+import HomeHeader from '../../../components/HomeHeader';
+import HomeSearchBar from '../../../components/HomeSearchBar';
 import NearbyProperties from '../../../components/NearbyProperties';
-import PromoSlider      from '../../../components/PromoSlider';
-import TopCompanies     from '../../../components/TopCompanies';
+import PromoSlider from '../../../components/PromoSlider';
+import TopCompanies from '../../../components/TopCompanies';
 import TopLocations from '../../../components/TopLocations';
+import TrendingProperties from '../../../components/TrendingProperties';
 
 export default function HomeScreen() {
   // Lifted state so HomeHeader can show live counts from child fetches
   const [propertiesCount, setPropertiesCount] = useState(0);
-  const [companiesCount,  setCompaniesCount]  = useState(0);
+  const [companiesCount, setCompaniesCount] = useState(0);
 
   return (
     <FlatList
@@ -51,6 +52,8 @@ export default function HomeScreen() {
           <TopCompanies
             onCountChange={(n) => setCompaniesCount(n)}
           />
+
+          <TrendingProperties />
 
           {/* ── 6. Nearby properties (tabs + category chips + 2-col grid) ── */}
           <NearbyProperties

@@ -1,0 +1,763 @@
+import {
+    Ionicons,
+    MaterialCommunityIcons,
+} from '@expo/vector-icons';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { useRouter } from 'expo-router';
+
+import React, {
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import {
+    ActivityIndicator,
+    Dimensions,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+import PremiumLoader from './PremiumLoader';
+
+const { width } = Dimensions.get('window');
+
+const CARD_WIDTH = width * 0.82;
+
+const COLORS = {
+    bg: '#091530',
+    card: '#0f2044',
+    gold: '#c9a84c',
+    gold2: '#f0d98a',
+    white: '#ffffff',
+    muted: '#94a3b8',
+    border: 'rgba(255,255,255,0.08)',
+};
+
+export default function TrendingProperties() {
+
+    const router = useRouter();
+
+    const [properties, setProperties] =
+        useState<any[]>([]);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    /*
+    -----------------------------------------
+    FETCH
+    -----------------------------------------
+    */
+
+    const fetchTrending = async () => {
+
+        try {
+
+            setLoading(true);
+
+            const token =
+                await AsyncStorage.getItem(
+                    'authToken'
+                );
+
+            const response = await fetch(
+                'https://insighthub.com.ng/NestifyAPI/get_trending_properties.php?limit=10',
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type':
+                            'application/json',
+                        Authorization:
+                            `Token ${token}`,
+                    },
+                }
+            );
+
+            const result =
+                await response.json();
+
+            if (
+                response.ok &&
+                result.status === 'success'
+            ) {
+
+                setProperties(
+                    result.data || []
+                );
+            }
+
+        } catch (error) {
+
+            console.log(
+                'Trending Error:',
+                error
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTrending();
+    }, []);
+
+    /*
+    -----------------------------------------
+    PREMIUM COUNT
+    -----------------------------------------
+    */
+
+    const premiumCount = useMemo(() => {
+
+        return properties.filter(
+            item =>
+                Number(
+                    item.owner_is_premium
+                ) === 1
+        ).length;
+
+    }, [properties]);
+
+    /*
+    -----------------------------------------
+    LOADING
+    -----------------------------------------
+    */
+
+    if (loading) {
+
+        return (
+            <View
+                style={{
+                    marginTop: 20,
+                }}
+            >
+                <PremiumLoader />
+            </View>
+        );
+    }
+
+    /*
+    -----------------------------------------
+    EMPTY
+    -----------------------------------------
+    */
+
+    if (!properties.length) {
+
+        return null;
+    }
+
+    /*
+    -----------------------------------------
+    FORMAT PRICE
+    -----------------------------------------
+    */
+
+    const formatPrice = (
+        value: any
+    ) => {
+
+        return Number(
+            String(value || 0).replace(
+                /,/g,
+                ''
+            )
+        ).toLocaleString();
+    };
+
+    return (
+        <View style={styles.container}>
+
+            {/* HEADER */}
+
+            <View style={styles.header}>
+
+                <View>
+
+                    <View
+                        style={styles.topRow}
+                    >
+
+                        <MaterialCommunityIcons
+                            name="fire"
+                            size={24}
+                            color="#ff7b00"
+                        />
+
+                        <Text
+                            style={
+                                styles.title
+                            }
+                        >
+                            Trending Now
+                        </Text>
+
+                    </View>
+
+                    <Text
+                        style={
+                            styles.subtitle
+                        }
+                    >
+                        {
+                            premiumCount
+                        } premium listings
+                        trending near you
+                    </Text>
+
+                </View>
+
+                <TouchableOpacity
+                    onPress={() =>
+                        router.push(
+                            '/Home/Properties/AllPropertiesScreen'
+                        )
+                    }
+                >
+                    <Text
+                        style={
+                            styles.viewAll
+                        }
+                    >
+                        View all
+                    </Text>
+                </TouchableOpacity>
+
+            </View>
+
+            {/* LIST */}
+
+            <FlatList
+                horizontal
+                data={properties}
+                keyExtractor={(item) =>
+                    item.id.toString()
+                }
+                showsHorizontalScrollIndicator={
+                    false
+                }
+                contentContainerStyle={{
+                    paddingLeft: 16,
+                    paddingRight: 10,
+                }}
+                renderItem={({ item, index }) => {
+
+                    const image =
+                        item.thumbnail_image
+                            ? `https://insighthub.com.ng/${item.thumbnail_image}`
+                            : null;
+
+                    const isPremium =
+                        Number(
+                            item.owner_is_premium
+                        ) === 1;
+
+                    const isBoosted =
+                        item.boosted_until;
+
+                    const isFeatured =
+                        item.featured_until;
+
+                    return (
+
+                        <TouchableOpacity
+                            activeOpacity={0.92}
+                            style={
+                                styles.cardWrap
+                            }
+                            onPress={() =>
+                                router.push({
+                                    pathname:
+                                        '/Home/Company/Details',
+                                    params: {
+                                        id: String(
+                                            item.id
+                                        ),
+                                    },
+                                })
+                            }
+                        >
+
+                            <LinearGradient
+                                colors={
+                                    isPremium
+                                        ? [
+                                            '#172554',
+                                            '#0f172a',
+                                        ]
+                                        : [
+                                            '#0f2044',
+                                            '#0b1733',
+                                        ]
+                                }
+                                style={
+                                    styles.card
+                                }
+                            >
+
+                                {/* IMAGE */}
+
+                                <View
+                                    style={
+                                        styles.imageWrap
+                                    }
+                                >
+
+                                    {image ? (
+
+                                        <Image
+                                            source={{
+                                                uri: image,
+                                            }}
+                                            style={
+                                                styles.image
+                                            }
+                                        />
+
+                                    ) : (
+
+                                        <View
+                                            style={[
+                                                styles.image,
+                                                {
+                                                    backgroundColor:
+                                                        '#1e293b',
+                                                },
+                                            ]}
+                                        />
+
+                                    )}
+
+                                    {/* DARK OVERLAY */}
+
+                                    <LinearGradient
+                                        colors={[
+                                            'transparent',
+                                            'rgba(0,0,0,0.85)',
+                                        ]}
+                                        style={
+                                            styles.overlay
+                                        }
+                                    />
+
+                                    {/* TRENDING RANK */}
+
+                                    <View
+                                        style={
+                                            styles.rankBadge
+                                        }
+                                    >
+
+                                        <Text
+                                            style={
+                                                styles.rankText
+                                            }
+                                        >
+                                            #
+                                            {index + 1}
+                                        </Text>
+
+                                    </View>
+
+                                    {/* PREMIUM */}
+
+                                    {isPremium && (
+
+                                        <View
+                                            style={
+                                                styles.premiumBadge
+                                            }
+                                        >
+
+                                            <Ionicons
+                                                name="diamond"
+                                                size={13}
+                                                color="#fff"
+                                            />
+
+                                            <Text
+                                                style={
+                                                    styles.premiumText
+                                                }
+                                            >
+                                                PREMIUM
+                                            </Text>
+
+                                        </View>
+
+                                    )}
+
+                                    {/* FEATURED */}
+
+                                    {isFeatured && (
+
+                                        <View
+                                            style={
+                                                styles.featuredBadge
+                                            }
+                                        >
+
+                                            <Ionicons
+                                                name="star"
+                                                size={12}
+                                                color="#fff"
+                                            />
+
+                                            <Text
+                                                style={
+                                                    styles.featuredText
+                                                }
+                                            >
+                                                FEATURED
+                                            </Text>
+
+                                        </View>
+
+                                    )}
+
+                                </View>
+
+                                {/* CONTENT */}
+
+                                <View
+                                    style={
+                                        styles.content
+                                    }
+                                >
+
+                                    <Text
+                                        numberOfLines={1}
+                                        style={
+                                            styles.name
+                                        }
+                                    >
+                                        {
+                                            item.propertyName
+                                        }
+                                    </Text>
+
+                                    <Text
+                                        style={
+                                            styles.location
+                                        }
+                                    >
+                                        {item.city},{' '}
+                                        {item.state}
+                                    </Text>
+
+                                    <Text
+                                        style={
+                                            styles.price
+                                        }
+                                    >
+
+                                        ₦
+
+                                        {item.sellPrice
+                                            ? formatPrice(
+                                                item.sellPrice
+                                            )
+                                            : formatPrice(
+                                                item.rentPrice
+                                            )}
+
+                                    </Text>
+
+                                    {/* STATS */}
+
+                                    <View
+                                        style={
+                                            styles.statsRow
+                                        }
+                                    >
+
+                                        <View
+                                            style={
+                                                styles.stat
+                                            }
+                                        >
+
+                                            <Ionicons
+                                                name="eye-outline"
+                                                size={14}
+                                                color="#cbd5e1"
+                                            />
+
+                                            <Text
+                                                style={
+                                                    styles.statText
+                                                }
+                                            >
+                                                {
+                                                    item.views_count ||
+                                                    0
+                                                }
+                                            </Text>
+
+                                        </View>
+
+                                        <View
+                                            style={
+                                                styles.stat
+                                            }
+                                        >
+
+                                            <Ionicons
+                                                name="heart"
+                                                size={13}
+                                                color="#ff4d6d"
+                                            />
+
+                                            <Text
+                                                style={
+                                                    styles.statText
+                                                }
+                                            >
+                                                {
+                                                    item.likes_count ||
+                                                    0
+                                                }
+                                            </Text>
+
+                                        </View>
+
+                                        {isBoosted && (
+
+                                            <View
+                                                style={
+                                                    styles.boosted
+                                                }
+                                            >
+
+                                                <MaterialCommunityIcons
+                                                    name="rocket-launch"
+                                                    size={12}
+                                                    color="#fff"
+                                                />
+
+                                                <Text
+                                                    style={
+                                                        styles.boostedText
+                                                    }
+                                                >
+                                                    Boosted
+                                                </Text>
+
+                                            </View>
+
+                                        )}
+
+                                    </View>
+
+                                </View>
+
+                            </LinearGradient>
+
+                        </TouchableOpacity>
+                    );
+                }}
+            />
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+
+    container: {
+        marginTop: 18,
+        marginBottom: 18,
+    },
+
+    header: {
+        paddingHorizontal: 16,
+        marginBottom: 16,
+        flexDirection: 'row',
+        justifyContent:
+            'space-between',
+        alignItems: 'center',
+    },
+
+    topRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+
+    title: {
+        color: COLORS.white,
+        fontSize: 22,
+        fontWeight: '800',
+    },
+
+    subtitle: {
+        marginTop: 4,
+        color: COLORS.muted,
+        fontSize: 13,
+    },
+
+    viewAll: {
+        color: COLORS.gold,
+        fontWeight: '700',
+    },
+
+    cardWrap: {
+        width: CARD_WIDTH,
+        marginRight: 16,
+    },
+
+    card: {
+        borderRadius: 28,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+
+    imageWrap: {
+        height: 240,
+        position: 'relative',
+    },
+
+    image: {
+        width: '100%',
+        height: '100%',
+    },
+
+    overlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 110,
+    },
+
+    rankBadge: {
+        position: 'absolute',
+        top: 14,
+        left: 14,
+        backgroundColor:
+            'rgba(0,0,0,0.55)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+
+    rankText: {
+        color: '#fff',
+        fontWeight: '800',
+    },
+
+    premiumBadge: {
+        position: 'absolute',
+        top: 14,
+        right: 14,
+        backgroundColor: '#c9a84c',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 20,
+    },
+
+    premiumText: {
+        color: '#fff',
+        fontWeight: '800',
+        fontSize: 11,
+    },
+
+    featuredBadge: {
+        position: 'absolute',
+        bottom: 14,
+        left: 14,
+        backgroundColor: '#7c3aed',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 18,
+    },
+
+    featuredText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 11,
+    },
+
+    content: {
+        padding: 18,
+    },
+
+    name: {
+        color: COLORS.white,
+        fontSize: 18,
+        fontWeight: '800',
+    },
+
+    location: {
+        marginTop: 6,
+        color: COLORS.muted,
+        fontSize: 13,
+    },
+
+    price: {
+        marginTop: 12,
+        color: COLORS.gold2,
+        fontSize: 24,
+        fontWeight: '800',
+    },
+
+    statsRow: {
+        marginTop: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 10,
+    },
+
+    stat: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor:
+            'rgba(255,255,255,0.06)',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+
+    statText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    boosted: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        backgroundColor: '#f97316',
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 20,
+    },
+
+    boostedText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 11,
+    },
+
+});

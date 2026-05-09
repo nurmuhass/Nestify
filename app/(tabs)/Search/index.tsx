@@ -15,6 +15,8 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    ScrollView,
+
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { useToast } from '../../../components/Toast';
@@ -25,13 +27,28 @@ type Property = {
     propertyName: string;
     images?: string[];
     listingType: 'Rent' | 'Sell' | 'Both';
+
     rentPrice?: string | number;
     sellPrice?: string | number;
+
     city?: string;
     state?: string;
+
     propertyCategory?: string | number;
+    propertySubCategory?: string | number;
+
     bedrooms?: number;
     bathrooms?: number;
+
+    owner_is_premium?: number;
+    likes_count?: number;
+    views_count?: number;
+
+    company_name?: string;
+    company_id?: string | number;
+
+    search_type?: 'property' | 'company';
+
     status?: string;
 };
 
@@ -125,6 +142,18 @@ const ResultCard = ({
                     <View style={styles.cardTagWrap}>
                         <Text style={styles.cardTag}>{tag}</Text>
                     </View>
+                    {item.owner_is_premium === 1 && (
+                        <View style={styles.premiumBadge}>
+                            <Ionicons
+                                name="diamond"
+                                size={10}
+                                color="#fff"
+                            />
+                            <Text style={styles.premiumBadgeText}>
+                                PREMIUM
+                            </Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Info */}
@@ -133,11 +162,43 @@ const ResultCard = ({
                         {item.propertyName}
                     </Text>
 
+                    {item.company_name ? (
+                        <Text style={styles.companyName}>
+                            {item.company_name}
+                        </Text>
+                    ) : null}
+
                     <View style={styles.cardRow}>
                         <Ionicons name="location-outline" size={13} color="#94a3b8" />
                         <Text style={styles.cardLoc} numberOfLines={1}>
                             {[item.city, item.state].filter(Boolean).join(', ') || 'Nigeria'}
                         </Text>
+                    </View>
+
+                    <View style={styles.metricsRow}>
+
+                        <View style={styles.metricItem}>
+                            <Ionicons
+                                name="eye-outline"
+                                size={13}
+                                color="#94a3b8"
+                            />
+                            <Text style={styles.metricText}>
+                                {item.views_count || 0}
+                            </Text>
+                        </View>
+
+                        <View style={styles.metricItem}>
+                            <Ionicons
+                                name="heart-outline"
+                                size={13}
+                                color="#94a3b8"
+                            />
+                            <Text style={styles.metricText}>
+                                {item.likes_count || 0}
+                            </Text>
+                        </View>
+
                     </View>
 
                     {(item.bedrooms || item.bathrooms) ? (
@@ -178,11 +239,24 @@ export default function SearchScreen() {
     const [fetched, setFetched] = useState(false);
     const [recent, setRecent] = useState<string[]>([]);
 
-    /* Focus input on mount */
+    const [searchType, setSearchType] = useState<'all' | 'property' | 'company'>('all');
+
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+
+    const [premiumOnly, setPremiumOnly] = useState(false);
+
+    const [bedroomFilter, setBedroomFilter] = useState<string>('Any');
+
+    const [searching, setSearching] = useState(false);
+
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
     useEffect(() => {
         const t = setTimeout(() => inputRef.current?.focus(), 180);
+
         loadRecent();
-        loadProperties();
+
         return () => clearTimeout(t);
     }, []);
 
@@ -193,7 +267,80 @@ export default function SearchScreen() {
             if (raw) setRecent(JSON.parse(raw));
         } catch { }
     };
+    const searchProperties = async () => {
 
+        try {
+
+            setSearching(true);
+
+            const token = await AsyncStorage.getItem('authToken');
+
+            const params = new URLSearchParams();
+
+            params.append('query', query);
+
+            params.append('type', searchType);
+
+            params.append('listingType', activeFilter);
+
+            if (minPrice) {
+                params.append('minPrice', minPrice);
+            }
+
+            if (maxPrice) {
+                params.append('maxPrice', maxPrice);
+            }
+
+            if (premiumOnly) {
+                params.append('premiumOnly', '1');
+            }
+
+            if (bedroomFilter !== 'Any') {
+                params.append('bedrooms', bedroomFilter);
+            }
+
+            const response = await fetch(
+                `${BASE}NestifyAPI/get_smart_search.php?${params.toString()}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Token ${token ?? ''}`,
+                    },
+                }
+            );
+
+            const result = await response.json();
+
+            console.log('SEARCH RESULT:', result);
+
+            if (result.status === 'success') {
+
+                setProperties(result.data || []);
+
+            } else {
+
+                show({
+                    type: 'error',
+                    title: 'Search Error',
+                    message: result.msg || 'Search failed',
+                });
+            }
+
+        } catch (err: any) {
+
+            show({
+                type: 'error',
+                title: 'Error',
+                message: err.message,
+            });
+
+        } finally {
+
+            setSearching(false);
+            setFetched(true);
+        }
+    };
     const saveRecent = async (q: string) => {
         const trimmed = q.trim();
         if (!trimmed) return;
@@ -208,67 +355,32 @@ export default function SearchScreen() {
         await AsyncStorage.setItem(RECENT_KEY, JSON.stringify(next));
     };
 
-    /* ── Fetch all properties once ── */
-    const loadProperties = async () => {
-        try {
-            setLoading(true);
-            const token = await AsyncStorage.getItem('authToken');
-            const response = await fetch(
-                `${BASE}NestifyAPI/get_properties.php?page=1&limit=100`,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Token ${token ?? ''}`,
-                    },
-                }
-            );
-            const result = await response.json();
-            if (result.status === 'success') {
-                setProperties(result.data ?? result.properties ?? []);
-            } else {
-                show({
-                    type: 'error',
-                    title: 'Error',
-                    message: result.msg || 'Failed to load properties',
-                });
-            }
-        } catch (e: any) {
-            show({
-                type: 'error',
-                title: 'Error',
-                message: e.message,
-            });
-        } finally {
-            setLoading(false);
-            setFetched(true);
-        }
-    };
 
-    /* ── Filter logic ── */
-    const results = useMemo(() => {
-        const q = query.toLowerCase().trim();
-        return properties.filter((p) => {
-            if (activeFilter === 'Rent' && !['Rent', 'Both'].includes(p.listingType)) return false;
-            if (activeFilter === 'Sell' && !['Sell', 'Both'].includes(p.listingType)) return false;
-            if (!q) return true;
-            return (
-                p.propertyName?.toLowerCase().includes(q) ||
-                p.city?.toLowerCase().includes(q) ||
-                p.state?.toLowerCase().includes(q)
-            );
-        });
-    }, [properties, query, activeFilter]);
 
+    const results = properties;
     const isIdle = !query.trim() && fetched;
     const isEmpty = fetched && !loading && results.length === 0 && query.trim().length > 0;
 
     /* ── Search submit ── */
-    const handleSubmit = useCallback(() => {
-        if (query.trim()) {
-            saveRecent(query.trim());
-            Keyboard.dismiss();
-        }
-    }, [query, recent]);
+    const handleSubmit = useCallback(async () => {
+
+        if (!query.trim()) return;
+
+        await saveRecent(query.trim());
+
+        Keyboard.dismiss();
+
+        searchProperties();
+
+    }, [
+        query,
+        searchType,
+        activeFilter,
+        minPrice,
+        maxPrice,
+        premiumOnly,
+        bedroomFilter
+    ]);
 
     /* ── Search bar pulse anim ── */
     const borderAnim = useRef(new Animated.Value(0)).current;
@@ -319,6 +431,38 @@ export default function SearchScreen() {
                 </Animated.View>
             </View>
 
+            <View style={styles.searchTypeWrap}>
+
+                {[
+                    { key: 'all', label: 'All' },
+                    { key: 'property', label: 'Properties' },
+                    { key: 'company', label: 'Companies' },
+                ].map((item) => {
+
+                    const active = searchType === item.key;
+
+                    return (
+                        <TouchableOpacity
+                            key={item.key}
+                            style={[
+                                styles.searchTypeBtn,
+                                active && styles.searchTypeBtnActive
+                            ]}
+                            onPress={() => setSearchType(item.key as any)}
+                        >
+                            <Text
+                                style={[
+                                    styles.searchTypeText,
+                                    active && styles.searchTypeTextActive
+                                ]}
+                            >
+                                {item.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
+
             {/* ── Filter chips ── */}
             <View style={styles.filters}>
                 {FILTERS.map((f) => (
@@ -344,11 +488,126 @@ export default function SearchScreen() {
                 )}
             </View>
 
+            <TouchableOpacity
+                style={styles.advancedBtn}
+                onPress={() =>
+                    setShowAdvancedFilters(!showAdvancedFilters)
+                }
+            >
+
+                <Ionicons
+                    name="options-outline"
+                    size={18}
+                    color="#f0d98a"
+                />
+
+                <Text style={styles.advancedBtnText}>
+                    Advanced Filters
+                </Text>
+
+            </TouchableOpacity>
+
+            {showAdvancedFilters && (
+
+                <View style={styles.advancedPanel}>
+
+                    {/* PRICE */}
+
+                    <View style={styles.priceRow}>
+
+                        <TextInput
+                            placeholder="Min Price"
+                            placeholderTextColor="#64748b"
+                            value={minPrice}
+                            onChangeText={setMinPrice}
+                            keyboardType="numeric"
+                            style={styles.priceInput}
+                        />
+
+                        <TextInput
+                            placeholder="Max Price"
+                            placeholderTextColor="#64748b"
+                            value={maxPrice}
+                            onChangeText={setMaxPrice}
+                            keyboardType="numeric"
+                            style={styles.priceInput}
+                        />
+
+                    </View>
+
+                    {/* BEDROOMS */}
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={{ marginTop: 14 }}
+                    >
+
+                        {['Any', '1', '2', '3', '4', '5+'].map((b) => {
+
+                            const active =
+                                bedroomFilter === b;
+
+                            return (
+                                <TouchableOpacity
+                                    key={b}
+                                    style={[
+                                        styles.bedroomChip,
+                                        active &&
+                                        styles.bedroomChipActive
+                                    ]}
+                                    onPress={() =>
+                                        setBedroomFilter(b)
+                                    }
+                                >
+                                    <Text
+                                        style={[
+                                            styles.bedroomText,
+                                            active &&
+                                            styles.bedroomTextActive
+                                        ]}
+                                    >
+                                        {b} Beds
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+
+                    </ScrollView>
+
+                    {/* PREMIUM */}
+
+                    <TouchableOpacity
+                        style={styles.premiumRow}
+                        onPress={() =>
+                            setPremiumOnly(!premiumOnly)
+                        }
+                    >
+
+                        <Ionicons
+                            name={
+                                premiumOnly
+                                    ? 'checkbox'
+                                    : 'square-outline'
+                            }
+                            size={20}
+                            color="#c9a84c"
+                        />
+
+                        <Text style={styles.premiumFilterText}>
+                            Premium listings only
+                        </Text>
+
+                    </TouchableOpacity>
+
+                </View>
+            )}
+
             {/* ── Divider ── */}
             <View style={styles.divider} />
 
             {/* ── Body ── */}
-            {loading ? (
+            {loading || searching ? (
                 <View style={styles.center}>
                     <ActivityIndicator size="large" color="#c9a84c" />
                     <Text style={styles.loadingText}>Finding properties…</Text>
@@ -401,7 +660,7 @@ export default function SearchScreen() {
                     <View style={styles.emptyIcon}>
                         <Ionicons name="home-outline" size={34} color="#94a3b8" />
                     </View>
-                    <Text style={styles.emptyTitle}>No properties found</Text>
+                    <Text style={styles.emptyTitle}>No search results</Text>
                     <Text style={styles.emptySub}>
                         No results for{' '}
                         <Text style={{ color: '#0f172a', fontWeight: '600' }}>"{query}"</Text>
@@ -755,5 +1014,151 @@ const styles = StyleSheet.create({
     cardChevron: {
         marginRight: 12,
         color: '#c9a84c',
+    },
+    searchTypeWrap: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        marginTop: 10,
+        gap: 10,
+    },
+
+    searchTypeBtn: {
+        paddingHorizontal: 18,
+        paddingVertical: 8,
+        borderRadius: 30,
+        backgroundColor: '#0f2044',
+        borderWidth: 1,
+        borderColor: '#1e2f5a',
+    },
+
+    searchTypeBtnActive: {
+        backgroundColor: '#c9a84c',
+        borderColor: '#c9a84c',
+    },
+
+    searchTypeText: {
+        color: '#94a3b8',
+        fontWeight: '600',
+        fontSize: 13,
+    },
+
+    searchTypeTextActive: {
+        color: '#091530',
+    },
+
+    advancedBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginHorizontal: 16,
+        marginTop: 12,
+    },
+
+    advancedBtnText: {
+        color: '#f0d98a',
+        fontWeight: '600',
+    },
+
+    advancedPanel: {
+        marginHorizontal: 16,
+        marginTop: 14,
+        backgroundColor: '#0f2044',
+        borderRadius: 20,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#1e2f5a',
+    },
+
+    priceRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+
+    priceInput: {
+        flex: 1,
+        backgroundColor: '#091530',
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        color: '#fff',
+        borderWidth: 1,
+        borderColor: '#1e2f5a',
+    },
+
+    bedroomChip: {
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        backgroundColor: '#091530',
+        borderRadius: 20,
+        marginRight: 8,
+    },
+
+    bedroomChipActive: {
+        backgroundColor: '#c9a84c',
+    },
+
+    bedroomText: {
+        color: '#94a3b8',
+        fontSize: 12,
+    },
+
+    bedroomTextActive: {
+        color: '#091530',
+        fontWeight: '700',
+    },
+
+    premiumRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 18,
+        gap: 10,
+    },
+
+    premiumFilterText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+
+    premiumBadge: {
+        position: 'absolute',
+        top: 8,
+        left: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#c9a84c',
+        borderRadius: 20,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+    },
+
+    premiumBadgeText: {
+        color: '#091530',
+        fontWeight: '800',
+        fontSize: 9,
+    },
+
+    companyName: {
+        color: '#c9a84c',
+        fontSize: 12,
+        marginTop: 2,
+    },
+
+    metricsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginTop: 6,
+    },
+
+    metricItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+
+    metricText: {
+        color: '#94a3b8',
+        fontSize: 11,
     },
 });
