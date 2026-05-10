@@ -17,6 +17,8 @@ import {
 import { initiateChat } from '@/hooks/useChat';
 import PremiumLoader from "@/components/PremiumLoader";
 import { useToast } from "@/components/Toast";
+import FeaturedCompanies from "@/components/FeaturedCompanies";
+import RelatedCompanies from "@/components/RelatedCompany";
 
 const COLORS = {
   bg: '#091530',
@@ -220,6 +222,34 @@ export default function EstateCompanyScreen() {
     }
   };
 
+  useEffect(() => {
+    trackView();
+  }, []);
+
+  const trackView = async () => {
+
+    try {
+
+      const token = await AsyncStorage.getItem('authToken');
+
+      await fetch(
+        'https://insighthub.com.ng/NestifyAPI/track_company_view.php',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Token ' + (token ?? ''),
+          },
+          body: JSON.stringify({
+            company_id: id,
+          }),
+        }
+      );
+
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   const fetchEstatesByCompany = async () => {
     try {
@@ -417,7 +447,7 @@ export default function EstateCompanyScreen() {
         {/* Company Info */}
         <View style={styles.section}>
 
-          <Text style={styles.title}>{companyDetails?.company_name}</Text>
+          <Text style={styles.title}> {companyDetails?.company_name || companyDetails?.name}</Text>
           <Text style={styles.subtitle}>
             <Ionicons name="location-outline" size={14} />
             {companyDetails?.city}, {companyDetails?.state}
@@ -427,15 +457,17 @@ export default function EstateCompanyScreen() {
 
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>4.8</Text>
+              <Text style={styles.statValue}>{companyDetails?.average_rating}</Text>
               <Text style={styles.statLabel}>Rating</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{companyDetails?.date_established}</Text>
-              <Text style={styles.statLabel}>Established</Text>
+              <Text style={styles.statValue}>
+                {new Date(companyDetails?.date_established).getFullYear()}
+              </Text>
+              <Text style={styles.statLabel}>Joined</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>30</Text>
+              <Text style={styles.statValue}>{properties.length}</Text>
               <Text style={styles.statLabel}>Properties</Text>
             </View>
           </View>
@@ -464,7 +496,12 @@ export default function EstateCompanyScreen() {
         {/* About */}
         <View style={[styles.section, styles.sectionNoPadTop]}>
           <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.bodyText}>{companyDetails?.about}</Text>
+          {companyDetails?.about ? (
+            <Text style={styles.bodyText}>{companyDetails.about}</Text>
+          ) : (
+            <Text style={styles.bodyText}>No description available.</Text>
+          )}
+
         </View>
 
         {/* Amenities */}
@@ -518,15 +555,8 @@ export default function EstateCompanyScreen() {
           />
         </View>
 
-        {/* Gallery */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Gallery</Text>
-          <View style={styles.galleryGrid}>
-            {company.gallery.map((g: string, idx: number) => (
-              <Image key={idx} source={{ uri: g }} style={styles.galleryImg} />
-            ))}
-          </View>
-        </View>
+
+
 
         {/* Contact */}
         <View style={styles.section}>
@@ -539,14 +569,37 @@ export default function EstateCompanyScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* small spacer between header and properties list */}
+
+
         <View style={{ height: 12 }} />
-        <View style={{ ...styles.rowSpace, marginBottom: 8 }}>
-          <Text style={styles.sectionTitle}>Properties by {companyDetails?.company_name}</Text>
-          <TouchableOpacity onPress={() => router.push({ pathname: '/Home/Properties/AllPropertiesScreen', params: { companyId: String(companyDetails?.id) } })}>
-            <Text style={styles.linkText}>See all</Text>
-          </TouchableOpacity>
-        </View>
+
+        {
+          properties.length !== 0 ? (
+            <View style={{ ...styles.rowSpace, marginBottom: 8 }}>
+              <Text style={{ ...styles.sectionTitle, width: "40%" }}>Properties by {companyDetails?.company_name || companyDetails?.name}</Text>
+
+
+              <TouchableOpacity onPress={() => router.push({ pathname: '/Home/Company/CompanyProperties', params: { id: String(companyDetails?.id), company_name: companyDetails?.company_name || companyDetails?.name } })}>
+                <Text style={styles.linkText}>See all</Text>
+              </TouchableOpacity>
+
+            </View>
+          ) : (
+            <View style={{ paddingHorizontal: 4, marginBottom: 16 }}>
+              <Text style={{ ...styles.sectionTitle, marginBottom: 12 }}>Properties</Text>
+              <View style={{ backgroundColor: COLORS.card, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center' }}>
+                <Ionicons name="home-outline" size={40} color={COLORS.gold} />
+                <Text style={{ marginTop: 12, fontSize: 14, fontWeight: '600', color: COLORS.textPrimary, textAlign: 'center' }}>
+                  This company has no properties yet
+                </Text>
+                <Text style={{ marginTop: 6, fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' }}>
+                  Check back soon for new listings
+                </Text>
+              </View>
+            </View>
+          )
+        }
+
       </View>
     );
   }, [company, companyDetails, Estates, onBookInspection, onChatWithAgent, onDownloadBrochure, onOpenWebsite, router]);
@@ -571,6 +624,11 @@ export default function EstateCompanyScreen() {
       keyExtractor={(item) => String(item.id)}
       renderItem={renderProperty}
       ListHeaderComponent={ListHeader}
+      ListFooterComponent={() => (
+        <View style={{ marginTop: 20 }}>
+          <RelatedCompanies companyId={companyDetails?.id} />
+        </View>
+      )}
       contentContainerStyle={styles.listContent}
       columnWrapperStyle={{ justifyContent: "space-between" }}
       showsVerticalScrollIndicator={false}
@@ -582,6 +640,8 @@ export default function EstateCompanyScreen() {
     />
   );
 }
+
+
 
 /* ----------------------------- Styles ----------------------------- */
 

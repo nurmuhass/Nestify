@@ -15,6 +15,9 @@ import PromoSlider from '../../../components/PromoSlider';
 import TopCompanies from '../../../components/TopCompanies';
 import TopLocations from '../../../components/TopLocations';
 import TrendingProperties from '../../../components/TrendingProperties';
+import FeaturedCompanies from '../../../components/FeaturedCompanies';
+
+
 
 export default function HomeScreen() {
   // Lifted state so HomeHeader can show live counts from child fetches
@@ -49,7 +52,7 @@ export default function HomeScreen() {
           <FeaturedEstates />
 
           {/* ── 5. Top companies (horizontal scroll) ── */}
-          <TopCompanies
+          <FeaturedCompanies
             onCountChange={(n) => setCompaniesCount(n)}
           />
 

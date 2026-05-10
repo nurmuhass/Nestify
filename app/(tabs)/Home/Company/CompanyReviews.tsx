@@ -239,7 +239,7 @@ export default function CompanyReviewsScreen() {
           <Text style={styles.ownerName}>{company_name}</Text>
           <Text style={{ color: 'gray' }}>Owner</Text>
         </View>
-        <Ionicons name="chatbubble-ellipses-outline" size={24} style={{ marginLeft: 'auto' }} />
+
       </View>
 
       <FlatList
