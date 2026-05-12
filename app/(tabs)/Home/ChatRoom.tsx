@@ -217,12 +217,14 @@ const InspectionModal = ({
 export default function ChatRoom() {
   const { show } = useToast();
   const router = useRouter();
-  const { conversation_id, property_name, property_id, company_id } = useLocalSearchParams() as {
+  const { conversation_id, property_name, property_id, company_id, CompanyName } = useLocalSearchParams() as {
     conversation_id: string;
     property_name: string;
     property_id: string;
     company_id: string;
+    CompanyName: string;
   };
+  console.log('ChatRoom params:', { company_id, CompanyName });
   const conversationId = Number(conversation_id);
 
   const [userId, setUserId] = useState<number>(0);
@@ -421,7 +423,7 @@ export default function ChatRoom() {
               style={{ flex: 1 }}
               onPress={() =>
                 router.push({
-                  pathname: '/Home/CompanyScreen',
+                  pathname: '/Home/Company/CompanyScreen',
                   params: { id: company_id },
                 })
               }
@@ -429,7 +431,7 @@ export default function ChatRoom() {
 
 
               <Text style={styles.headerTitle} numberOfLines={1}>
-                {property_name ?? 'General Enquiry'}
+                {CompanyName ?? 'General Enquiry'}
               </Text>
               <Text style={styles.headerSub}>General enquiry</Text>
             </TouchableOpacity>

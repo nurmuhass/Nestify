@@ -438,26 +438,28 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                 </View>
 
             </ScrollView>
-            <PricingModal
-                visible={pricingVisible}
-                onSelectPlan={(planKey: string) => {
-                    setPricingVisible(false);
-                    switch (planKey) {
-                        case "semi":
-                            router.push("../../../upgrade/payment?plan=semi");
-                            break;
-                        case "annual":
-                            router.push("../../../upgrade/payment?plan=annual");
-                            break;
-                        case "monthly":
-                            router.push("../../../upgrade/payment?plan=monthly");
-                            break;
-                        default:
-                            router.push("../../../upgrade/payment?plan=monthly");
-                    }
-                }}
-                onClose={() => setPricingVisible(false)}
-            />
+       <PricingModal
+  visible={pricingVisible}
+  mode="seller"
+  onClose={() => setPricingVisible(false)}
+  onSelectPlan={(planKey) => {
+
+    switch (planKey) {
+
+      case "seller_monthly":
+        router.push("../../../upgrade/payment?plan=seller_monthly");
+        break;
+
+      case "seller_semi":
+        router.push("../../../upgrade/payment?plan=seller_semi");
+        break;
+
+      case "seller_annual":
+        router.push("../../../upgrade/payment?plan=seller_annual");
+        break;
+    }
+  }}
+/>
         </View>
     );
 }

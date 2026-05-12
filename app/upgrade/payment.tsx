@@ -1,137 +1,232 @@
 import { useState } from 'react';
-import { View, Text, Switch, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Switch,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
+
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useToast } from '../../components/Toast';
 
 const BASE_URL = 'https://insighthub.com.ng';
+
 const GOLD = '#C9A84C';
 const DARK = '#0F0F1A';
 
-const PLAN_LABELS: Record<string, string> = {
-  monthly: 'Monthly Premium — ₦8,000',
-  semi: 'Semi-Annual — ₦40,000',
-  annual: 'Annual Premium — ₦70,000',
+const PLAN_DETAILS: Record<string, any> = {
+
+  // SELLER PLANS
+  seller_monthly: {
+    label: 'Seller Monthly Premium',
+    amount: '₦8,000',
+    type: 'seller',
+  },
+
+  seller_semi: {
+    label: 'Seller Semi-Annual',
+    amount: '₦40,000',
+    type: 'seller',
+  },
+
+  seller_annual: {
+    label: 'Seller Annual Premium',
+    amount: '₦70,000',
+    type: 'seller',
+  },
+
+  // BUYER PLANS
+  buyer_monthly: {
+    label: 'Buyer Monthly Premium',
+    amount: '₦5,000',
+    type: 'buyer',
+  },
+
+  buyer_annual: {
+    label: 'Buyer Annual Premium',
+    amount: '₦50,000',
+    type: 'buyer',
+  },
 };
 
 export default function PaymentScreen() {
+
   const router = useRouter();
   const { show } = useToast();
+
   const params = useLocalSearchParams();
-  const planKey = Array.isArray(params.plan) ? params.plan[0] : params.plan;
+
+  const planKey = Array.isArray(params.plan)
+    ? params.plan[0]
+    : params.plan;
+
+  const plan = PLAN_DETAILS[planKey ?? ''];
 
   const [autoRenew, setAutoRenew] = useState(false);
+
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+
   const [reference, setReference] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   const initializePayment = async () => {
+
     setLoading(true);
+
     try {
+
       const token = await AsyncStorage.getItem('authToken');
+
       const userJson = await AsyncStorage.getItem('authUser');
+
       let userEmail = '';
-      
+
       if (userJson) {
         const userObj = JSON.parse(userJson);
-        setUser(userObj);
         userEmail = userObj?.email || '';
       }
-      
-      const res = await fetch(`${BASE_URL}/NestifyAPI/initialize_payment.php`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ plan_key: planKey, auto_renew: autoRenew, email: userEmail }),
-      });
 
-      const data = await res.json();
+      const response = await fetch(
+        `${BASE_URL}/NestifyAPI/initialize_payment.php`,
+        {
+          method: 'POST',
+
+          headers: {
+            Authorization: `Token ${token}`,
+            'Content-Type': 'application/json',
+          },
+
+          body: JSON.stringify({
+            plan_key: planKey,
+            auto_renew: autoRenew,
+            email: userEmail,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
       if (data.status === 'success') {
+
         setReference(data.reference);
+
         setPaymentUrl(data.payment_url);
+
       } else {
+
         show({
           type: 'error',
-          title: 'Error',
-          message: data.msg || 'Could not start payment',
+          title: 'Payment Error',
+          message: data.msg || 'Could not initialize payment',
         });
       }
-    } catch {
+
+    } catch (e) {
+
       show({
         type: 'error',
-        title: 'Error',
-        message: 'Network error',
+        title: 'Network Error',
+        message: 'Something went wrong',
       });
+
     } finally {
+
       setLoading(false);
     }
   };
-    
-  const handleWebViewNav = async (navState: any) => {
-    const url: string = navState.url;
 
-    // Paystack redirects to callback when done
-    if (url.includes('payment_callback.php') || url.includes('paystack.co/close')) {
+  const handleWebViewNav = async (navState: any) => {
+
+    const url = navState.url;
+
+    if (
+      url.includes('payment_callback.php') ||
+      url.includes('paystack.co/close')
+    ) {
+
       setPaymentUrl(null);
+
       await verifyPayment();
     }
-  };  
+  };
 
   const verifyPayment = async () => {
+
     if (!reference) return;
+
     setLoading(true);
+
     try {
+
       const token = await AsyncStorage.getItem('authToken');
-      const res = await fetch(
+
+      const response = await fetch(
         `${BASE_URL}/NestifyAPI/verify_payment.php?reference=${reference}`,
-        { headers: { Authorization: `Token ${token}` } }
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
       );
-      const data = await res.json();
+
+      const data = await response.json();
 
       if (data.status === 'success') {
-        // Update user data if provided in response, otherwise fetch fresh data
+
         if (data.user) {
-          await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
-        } else {
-          // Fetch updated user data from backend
-          try {
-            const userRes = await fetch(`${BASE_URL}/NestifyAPI/get_user_profile.php`, {
-              headers: { Authorization: `Token ${token}` }
-            });
-            const userData = await userRes.json();
-            if (userData.status === 'success' && userData.user) {
-              await AsyncStorage.setItem('authUser', JSON.stringify(userData.user));
-            }
-          } catch (error) {
-            console.log('Could not fetch updated user profile:', error);
-          }
+          await AsyncStorage.setItem(
+            'authUser',
+            JSON.stringify(data.user)
+          );
         }
 
         show({
           type: 'success',
-          title: '🎉 Payment Successful',
-          message: 'Your premium plan is now active!',
+          title: 'Payment Successful',
+          message:
+            plan?.type === 'seller'
+              ? 'Seller premium activated successfully'
+              : 'Buyer premium activated successfully',
         });
-        setTimeout(() => router.replace('../(tabs)/Profile'), 1500);
+
+        setTimeout(() => {
+          router.replace('../(tabs)/Profile');
+        }, 1500);
+
       } else {
+
         show({
           type: 'warning',
           title: 'Pending',
-          message: 'Payment is still processing. Check back shortly.',
+          message: 'Payment still processing',
         });
-        setTimeout(() => router.back(), 1500);
-      }     
+
+        setTimeout(() => {
+          router.back();
+        }, 1500);
+      }
+
+    } catch {
+
+      show({
+        type: 'error',
+        title: 'Verification Failed',
+        message: 'Could not verify payment',
+      });
+
     } finally {
+
       setLoading(false);
     }
   };
 
-  // Show WebView when payment URL is ready
   if (paymentUrl) {
+
     return (
       <WebView
         source={{ uri: paymentUrl }}
@@ -143,27 +238,75 @@ export default function PaymentScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Complete Upgrade</Text>
-      <Text style={styles.planLabel}>{PLAN_LABELS[planKey ?? ''] ?? planKey}</Text>
+
+      <Text style={styles.title}>
+        Complete Upgrade
+      </Text>
+
+      <Text style={styles.planLabel}>
+        {plan?.label}
+      </Text>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Payment via Paystack</Text>
-        <Text style={styles.cardSub}>Card · Bank Transfer · Opay · Mobile Money</Text>
+
+        <Text style={styles.cardTitle}>
+          {plan?.type === 'seller'
+            ? 'Seller Premium Access'
+            : 'Buyer Premium Access'}
+        </Text>
+
+        <Text style={styles.cardSub}>
+          {plan?.type === 'seller'
+            ? 'Boost listings and increase visibility'
+            : 'Unlock chats and company contact access'}
+        </Text>
+
       </View>
 
-      {/* Only show auto-renew for recurring plans */}
-      {planKey !== 'single' && (
+      <View style={styles.featuresCard}>
+
+        {plan?.type === 'seller' ? (
+          <>
+            <Text style={styles.feature}>✓ More property uploads</Text>
+            <Text style={styles.feature}>✓ Featured listings</Text>
+            <Text style={styles.feature}>✓ Better visibility</Text>
+            <Text style={styles.feature}>✓ Analytics dashboard</Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.feature}>✓ Chat companies directly</Text>
+            <Text style={styles.feature}>✓ View company contacts</Text>
+            <Text style={styles.feature}>✓ Access premium listings</Text>
+            <Text style={styles.feature}>✓ Priority buyer access</Text>
+          </>
+        )}
+
+      </View>
+
+      {/* ONLY SELLER PLANS CAN AUTO RENEW */}
+      {plan?.type === 'seller' && (
+
         <View style={styles.row}>
+
           <View>
-            <Text style={styles.rowLabel}>Auto-Renew</Text>
-            <Text style={styles.rowSub}>Automatically renew when plan expires</Text>
+
+            <Text style={styles.rowLabel}>
+              Auto Renew
+            </Text>
+
+            <Text style={styles.rowSub}>
+              Automatically renew subscription
+            </Text>
+
           </View>
+
           <Switch
             value={autoRenew}
             onValueChange={setAutoRenew}
             trackColor={{ true: GOLD }}
             thumbColor="#fff"
           />
+
         </View>
       )}
 
@@ -172,35 +315,113 @@ export default function PaymentScreen() {
         onPress={initializePayment}
         disabled={loading}
       >
-        {loading
-          ? <ActivityIndicator color={DARK} />
-          : <Text style={styles.buttonText}>Proceed to Payment</Text>
-        }
+
+        {loading ? (
+          <ActivityIndicator color={DARK} />
+        ) : (
+          <Text style={styles.buttonText}>
+            Proceed to Payment
+          </Text>
+        )}
+
       </TouchableOpacity>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F1A', padding: 24, justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 24, fontWeight: '800', marginBottom: 6 },
-  planLabel: { color: GOLD, fontSize: 16, marginBottom: 28 },
+
+  container: {
+    flex: 1,
+    backgroundColor: '#0F0F1A',
+    padding: 24,
+    justifyContent: 'center',
+  },
+
+  title: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+
+  planLabel: {
+    color: GOLD,
+    fontSize: 17,
+    marginBottom: 28,
+    fontWeight: '700',
+  },
+
   card: {
-    backgroundColor: '#1A1A2A', borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: '#ffffff10', marginBottom: 24,
+    backgroundColor: '#1A1A2A',
+    borderRadius: 18,
+    padding: 22,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#ffffff10',
   },
-  cardTitle: { color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  cardSub: { color: '#888', fontSize: 13 },
+
+  cardTitle: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 5,
+  },
+
+  cardSub: {
+    color: '#aaa',
+    fontSize: 13,
+  },
+
+  featuresCard: {
+    backgroundColor: '#1A1A2A',
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#ffffff10',
+  },
+
+  feature: {
+    color: '#ddd',
+    marginBottom: 10,
+    fontSize: 14,
+  },
+
   row: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#1A1A2A', borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: '#ffffff10', marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#1A1A2A',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#ffffff10',
+    marginBottom: 24,
   },
-  rowLabel: { color: '#fff', fontWeight: '600', marginBottom: 2 },
-  rowSub: { color: '#888', fontSize: 12 },
+
+  rowLabel: {
+    color: '#fff',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+
+  rowSub: {
+    color: '#888',
+    fontSize: 12,
+  },
+
   button: {
-    backgroundColor: GOLD, paddingVertical: 16,
-    borderRadius: 14, alignItems: 'center',
+    backgroundColor: GOLD,
+    paddingVertical: 17,
+    borderRadius: 16,
+    alignItems: 'center',
   },
-  buttonText: { color: DARK, fontWeight: '800', fontSize: 16 },
+
+  buttonText: {
+    color: DARK,
+    fontWeight: '800',
+    fontSize: 16,
+  },
 });

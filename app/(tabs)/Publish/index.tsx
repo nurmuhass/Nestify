@@ -21,6 +21,8 @@ import { getStatusBarHeight } from "react-native-status-bar-height";
 import { MaterialIcons as Icon, Ionicons } from "@expo/vector-icons";
 import { useToast } from "../../../components/Toast";
 import PricingModal from "../../../components/PricingModal";
+import PremiumLoader from "@/components/PremiumLoader";
+import { Video } from 'expo-av';
 
 
 // Add these constants above the component
@@ -64,8 +66,10 @@ const PublishProperty = () => {
     salesType: string;
     location: string;
     parkingspace: number;
+    video: string | null;
     managedByUs: boolean;
     [key: string]: any; // Add index signature for dynamic property access
+
   };
 
   // State for form data
@@ -78,10 +82,10 @@ const PublishProperty = () => {
     sellPrice: "",
     rentPrice: "",
     rentPeriod: "Monthly", // or 'Yearly'
-    bedrooms: 3,
+    bedrooms: 2,
     Toilet: 2,
     BQ: 1,
-    balconies: 2,
+    balconies: 0,
     totalRooms: "6",
     description: "",
     propertyCategory: "",
@@ -95,8 +99,9 @@ const PublishProperty = () => {
     condition: "",
     salesType: "",
     location: "",
-    parkingspace: 2,
+    parkingspace: 1,
     managedByUs: false,
+    video: null as string | null,
   });
 
   const [categories, setCategories] = useState<any[]>([]);
@@ -176,6 +181,115 @@ const PublishProperty = () => {
   const [subItems, setSubItems] = useState<{ label: string, value: string | number }[]>([]);
 
   const [authLoaded, setAuthLoaded] = useState(false);
+
+
+
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+
+  // Validation functions
+  const validateStep = (step: number): boolean => {
+    const errors: { [key: string]: string } = {};
+
+    switch (step) {
+      case 0: // Property Details
+        if (!formData.propertyName.trim()) {
+          errors.propertyName = "Property name is required";
+        } else if (formData.propertyName.length < 10) {
+          errors.propertyName = "Property name must be at least 10 characters";
+        } else if (formData.propertyName.length > 100) {
+          errors.propertyName = "Property name cannot exceed 100 characters";
+        }
+
+        if (!categoryValue) {
+          errors.category = "Please select a property category";
+        }
+
+        if (!subValue && subItems.length > 0) {
+          errors.subcategory = "Please select a subcategory";
+        }
+
+        if (!formData.description.trim()) {
+          errors.description = "Description is required";
+        } else if (formData.description.length < 30) {
+          errors.description = "Description must be at least 30 characters";
+        }
+
+        if (formData.listingType === "Sell" || formData.listingType === "Both") {
+          if (!formData.sellPrice.trim()) {
+            errors.sellPrice = "Sell price is required";
+          } else if (isNaN(Number(formData.sellPrice)) || Number(formData.sellPrice) <= 0) {
+            errors.sellPrice = "Sell price must be a valid positive number";
+          } else if (Number(formData.sellPrice) < 100000) {
+            errors.sellPrice = "Sell price seems very low, please verify";
+          } else if (Number(formData.sellPrice) > 1000000000) {
+            errors.sellPrice = "Sell price seems very high, please verify";
+          }
+        }
+
+        if (formData.listingType === "Rent" || formData.listingType === "Both") {
+          if (!formData.rentPrice.trim()) {
+            errors.rentPrice = "Rent price is required";
+          } else if (isNaN(Number(formData.rentPrice)) || Number(formData.rentPrice) <= 0) {
+            errors.rentPrice = "Rent price must be a valid positive number";
+          } else if (Number(formData.rentPrice) < 5000) {
+            errors.rentPrice = "Rent price seems very low, please verify";
+          } else if (Number(formData.rentPrice) > 50000000) {
+            errors.rentPrice = "Rent price seems very high, please verify";
+          }
+        }
+        break;
+
+
+
+      case 1: // Location
+        if (!state) {
+          errors.state = "Please select a state";
+        }
+        if (!city) {
+          errors.city = "Please select a city";
+        }
+        if (!formData.location.trim()) {
+          errors.location = "Please enter a landmark or area";
+        } else if (formData.location.length < 3) {
+          errors.location = "Landmark must be at least 3 characters";
+        }
+        break;
+
+      case 2: // Photos
+        if (formData.images.length === 0) {
+          errors.images = "Please add at least 1 image";
+        } else if (formData.images.length === 1 && !formData.thumbnail) {
+          errors.thumbnail = "Please set a main image";
+        } else if (formData.images.length > 1 && !formData.thumbnail) {
+          errors.thumbnail = "Please select a main image as thumbnail";
+        }
+        break;
+
+      case 4: // Complete Listing
+        if (formData.size.trim() && (isNaN(Number(formData.size)) || Number(formData.size) <= 0)) {
+          errors.size = "Size must be a valid positive number";
+        }
+
+        if (!isLandCategory) {
+          if (!conditionValue) {
+            errors.condition = "Please select property condition";
+          }
+        }
+
+        if (!docValue) {
+          errors.documentType = "Please select a document type";
+        }
+
+        if (!statusValue) {
+          errors.status = "Please select a status";
+        }
+        break;
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   useEffect(() => {
     if (categories.length > 0) {
@@ -322,10 +436,19 @@ const PublishProperty = () => {
 
   // Function to handle next step
   const handleNext = () => {
-    // Simple validation could be added here
+    if (!validateStep(currentStep)) {
+      show({
+        type: "warning",
+        title: "Validation Error",
+        message: "Please fix all errors before proceeding",
+      });
+      return;
+    }
+
     if (currentStep === steps.length - 1) {
       handleSubmit();
     } else {
+      setValidationErrors({});
       setCurrentStep(currentStep + 1);
     }
   };
@@ -393,7 +516,15 @@ const PublishProperty = () => {
       if (thumbnailIndex !== -1) {
         data.append("thumbnailIndex", String(thumbnailIndex));
       }
+      if (formData.video) {
+        const videoName = formData.video.split("/").pop() || "property_video.mp4";
 
+        data.append("video", {
+          uri: formData.video,
+          name: videoName,
+          type: "video/mp4",
+        } as any);
+      }
       const token = await AsyncStorage.getItem("authToken");
       const userJson = await AsyncStorage.getItem("authUser");
       if (!token || !userJson) {
@@ -439,19 +570,19 @@ const PublishProperty = () => {
     }
   };
 
-  const [user, setUser] = useState<{ id: string; name: string; plan_type: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; plan_type: string; is_seller?: number } | null>(null);
 
   const checkAuth = async () => {
     const token = await AsyncStorage.getItem('authToken');
     const userJson = await AsyncStorage.getItem('authUser');
-    
+
     if (!token || !userJson) {
       console.log("Error", "Not authenticated");
       return;
     }
     const userObj = JSON.parse(userJson);
     setUser(userObj);
-    
+
     const planType = String(userObj.plan_type || "").toLowerCase();
     const isPremium = planType === "premium";
     setPricingVisible(!isPremium);
@@ -470,24 +601,31 @@ const PublishProperty = () => {
     }, [])
   );
 
-  //   // Function to handle form submission
-  //   const handleSubmit = () => {
-  // console.log('Form submitted with data:', formData);
-  //     setTimeout(() => {
-  //       try {
-  //         // Simulate random error for demo purposes
-  //         if (Math.random() > 0.7) {
-  //           throw new Error("Network error");
-  //         }
-  //         setSuccess(true);
-  //         setError(null);
-  //         // Here you would navigate to a success screen or dashboard
-  //       } catch (err) {
-  //         setError(err.message);
-  //         setSuccess(false);
-  //       }
-  //     }, 1000);
-  //   };
+  const pickVideo = async () => {
+    if (!user) return;
+
+    if (user.plan_type !== "premium") {
+      show({
+        type: "warning",
+        title: "Premium Required",
+        message: "Only premium users can upload videos.",
+      });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 1,
+      allowsEditing: false,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        video: result.assets[0].uri,
+      }));
+    }
+  };
 
   const pickImage = async () => {
     if (!user) return; // Guard clause to ensure user is not null
@@ -554,19 +692,22 @@ const PublishProperty = () => {
             style={{ marginBottom: 100 }}
           >
             <View style={styles.stepContainer}>
-   
+
               <Text style={styles.stepTitle}>
                 Hi {user ? user.name : ""}, Fill detail of your{" "}
-                
+
                 <Text style={styles.highlight}>real estate</Text>
                 {" "}
               </Text>
-            
+
 
               <View style={styles.inputContainer}>
                 <View style={styles.formField}>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      validationErrors.propertyName && { borderColor: "#dc2626", borderWidth: 2 },
+                    ]}
                     value={formData.propertyName}
                     onChangeText={(text) => handleChange("propertyName", text)}
                     placeholder="Property title with short description"
@@ -578,6 +719,12 @@ const PublishProperty = () => {
                     style={styles.inputIcon}
                   />
                 </View>
+                {validationErrors.propertyName && (
+                  <Text style={styles.errorText}>{validationErrors.propertyName}</Text>
+                )}
+                <Text style={styles.charCount}>
+                  {formData.propertyName.length}/100 characters
+                </Text>
 
                 <Text style={styles.label}>Property Category</Text>
 
@@ -591,10 +738,14 @@ const PublishProperty = () => {
                   setItems={setCategoryItems}
                   placeholder="Select Property Type"
                   zIndex={3000}
+                  style={validationErrors.category && { borderColor: "#dc2626", borderWidth: 2 }}
                   onChangeValue={(val) => {
                     handleChange("propertyCategory", val);
                   }}
                 />
+                {validationErrors.category && (
+                  <Text style={styles.errorText}>{validationErrors.category}</Text>
+                )}
 
                 {/* Subcategory */}
                 {subItems.length > 0 && (
@@ -611,10 +762,14 @@ const PublishProperty = () => {
                       setItems={setSubItems}
                       placeholder="Select Subcategory"
                       zIndex={2000}
+                      style={validationErrors.subcategory && { borderColor: "#dc2626", borderWidth: 2 }}
                       onChangeValue={(val) => {
                         handleChange("propertySubCategory", val);
                       }}
                     />
+                    {validationErrors.subcategory && (
+                      <Text style={styles.errorText}>{validationErrors.subcategory}</Text>
+                    )}
                   </>
                 )}
 
@@ -649,14 +804,20 @@ const PublishProperty = () => {
                       <Text style={styles.sectionTitle}>Sell Price</Text>
                       <View style={styles.priceInputContainer}>
                         <TextInput
-                          style={styles.priceInput}
+                          style={[
+                            styles.priceInput,
+                            validationErrors.sellPrice && { borderColor: "#dc2626", borderWidth: 2 },
+                          ]}
                           value={formData.sellPrice}
                           onChangeText={(text) => handleChange("sellPrice", text)}
                           keyboardType="numeric"
-                          placeholder="Enter Sell Price"
+                          placeholder="Enter Sell Price (eg. 5000000)"
                         />
                         <Text style={styles.currencyLabel}>N</Text>
                       </View>
+                      {validationErrors.sellPrice && (
+                        <Text style={styles.errorText}>{validationErrors.sellPrice}</Text>
+                      )}
                     </>
                   )}
 
@@ -676,21 +837,32 @@ const PublishProperty = () => {
                       </Text>
                       <View style={styles.priceInputContainer}>
                         <TextInput
-                          style={styles.priceInput}
+                          style={[
+                            styles.priceInput,
+                            validationErrors.rentPrice && { borderColor: "#dc2626", borderWidth: 2 },
+                          ]}
                           value={formData.rentPrice}
                           onChangeText={(text) => handleChange("rentPrice", text)}
                           keyboardType="numeric"
-                          placeholder="Enter Rent Price"
+                          placeholder="Enter Rent Price (eg. 1000000)"
                         />
                         <Text style={styles.currencyLabel}>N</Text>
                       </View>
+                      {validationErrors.rentPrice && (
+                        <Text style={styles.errorText}>{validationErrors.rentPrice}</Text>
+                      )}
                     </>
                   )}
               </View>
 
               <View style={styles.formField}>
                 <Text style={styles.label}>Description</Text>
-                <View style={styles.textAreaWrapper}>
+                <View
+                  style={[
+                    styles.textAreaWrapper,
+                    validationErrors.description && { borderColor: "#dc2626", borderWidth: 2 },
+                  ]}
+                >
                   <Ionicons
                     name="document-text-outline"
                     size={18}
@@ -707,10 +879,125 @@ const PublishProperty = () => {
                     style={styles.textArea}
                   />
                 </View>
+                {validationErrors.description && (
+                  <Text style={styles.errorText}>{validationErrors.description}</Text>
+                )}
+                <Text style={styles.charCount}>
+                  {formData.description.length}/500 characters (min 30)
+                </Text>
               </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+      ),
+    },
+    {
+      title: "Where is the location?",
+      render: () => (
+
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <SafeAreaProvider style={{
+            flex: 1,
+            padding: 10,
+          }}>
+            <Text style={styles.stepTitle}>
+              Where is the <Text style={styles.highlight}>location</Text>?
+            </Text>
+
+            <View style={{ padding: 6 }}>
+              <Text style={{ marginBottom: 8 }}>Select State</Text>
+              <DropDownPicker
+                open={openState}
+                value={state}
+                items={stateItems}
+                setOpen={setOpenState}
+                listMode="MODAL"
+                setValue={(callback) => {
+                  const value =
+                    typeof callback === "function"
+                      ? callback(state)
+                      : callback;
+                  setState(value);
+                  const selected = stateItems.find(
+                    (item) => item.value === value,
+                  );
+                  handleChange("state", selected ? selected.label : value);
+                }}
+                setItems={setStateItems}
+                placeholder="Select a state"
+                searchable={true}
+                zIndex={2000}
+                style={validationErrors.state && { borderColor: "#dc2626", borderWidth: 2 }}
+                dropDownContainerStyle={{
+                  maxHeight: 500,
+                }}
+              />
+              {validationErrors.state && (
+                <Text style={styles.errorText}>{validationErrors.state}</Text>
+              )}
+
+              <Text style={{ marginTop: 20, marginBottom: 1 }}>
+                Select City{" "}
+              </Text>
+              <DropDownPicker
+                open={openCity}
+                value={city}
+                items={cityItems}
+                setOpen={setOpenCity}
+                listMode="MODAL"
+                setValue={(callback) => {
+                  const value =
+                    typeof callback === "function"
+                      ? callback(city)
+                      : callback;
+                  setCity(value);
+                  const selected = cityItems.find(
+                    (item) => item.value === value,
+                  );
+                  handleChange("city", selected ? selected.label : value);
+                }}
+                setItems={setCityItems}
+                placeholder="Select City"
+                searchable={true}
+                zIndex={1800}
+                style={validationErrors.city && { borderColor: "#dc2626", borderWidth: 2 }}
+                dropDownContainerStyle={{
+                  maxHeight: 900,
+                }}
+              />
+              {validationErrors.city && (
+                <Text style={styles.errorText}>{validationErrors.city}</Text>
+              )}
+            </View>
+
+            <View style={styles.formField}>
+              <Text style={{ marginTop: 5, marginBottom: 5, marginLeft: 12 }}>
+                Enter Landmark / Area
+              </Text>
+              <TextInput
+                style={[
+                  {
+                    backgroundColor: "#FFFFFF",
+                    padding: 14,
+                    borderRadius: 4,
+                    paddingLeft: 5,
+                    marginHorizontal: 10,
+                    borderColor: "#555",
+                    borderWidth: 1,
+                  },
+                  validationErrors.location && { borderColor: "#dc2626", borderWidth: 2 },
+                ]}
+                value={formData.location}
+                onChangeText={(text) => handleChange("location", text)}
+                placeholder="Landmark / Area"
+              />
+              {validationErrors.location && (
+                <Text style={styles.errorText}>{validationErrors.location}</Text>
+              )}
+            </View>
+          </SafeAreaProvider>
+        </ScrollView>
+
       ),
     },
     {
@@ -753,6 +1040,13 @@ const PublishProperty = () => {
               <Icon name="info" size={22} color="#2563EB" />
             </TouchableOpacity>
           </View>
+
+          {validationErrors.images && (
+            <Text style={styles.errorText}>{validationErrors.images}</Text>
+          )}
+          {validationErrors.thumbnail && (
+            <Text style={styles.errorText}>{validationErrors.thumbnail}</Text>
+          )}
 
           {formData.images.length > 1 && (
             <Text style={{ marginTop: 4, color: "orange", fontSize: 14 }}>
@@ -799,103 +1093,51 @@ const PublishProperty = () => {
         </View>
       ),
     },
+
     {
-      title: "Where is the location?",
+      title: "Add a video to your listing",
       render: () => (
+        <View style={styles.stepContainer}>
+          <Text style={styles.stepTitle}>
+            Add a <Text style={styles.highlight}>video</Text> to your listing
+          </Text>
 
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <SafeAreaProvider style={{
-            flex: 1,
-            padding: 10,
-          }}>
-            <Text style={styles.stepTitle}>
-              Where is the <Text style={styles.highlight}>location</Text>?
-            </Text>
+          <Text
+            style={{
+              marginTop: 4,
+              marginBottom: 8,
+              color: "#6B7280",
+              fontSize: 14,
+            }}
+          >
+            Only premium users can upload a video
+          </Text>
 
-            <View style={{ padding: 6 }}>
-              <Text style={{ marginBottom: 8 }}>Select State</Text>
-              <DropDownPicker
-                open={openState}
-                value={state}
-                items={stateItems}
-                setOpen={setOpenState}
-                listMode="MODAL"
-                setValue={(callback) => {
-                  const value =
-                    typeof callback === "function"
-                      ? callback(state)
-                      : callback;
-                  setState(value);
-                  const selected = stateItems.find(
-                    (item) => item.value === value,
-                  );
-                  handleChange("state", selected ? selected.label : value);
-                }}
-                setItems={setStateItems}
-                placeholder="Select a state"
-                searchable={true}
-                zIndex={2000}
-
-                dropDownContainerStyle={{
-                  maxHeight: 500,
-                }}
+          {formData.video ? (
+            <View style={{ marginBottom: 16 }}>
+              <Video
+                source={{ uri: formData.video }}
+                useNativeControls
+                shouldPlay={false}
+                style={{ width: "100%", height: 200, borderRadius: 8 }}
               />
-
-              <Text style={{ marginTop: 20, marginBottom: 1 }}>
-                Select City{" "}
-              </Text>
-              <DropDownPicker
-                open={openCity}
-                value={city}
-                items={cityItems}
-                setOpen={setOpenCity}
-                listMode="MODAL"
-                setValue={(callback) => {
-                  const value =
-                    typeof callback === "function"
-                      ? callback(city)
-                      : callback;
-                  setCity(value);
-                  const selected = cityItems.find(
-                    (item) => item.value === value,
-                  );
-                  handleChange("city", selected ? selected.label : value);
-                }}
-                setItems={setCityItems}
-                placeholder="Select City"
-                searchable={true}
-                zIndex={1800}
-
-                dropDownContainerStyle={{
-                  maxHeight: 900,
-                }}
-              />
+              <TouchableOpacity
+                style={styles.removeVideoBtn}
+                onPress={() => setFormData({ ...formData, video: null })}
+              >
+                <Text style={styles.removeVideoText}>Remove Video</Text>
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.formField}>
-              <Text style={{ marginTop: 5, marginBottom: 5, marginLeft: 12 }}>
-                Enter Landmark / Area
-              </Text>
-              <TextInput
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  padding: 14,
-                  borderRadius: 4,
-                  paddingLeft: 5,
-                  marginHorizontal: 10,
-                  borderColor: "#555",
-                  borderWidth: 1,
-                }}
-                value={formData.location}
-                onChangeText={(text) => handleChange("location", text)}
-                placeholder="Landmark / Area"
-              />
-            </View>
-          </SafeAreaProvider>
-        </ScrollView>
-
+          ) : (
+            <TouchableOpacity style={styles.pickVideoBtn} onPress={pickVideo}>
+              <Text style={styles.pickVideoText}>Pick a Video</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       ),
+
     },
+
     {
       title: "Complete the listing",
       render: () => (
@@ -911,18 +1153,25 @@ const PublishProperty = () => {
             </Text>
 
             <TextInput
-              style={{
-                backgroundColor: "#FFFFFF",
-                padding: 15,
-                borderRadius: 5,
-                paddingLeft: 5,
-                marginHorizontal: 3,
-                borderWidth: 1,
-              }}
+              style={[
+                {
+                  backgroundColor: "#FFFFFF",
+                  padding: 15,
+                  borderRadius: 5,
+                  paddingLeft: 5,
+                  marginHorizontal: 3,
+                  borderWidth: 1,
+                },
+                validationErrors.size && { borderColor: "#dc2626", borderWidth: 2 },
+              ]}
               value={formData.size}
               onChangeText={(text) => handleChange("size", text)}
+              keyboardType="numeric"
               placeholder="Optional, e.g. 120 sqm"
             />
+            {validationErrors.size && (
+              <Text style={styles.errorText}>{validationErrors.size}</Text>
+            )}
 
             {!isLandCategory && (
               <>
@@ -972,11 +1221,15 @@ const PublishProperty = () => {
                   setValue={setConditionValue}
                   setItems={setConditionItems}
                   placeholder="Select Condition"
-                  zIndex={3000}
+                  zIndex={3500}
+                  style={validationErrors.condition && { borderColor: "#dc2626", borderWidth: 2 }}
                   onChangeValue={(val) => {
                     handleConditionChange(val);
                   }}
                 />
+                {validationErrors.condition && (
+                  <Text style={styles.errorText}>{validationErrors.condition}</Text>
+                )}
               </>
             )}
 
@@ -992,10 +1245,14 @@ const PublishProperty = () => {
               setItems={setDocItems}
               placeholder="Select Document Type"
               zIndex={3000}
+              style={validationErrors.documentType && { borderColor: "#dc2626", borderWidth: 2 }}
               onChangeValue={(val) => {
                 onValueChange(val);
               }}
             />
+            {validationErrors.documentType && (
+              <Text style={styles.errorText}>{validationErrors.documentType}</Text>
+            )}
 
             <Text style={{ ...styles.label, marginTop: 16 }}>Sales Type</Text>
 
@@ -1008,7 +1265,7 @@ const PublishProperty = () => {
               setValue={setSalesValue}
               setItems={setSalesItems}
               placeholder="Select Sales Type"
-              zIndex={3000}
+              zIndex={2500}
               onChangeValue={(val) => {
                 handleSalesTypeChange(val);
               }}
@@ -1025,11 +1282,15 @@ const PublishProperty = () => {
               setValue={setStatusValue}
               setItems={setStatusItems}
               placeholder="Select Status"
-              zIndex={3000}
+              zIndex={2000}
+              style={validationErrors.status && { borderColor: "#dc2626", borderWidth: 2 }}
               onChangeValue={(val) => {
                 handleStatusChange(val);
               }}
             />
+            {validationErrors.status && (
+              <Text style={styles.errorText}>{validationErrors.status}</Text>
+            )}
 
             <Text style={styles.sectionTitle}>Property Features</Text>
 
@@ -1159,6 +1420,38 @@ const PublishProperty = () => {
     </View>
   );
 
+  const BecomeSellerUI = () => (
+    <SafeAreaView style={[styles.container, { backgroundColor: "#1A1A2E" }]}>
+      <View style={styles.becomeSellerContainer}>
+        <View style={styles.becomeSellerContent}>
+          <Icon name="business" size={80} color={GOLD} />
+          <Text style={styles.becomeSellerTitle}>Become a Seller</Text>
+          <Text style={styles.becomeSellerSubtitle}>
+            List properties and grow your business. Connect with buyers and manage your real estate portfolio.
+          </Text>
+          <TouchableOpacity
+            style={styles.becomeSellerButton}
+            onPress={() => router.push("../Publish/BecomeASeller")}
+          >
+            <Text style={styles.becomeSellerButtonText}>Get Started</Text>
+            <Ionicons name="arrow-forward" size={20} color="#1A1A2E" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+
+  // Show loading while checking auth
+  if (!authLoaded) {
+    return (
+      <PremiumLoader />
+    );
+  }
+
+  if (!user || user.is_seller != 1) {
+    return <BecomeSellerUI />;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -1174,15 +1467,19 @@ const PublishProperty = () => {
 
       {/* Navigation Buttons */}
       <View style={styles.navigation}>
-        <TouchableOpacity style={styles.backButtonCircle} onPress={handleBack}>
-          <Icon name="arrow-back" size={24} color="#333" />
+        <TouchableOpacity style={styles.backButtonCircle} onPress={handleBack} disabled={loading}>
+          <Icon name="arrow-back" size={24} color={loading ? "#ccc" : "#333"} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          {/* <Text style={styles.nextButtonText}>
-            {currentStep === steps.length - 1 ? "Finish" : "Next"}
-          </Text> */}
-
+        <TouchableOpacity
+          style={[
+            styles.nextButton,
+            loading && styles.nextButtonDisabled
+          ]}
+          onPress={handleNext}
+          disabled={loading}
+          activeOpacity={loading ? 1 : 0.7}
+        >
           {loading && currentStep === steps.length - 1 ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
@@ -1194,28 +1491,26 @@ const PublishProperty = () => {
       </View>
 
       <PricingModal
-     visible={authLoaded && pricingVisible}
+        visible={authLoaded && pricingVisible}
         onSelectPlan={(planKey: string) => {
           setPricingVisible(false);
-          // navigate to payment/upgrade flow, passing planKey
-          // router.push(`./upgrade?plan=${planKey}`);
           switch (planKey) {
-    case "freemium":
-      break; 
+            case "freemium":
+              break;
             case "semi":
-              router.push(`../../../upgrade/payment?plan=semi`);      
+              router.push(`../../../upgrade/payment?plan=semi`);
               break;
             case "annual":
               router.push(`../../../upgrade/payment?plan=annual`);
-              break;                 
+              break;
             case "monthly":
               router.push(`../../../upgrade/payment?plan=monthly`);
-              break;       
-            default:  
-              router.push(`../../../upgrade`);      
+              break;
+            default:
+              router.push(`../../../upgrade`);
           }
         }}
-        onClose={() => setPricingVisible(false)}  
+        onClose={() => setPricingVisible(false)}
       />
 
       {/* Error Modal */}
@@ -1306,6 +1601,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+  },
+  nextButtonDisabled: {
+    backgroundColor: "#9ca3af",
+    opacity: 0.6,
   },
   nextButtonText: {
     color: "#fff",
@@ -1760,6 +2059,83 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
+  becomeSellerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  becomeSellerContent: {
+    alignItems: "center",
+    backgroundColor: "#16213E",
+    borderRadius: 20,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: GOLD + "44",
+  },
+  becomeSellerTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#fff",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  becomeSellerSubtitle: {
+    fontSize: 16,
+    color: "#ccc",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  becomeSellerButton: {
+    backgroundColor: GOLD,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 8,
+  },
+  becomeSellerButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1A1A2E",
+  },
+  errorText: {
+    color: "#dc2626",
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  charCount: {
+    fontSize: 12,
+    color: "#9ca3af",
+    marginTop: 4,
+    textAlign: "right",
+  },
+  removeVideoBtn: {
+    marginTop: 8,
+    backgroundColor: "#dc2626",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  removeVideoText: {
+    color: "#fff",
+    fontWeight: "500",
+  },
+  pickVideoBtn: {
+    backgroundColor: NAVY,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  pickVideoText: {
+    color: "#fff",
+    fontWeight: "500",
+  },
 });
 
 const pickerStyles = {
@@ -1791,6 +2167,7 @@ const pickerStyles = {
     top: 14,
     right: 10,
   },
+
 };
 
 export default PublishProperty;

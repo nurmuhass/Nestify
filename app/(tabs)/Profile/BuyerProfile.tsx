@@ -10,6 +10,7 @@ import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useToast } from "@/components/Toast";
+import PricingModal from "@/components/PricingModal";
 
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -25,6 +26,8 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const isPremium = user?.plan_type === "premium";
+    const [pricingVisible, setPricingVisible] = useState(false);
+
 
     useFocusEffect(
         useCallback(() => {
@@ -119,19 +122,25 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
             route: "../Profile/EditProfile",
         },
     ];
-
+type PricingModalProps = {
+  visible: boolean;
+  userType?: "buyer" | "seller";
+  currentPlan?: string;
+  onSelectPlan: (plan: string) => void;
+  onClose: () => void;
+};
     return (
-        <View style={[styles.container, { backgroundColor: "#fff" }]}>
+        <View style={[styles.container, { backgroundColor: DARK }]}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 {/* ── Header bar ── */}
                 <View style={styles.buyerHeaderBar}>
                     <TouchableOpacity style={styles.buyerHeaderBtn} onPress={onMessages}>
-                        <AntDesign name="message1" size={18} color="#111" />
+                        <AntDesign name="message1" size={18} color="#fff" />
                     </TouchableOpacity>
                     <Text style={styles.buyerHeaderTitle}>Profile</Text>
                     <TouchableOpacity style={styles.buyerHeaderBtn} onPress={onSettings}>
-                        <Ionicons name="settings-outline" size={18} color="#111" />
+                        <Ionicons name="settings-outline" size={18} color="#fff" />
                     </TouchableOpacity>
                 </View>
 
@@ -167,7 +176,17 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
                 {/* ── Premium banner ── */}
                 {!isPremium && (
                     <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-                        <PremiumBanner onUpgrade={() => router.push("/Subscription")} />
+                        <PremiumBanner onUpgrade={() => setPricingVisible(true)}/>
+                    </View>
+                )}
+
+                {/* ── Premium User Badge ── */}
+                {isPremium && (
+                    <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+                        <View style={styles.premiumUserBadge}>
+                            <MaterialIcons name="star" size={20} color={GOLD} />
+                            <Text style={styles.premiumUserText}>Premium User</Text>
+                        </View>
                     </View>
                 )}
 
@@ -247,7 +266,7 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
 
                 {/* ── Become a seller ── */}
                 <View style={{ paddingHorizontal: 16, marginBottom: 40 }}>
-                    <TouchableOpacity style={styles.becomeSellerCard} onPress={handleBecomeSeller}>
+                    <TouchableOpacity style={styles.becomeSellerCard}    onPress={() => router.push("../Publish/BecomeASeller")}>
                         <View style={styles.becomeSellerLeft}>
                             <View style={styles.becomeSellerIcon}>
                                 <MaterialIcons name="business" size={22} color={GOLD} />
@@ -263,7 +282,30 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
                     </TouchableOpacity>
                 </View>
 
+
+
             </ScrollView>
+
+<PricingModal
+  visible={pricingVisible}
+  mode="buyer"
+  onClose={() => setPricingVisible(false)}
+  onSelectPlan={(planKey) => {
+
+    switch (planKey) {
+
+      case "buyer_monthly":
+        router.push("/upgrade/payment?plan=buyer_monthly");
+        break;
+
+      case "buyer_annual":
+        router.push("/upgrade/payment?plan=buyer_annual");
+        break;
+    }
+  }}
+/>
+
+               
         </View>
     );
 }
@@ -285,7 +327,7 @@ const styles = StyleSheet.create({
     },
     premiumBannerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
     premiumBannerTitle: { fontSize: 13, fontWeight: "700", color: "#fff" },
-    premiumBannerSub: { fontSize: 11, color: "#888", marginTop: 2 },
+    premiumBannerSub: { fontSize: 11, color: "#ccc", marginTop: 2 },
     premiumBannerBtn: {
         backgroundColor: GOLD,
         paddingHorizontal: 14,
@@ -293,6 +335,21 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     premiumBannerBtnText: { fontSize: 12, fontWeight: "700", color: "#1A1A2E" },
+
+    // ── Premium User Badge ──
+    premiumUserBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: DARK2,
+        borderRadius: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderWidth: 1,
+        borderColor: GOLD + "44",
+        gap: 8,
+    },
+    premiumUserText: { fontSize: 14, fontWeight: "700", color: GOLD },
 
 
     buyerHeaderBar: {
@@ -302,14 +359,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 0.5,
-        borderColor: "#e5e7eb",
+        borderColor: "#555",
     },
     buyerHeaderBtn: {
         width: 40, height: 40, borderRadius: 12,
-        backgroundColor: "#f3f4f6",
+        backgroundColor: DARK2,
         alignItems: "center", justifyContent: "center",
     },
-    buyerHeaderTitle: { fontSize: 17, fontWeight: "800", color: "#111" },
+    buyerHeaderTitle: { fontSize: 17, fontWeight: "800", color: "#fff" },
 
     buyerAvatarBlock: {
         alignItems: "center",
@@ -318,25 +375,25 @@ const styles = StyleSheet.create({
     },
     buyerAvatarRing: {
         width: 88, height: 88, borderRadius: 44,
-        borderWidth: 3, borderColor: "#e5e7eb",
+        borderWidth: 3, borderColor: "#555",
         overflow: "hidden",
     },
     buyerAvatarImg: { width: "100%", height: "100%", },
     buyerAvatarFallback: {
         width: "100%", height: "100%",
-        backgroundColor: "#e0e7ff",
+        backgroundColor: "#555",
         alignItems: "center", justifyContent: "center",
     },
-    buyerAvatarInitial: { fontSize: 30, fontWeight: "800", color: "#4338ca" },
-    buyerName: { fontSize: 20, fontWeight: "800", color: "#111", marginTop: 12 },
-    buyerSince: { fontSize: 12, color: "#888", marginTop: 4 },
+    buyerAvatarInitial: { fontSize: 30, fontWeight: "800", color: "#fff" },
+    buyerName: { fontSize: 20, fontWeight: "800", color: "#fff", marginTop: 12 },
+    buyerSince: { fontSize: 12, color: "#ccc", marginTop: 4 },
     buyerRatingPill: {
         flexDirection: "row", alignItems: "center", gap: 4,
-        backgroundColor: "#fef9c3",
+        backgroundColor: DARK2,
         paddingHorizontal: 10, paddingVertical: 4,
         borderRadius: 20, marginTop: 8,
     },
-    buyerRatingText: { fontSize: 12, fontWeight: "600", color: "#b45309" },
+    buyerRatingText: { fontSize: 12, fontWeight: "600", color: "#fff" },
 
     buyerStatsGrid: {
         flexDirection: "row", flexWrap: "wrap",
@@ -345,40 +402,40 @@ const styles = StyleSheet.create({
     buyerStatCard: {
         width: "47.5%",
         flexDirection: "row", alignItems: "center", gap: 10,
-        backgroundColor: "#f9fafb",
+        backgroundColor: DARK2,
         borderRadius: 14, padding: 14,
-        borderWidth: 0.5, borderColor: "#e5e7eb",
+        borderWidth: 0.5, borderColor: "#555",
     },
     buyerStatIcon: {
         width: 40, height: 40, borderRadius: 12,
         alignItems: "center", justifyContent: "center",
     },
-    buyerStatNum: { fontSize: 18, fontWeight: "800", color: "#111" },
-    buyerStatLbl: { fontSize: 11, color: "#888", marginTop: 1 },
+    buyerStatNum: { fontSize: 18, fontWeight: "800", color: "#fff" },
+    buyerStatLbl: { fontSize: 11, color: "#ccc", marginTop: 1 },
 
     buyerSection: { paddingHorizontal: 16, marginBottom: 20 },
     buyerSectionHeader: {
         flexDirection: "row", alignItems: "center",
         justifyContent: "space-between", marginBottom: 12,
     },
-    buyerSectionTitle: { fontSize: 15, fontWeight: "700", color: "#111" },
-    buyerSeeAll: { fontSize: 12, fontWeight: "600", color: "#007bff" },
+    buyerSectionTitle: { fontSize: 15, fontWeight: "700", color: "#fff" },
+    buyerSeeAll: { fontSize: 12, fontWeight: "600", color: GOLD },
 
     buyerWishCard: {
         flexDirection: "row", alignItems: "center", gap: 12,
-        backgroundColor: "#f9fafb",
+        backgroundColor: DARK2,
         borderRadius: 14, padding: 12,
-        marginBottom: 8, borderWidth: 0.5, borderColor: "#e5e7eb",
+        marginBottom: 8, borderWidth: 0.5, borderColor: "#555",
     },
     buyerWishImg: { width: 60, height: 60, borderRadius: 10 },
     buyerWishInfo: { flex: 1 },
-    buyerWishName: { fontSize: 13, fontWeight: "700", color: "#111" },
+    buyerWishName: { fontSize: 13, fontWeight: "700", color: "#fff" },
     buyerWishLocRow: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: 3 },
-    buyerWishLoc: { fontSize: 11, color: "#888" },
-    buyerWishPrice: { fontSize: 13, fontWeight: "700", color: "#007bff", marginTop: 4 },
+    buyerWishLoc: { fontSize: 11, color: "#ccc" },
+    buyerWishPrice: { fontSize: 13, fontWeight: "700", color: GOLD, marginTop: 4 },
 
     buyerEmpty: { alignItems: "center", paddingVertical: 30, gap: 8 },
-    buyerEmptyText: { fontSize: 13, color: "#aaa" },
+    buyerEmptyText: { fontSize: 13, color: "#ccc" },
 
     becomeSellerCard: {
         flexDirection: "row", alignItems: "center",
@@ -394,7 +451,7 @@ const styles = StyleSheet.create({
         alignItems: "center", justifyContent: "center",
     },
     becomeSellerTitle: { fontSize: 14, fontWeight: "700", color: "#fff" },
-    becomeSellerSub: { fontSize: 11, color: "#888", marginTop: 2 },
+    becomeSellerSub: { fontSize: 11, color: "#ccc", marginTop: 2 },
 });
 
 export default BuyerProfile;

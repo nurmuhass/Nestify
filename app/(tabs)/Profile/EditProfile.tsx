@@ -351,6 +351,15 @@ const EditProfile = () => {
         return;
       }
 
+      if (!companyName.trim()) {
+        show({
+          type: 'warning',
+          title: 'Company name required',
+          message: 'Please enter your company name.',
+        });
+        return;
+      }
+
       if (!sellerIdNumber.trim()) {
         show({
           type: 'warning',
@@ -387,13 +396,17 @@ const EditProfile = () => {
       if (stateLabel) {
         formData.append('state', stateLabel);
       }
- 
+
       formData.append('city', city);
 
       if (isSeller) {
+        // Always send company name if provided
+        if (companyName.trim()) {
+          formData.append('company_name', companyName.trim());
+        }
+
         if (sellerType === 'company') {
           formData.append('rc_number', sellerIdNumber.trim());
-          formData.append('company_name', companyName.trim());
         } else {
           formData.append('nin', sellerIdNumber.trim());
         }
@@ -643,18 +656,16 @@ const EditProfile = () => {
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Seller Details</Text>
 
-              {sellerType === 'company' && (
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="business-outline" size={18} color="#98a2b3" />
-                  <TextInput
-                    value={companyName}
-                    onChangeText={setCompanyName}
-                    placeholder="Company Name"
-                    placeholderTextColor="#98a2b3"
-                    style={styles.input}
-                  />
-                </View>
-              )}
+              <View style={styles.inputWrapper}>
+                <Ionicons name="business-outline" size={18} color="#98a2b3" />
+                <TextInput
+                  value={companyName}
+                  onChangeText={setCompanyName}
+                  placeholder="Company Name"
+                  placeholderTextColor="#98a2b3"
+                  style={styles.input}
+                />
+              </View>
 
               <View style={styles.inputWrapper}>
                 <Ionicons name="card-outline" size={18} color="#98a2b3" />
@@ -665,8 +676,8 @@ const EditProfile = () => {
                     sellerType === 'company'
                       ? 'RC Number'
                       : sellerType === 'agent' || sellerType === 'owner'
-                      ? 'NIN'
-                      : 'NIN / RC Number'
+                        ? 'NIN'
+                        : 'NIN / RC Number'
                   }
                   placeholderTextColor="#98a2b3"
                   style={styles.input}

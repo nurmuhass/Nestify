@@ -24,6 +24,7 @@ import PricingModal from '@/components/PricingModal';
 import PremiumLoader from '@/components/PremiumLoader';
 import { useToast } from '@/components/Toast';
 import GetRelatedProperties from '@/components/GetRelatedProperties';
+import { Video } from 'expo-av';
 
 const COLORS = {
   bg: '#091530',
@@ -320,7 +321,7 @@ export default function PropertyDetails() {
     );
   }
   if (!property) {
-    return null;
+    return <PremiumLoader />;
 
   }
 
@@ -576,6 +577,14 @@ export default function PropertyDetails() {
               <Ionicons name="chatbubble-ellipses-outline" size={20} color="#007bff" />
             </View>
 
+
+            {property?.video && (
+              <Video
+                source={{ uri: `https://insighthub.com.ng/${property.video}` }}
+                useNativeControls
+                style={{ width: "100%", height: 250, marginTop: 10 }}
+              />
+            )}
             <View style={styles.divider} />
 
             {/* Specs */}

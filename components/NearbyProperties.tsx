@@ -53,7 +53,8 @@ export default function NearbyEstates() {
   const [user, setUser] = useState(null);
   const [seed] = useState(Math.floor(Math.random() * 99999));
 
-  /* ── your original auth check ─────────────────────────────── */
+
+
   useEffect(() => {
     const checkAuth = async () => {
       const token = await AsyncStorage.getItem('authToken');

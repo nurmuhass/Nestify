@@ -95,12 +95,16 @@ export default function MessagesScreen() {
 
   const getOtherParty = (conv: Conversation) => {
     const isBuyer = conv.buyer_id === userId;
+
     return {
       name: isBuyer ? (conv.seller_company || conv.seller_name) : conv.buyer_name,
       avatar: isBuyer ? conv.seller_avatar : conv.buyer_avatar,
       role: isBuyer ? 'Seller' : 'Buyer',
+      company_id: isBuyer ? conv.seller_id : conv.buyer_id,
     };
+
   };
+
 
   const renderItem = ({ item }: { item: Conversation }) => {
     const other = getOtherParty(item);
@@ -145,7 +149,7 @@ export default function MessagesScreen() {
           onPress={() =>
             router.push({
               pathname: '../Home/ChatRoom',
-              params: { conversation_id: item.id, property_name: item.propertyName, property_id: item.property_id, },
+              params: { conversation_id: item.id, property_name: item.propertyName, property_id: item.property_id, CompanyName: other.name, company_id: other.company_id },
             })
           }
         >
@@ -292,7 +296,7 @@ export default function MessagesScreen() {
         onSelectPlan={(planKey) => {
           setPricingVisible(false);
           // navigate to your payment/upgrade flow, passing planKey
-          // router.push(`./upgrade?plan=${planKey}`);
+
           switch (planKey) {
             case "freemium":
               setPricingVisible(false);

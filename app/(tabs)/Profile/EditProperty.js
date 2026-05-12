@@ -1125,7 +1125,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 4,
     fontSize: 16,
-    color: COLORS.gold,
+    color: COLORS.textPrimary,
     fontWeight: "500",
   },
   toggleContainer: {
