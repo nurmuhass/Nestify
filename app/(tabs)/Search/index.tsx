@@ -489,7 +489,11 @@ export default function SearchScreen() {
     const loadRecent = async () => {
         try {
             const raw = await AsyncStorage.getItem(RECENT_KEY);
-            if (raw) setRecent(JSON.parse(raw));
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                const unique = Array.isArray(parsed) ? Array.from(new Set(parsed)) : [];
+                setRecent(unique);
+            }
         } catch { }
     };
     const searchProperties = async () => {
@@ -861,9 +865,9 @@ export default function SearchScreen() {
                                 </TouchableOpacity>
                             </View>
                             <View style={styles.pillsWrap}>
-                                {recent.map((r) => (
+                                {recent.map((r, index) => (
                                     <RecentPill
-                                        key={r}
+                                        key={`${r}-${index}`}
                                         label={r}
                                         onPress={() => setQuery(r)}
                                         onRemove={() => removeRecent(r)}
@@ -905,9 +909,12 @@ export default function SearchScreen() {
                 /* Results */
                 <FlatList
                     data={results}
-                    keyExtractor={(item) => String(item.id)}
+                    keyExtractor={(item, index) =>
+                        item.id !== undefined && item.id !== null
+                            ? String(item.id)
+                            : String(index)
+                    }
                     renderItem={({ item, index }) => {
-
                         if (item.search_type === 'company') {
                             return (
                                 <CompanyCard

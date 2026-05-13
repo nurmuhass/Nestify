@@ -227,6 +227,15 @@ const EditProperty = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const updateFeatureCount = (feature, increment) => {
+    const currentValue = formData[feature] || 0;
+    const newValue = increment
+      ? currentValue + 1
+      : Math.max(0, currentValue - 1);
+
+    handleChange(feature, newValue);
+  };
+
   /* =========================
      FETCH PROPERTY
   ========================= */
@@ -567,7 +576,7 @@ const EditProperty = () => {
 
       const data = new FormData();
 
-      data.append("propertyId", id); // ✅ IMPORTANT CHANGE
+      data.append("propertyId", id);
 
       Object.keys(formData).forEach((key) => {
         if (key !== "images") {
@@ -877,6 +886,39 @@ const EditProperty = () => {
             selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
             listItemLabelStyle={styles.dropdownListItemLabel}
           />
+
+          <Text style={styles.sectionTitle}>Property Features</Text>
+
+          {["bedrooms", "Toilet", "balconies", "parkingspace", "BQ"].map(
+            (feature) => {
+              const label =
+                feature.charAt(0).toUpperCase() + feature.slice(1);
+              return (
+                <View key={feature} style={styles.counterContainer}>
+                  <Text style={styles.counterLabel}>{label}</Text>
+                  <View style={styles.counterControls}>
+                    <TouchableOpacity
+                      style={styles.counterButton}
+                      onPress={() => updateFeatureCount(feature, false)}
+                    >
+                      <Text style={styles.counterButtonText}>−</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.counterValue}>
+                      {formData[feature]}
+                    </Text>
+
+                    <TouchableOpacity
+                      style={styles.counterButton}
+                      onPress={() => updateFeatureCount(feature, true)}
+                    >
+                      <Text style={styles.counterButtonText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            },
+          )}
 
           <Text style={styles.sectionTitle}>Condition</Text>
 
@@ -1207,5 +1249,47 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
     borderColor: COLORS.border,
     color: COLORS.textPrimary,
+  },
+  counterContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: COLORS.card,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  counterLabel: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  counterControls: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  counterButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.gold,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  counterButtonText: {
+    fontSize: 18,
+    color: COLORS.bg,
+    fontWeight: "700",
+    lineHeight: 22,
+  },
+  counterValue: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    fontWeight: "700",
+    paddingHorizontal: 14,
+    minWidth: 36,
+    textAlign: "center",
   },
 });

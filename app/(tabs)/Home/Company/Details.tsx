@@ -582,7 +582,7 @@ export default function PropertyDetails() {
               <Video
                 source={{ uri: `https://insighthub.com.ng/${property.video}` }}
                 useNativeControls
-                style={{ width: "100%", height: 250, marginTop: 10 }}
+                style={{ width: "100%", height: 250, marginTop: 10, borderRadius: 20 }}
               />
             )}
             <View style={styles.divider} />
