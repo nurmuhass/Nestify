@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { City, State } from "country-state-city";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -12,13 +12,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View,Modal
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 import PremiumLoader from '@/components/PremiumLoader';
 import { useToast } from '@/components/Toast';
+import { Video } from 'expo-av';
 
 const COLORS = {
   bg: '#091530',
@@ -62,6 +63,9 @@ const EditProperty = () => {
   const [openCity, setOpenCity] = useState(false);
   // Store raw property data separately so we can prefill dropdowns after items load
   const [rawProperty, setRawProperty] = useState(null);
+  const [videoModalVisible, setVideoModalVisible] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+    const videoRef = useRef(null);
 
   const fetchCategories = async () => {
     try {
@@ -197,6 +201,7 @@ const EditProperty = () => {
   const [formData, setFormData] = useState({
     images: [],
     thumbnail: "",
+    video: null,
     propertyName: "",
     listingType: "Sell",
     Furnishing: "Unfurnished",
@@ -303,8 +308,8 @@ const EditProperty = () => {
               managedByUs: p.managed_by_us == "1",
               images: p.images.map((img) => `https://insighthub.com.ng/${img}`),
               thumbnail: p.thumbnail ? `https://insighthub.com.ng/${p.thumbnail}` : "",
+              video: p.video ? `https://insighthub.com.ng/NestifyAPI/${p.video}` : null,
             });
-
 
             // Prefill documentType
             if (p.documentType) {
@@ -411,7 +416,6 @@ const EditProperty = () => {
     getUser();
   }, []);
 
-
   useEffect(() => {
     if (categoryValue && categories.length > 0) {
       const selected = categories.find((c) => String(c.id) === String(categoryValue));
@@ -424,7 +428,6 @@ const EditProperty = () => {
       }
     }
   }, [categoryValue, categories]); // ✅ categories added
-
 
   const handleDelete = async () => {
     show({
@@ -481,6 +484,20 @@ const EditProperty = () => {
         },
       },
     });
+  };
+
+  const handleBoostProperty = () => {
+    router.push({
+      pathname: '/upgrade/payment',
+      params: { plan: 'property_boost', propertyId: id },
+    });
+  };
+
+  const isPropertyBoosted = () => {
+    if (!property?.boosted_until) return false;
+    const boostedUntil = new Date(property.boosted_until);
+    const now = new Date();
+    return boostedUntil > now;
   };
 
   /* =========================
@@ -548,10 +565,49 @@ const EditProperty = () => {
     }
   };
 
+  const pickVideo = async () => {
+    if (!user) return;
+
+    if (user.plan_type !== "premium") {
+      show({
+        type: 'warning',
+        title: 'Premium Required',
+        message: 'Only premium users can add or replace videos.',
+      });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 1,
+      allowsEditing: false,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      setVideoDeleted(false);
+      setFormData((prev) => ({
+        ...prev,
+        video: result.assets[0].uri,
+      }));
+    }
+  };
+
+  const removeVideo = () => {
+    if (formData.video?.startsWith("http")) {
+      setVideoDeleted(true);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      video: null,
+    }));
+  };
+
   /* =========================
      SUBMIT (UPDATE)
   ========================= */
   const [deletedImages, setDeletedImages] = useState([]);
+  const [videoDeleted, setVideoDeleted] = useState(false);
 
   const removeImage = (index) => {
     const img = formData.images[index];
@@ -570,82 +626,120 @@ const EditProperty = () => {
     }));
   };
 
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
+const handleSubmit = async () => {
+  try {
+    setLoading(true);
+    setUploadProgress(0);
 
-      const data = new FormData();
+    const data = new FormData();
+    data.append("propertyId", id);
 
-      data.append("propertyId", id);
+    Object.keys(formData).forEach((key) => {
+      if (key !== "images" && key !== "video") {
+        data.append(key, formData[key]);
+      }
+    });
 
-      Object.keys(formData).forEach((key) => {
-        if (key !== "images") {
-          data.append(key, formData[key]);
-        }
+    // Images
+    formData.images.forEach((uri) => {
+      if (uri.startsWith("http")) {
+        data.append("existing_images[]", uri);
+      } else {
+        const fileName = uri.split("/").pop();
+
+        data.append("new_images[]", {
+          uri,
+          name: fileName,
+          type: "image/jpeg",
+        });
+      }
+    });
+
+    // Deleted images
+    deletedImages.forEach((img) => {
+      const fileName = img.split("/").pop();
+      data.append("delete_images[]", fileName);
+    });
+
+    // ✅ VIDEO UPLOAD
+    if (formData.video && !formData.video.startsWith("http")) {
+      const fileName = formData.video.split("/").pop();
+
+      data.append("video", {
+        uri: formData.video,
+        name: fileName,
+        type: "video/mp4",
       });
+    }
 
-      // Existing & new images
-      formData.images.forEach((uri) => {
-        if (uri.startsWith("http")) {
-          data.append("existing_images[]", uri);
+    // ✅ VIDEO DELETE
+    if (videoDeleted) {
+      data.append("delete_video", "1");
+    }
+
+    const token = await AsyncStorage.getItem("authToken");
+    const xhr = new XMLHttpRequest();
+    const url = "https://insighthub.com.ng/NestifyAPI/update_property.php";
+
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Authorization", `Token ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        setUploadProgress(event.loaded / event.total);
+      }
+    };
+
+    xhr.onload = () => {
+      setLoading(false);
+      setUploadProgress(1);
+
+      try {
+        const result = JSON.parse(xhr.responseText);
+        if (result.status === "success") {
+          show({
+            type: 'success',
+            title: 'Success',
+            message: 'Property updated successfully',
+          });
+          router.back();
         } else {
-          const fileName = uri.split("/").pop();
-
-          data.append("new_images[]", {
-            uri,
-            name: fileName,
-            type: "image/jpeg",
+          show({
+            type: 'error',
+            title: 'Error',
+            message: result.msg || 'Update failed',
           });
         }
-      });
-
-
-
-      deletedImages.forEach((img) => {
-        const fileName = img.split("/").pop();
-        data.append("delete_images[]", fileName);
-      });
-
-      const token = await AsyncStorage.getItem("authToken");
-
-      const response = await fetch(
-        "https://insighthub.com.ng/NestifyAPI/update_property.php",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-          body: data,
-        }
-      );
-
-      const result = await response.json();
-
-      if (result.status === "success") {
-        show({
-          type: 'success',
-          title: 'Success',
-          message: 'Property updated successfully',
-        });
-        router.back();
-      } else {
+      } catch (error) {
         show({
           type: 'error',
           title: 'Error',
-          message: result.msg,
+          message: 'Unexpected server response',
         });
       }
-    } catch (err) {
+    };
+
+    xhr.onerror = () => {
+      setLoading(false);
+      setUploadProgress(0);
       show({
         type: 'error',
         title: 'Error',
-        message: err.message,
+        message: 'Upload failed. Please try again.',
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
+    xhr.send(data);
+  } catch (err) {
+    setLoading(false);
+    setUploadProgress(0);
+    show({
+      type: 'error',
+      title: 'Error',
+      message: err.message,
+    });
+  }
+};
 
   if (loading && !property) {
     return <PremiumLoader />;
@@ -653,7 +747,6 @@ const EditProperty = () => {
 
   return (
     <ScrollView style={styles.container}>
-
 
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20, justifyContent: "space-between" }}>
         <Text style={styles.title}>Edit Property</Text>
@@ -663,7 +756,6 @@ const EditProperty = () => {
         </TouchableOpacity>
 
       </View>
-
 
       <Text style={styles.sectionTitle}>Property Name</Text>
       <TextInput
@@ -697,7 +789,6 @@ const EditProperty = () => {
           </TouchableOpacity>
         ))}
       </View>
-
 
 
       <Text style={styles.sectionTitle}>Sell Price</Text>
@@ -1017,7 +1108,6 @@ const EditProperty = () => {
         placeholder="Location"
       />
 
-
       <Text style={styles.sectionTitle}>Description</Text>
       <View style={styles.formField}>
         <TextInput
@@ -1033,6 +1123,29 @@ const EditProperty = () => {
         />
       </View>
 
+      {/* BOOST PROPERTY BUTTON */}
+      {!isPropertyBoosted() && (
+        <TouchableOpacity
+          onPress={handleBoostProperty}
+          style={[
+            styles.btn,
+            {
+              backgroundColor: COLORS.gold,
+              marginTop: 16,
+              marginBottom: 16,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 8,
+            },
+          ]}
+        >
+          <Icon name="trending-up" size={20} color={COLORS.bg} />
+          <Text style={{ color: COLORS.bg, fontWeight: '600' }}>
+            Boost This Property
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* IMAGES */}
 
@@ -1045,9 +1158,70 @@ const EditProperty = () => {
         <Text style={{ color: COLORS.goldLight, marginBottom: 10 }}>
           Upgrade to Premium to upload more images
         </Text>
+      )}   
+
+      <Text style={styles.sectionTitle}>Property Video</Text>
+      {formData.video ? (
+        <View >
+     <TouchableOpacity
+    activeOpacity={0.9}
+    style={styles.videoCard}
+    onPress={() => setVideoModalVisible(true)}
+  >
+    {/* Thumbnail (fallback to video itself if no thumbnail) */}
+    <Video
+           source={{ uri: formData.video }}
+      style={styles.videoThumbnail}
+      resizeMode="cover"
+      shouldPlay={false}
+      isMuted
+    />
+
+    {/* Dark overlay */}
+    <View style={styles.overlay} />
+
+    {/* Play button */}
+    <View style={styles.playBtn}>
+      <MaterialIcons name="play-arrow" size={34} color="#fff" />
+    </View>
+
+    {/* Label */}
+    <View style={styles.videoBadge}>
+      <Text style={styles.videoBadgeText}>Video Tour</Text>
+    </View>
+  </TouchableOpacity>
+          <TouchableOpacity onPress={removeVideo} style={styles.removeVideoBtn}>
+            <Text style={{ color: COLORS.danger }}>Remove Video</Text>
+          </TouchableOpacity>
+        </View> 
+      ) : (
+        <Text style={{ color: COLORS.textSecondary, marginBottom: 8 }}>
+          {user?.plan_type === 'premium'
+            ? 'Choose a video to replace or add to this listing.'
+            : 'Only premium users can upload videos.'}
+        </Text>
       )}
 
-      <Text style={styles.sectionTitle}>Property Images</Text>
+      <TouchableOpacity
+        onPress={pickVideo}
+        style={[
+          styles.btn,
+          user?.plan_type !== 'premium' && {
+            backgroundColor: COLORS.textSecondary,
+          },
+        ]}
+        disabled={user?.plan_type !== 'premium'}
+      >
+        <Text style={{ color: COLORS.bg }}>
+          {formData.video ? 'Replace Video' : 'Pick a Video'}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={{ marginBottom: 6, color: COLORS.textSecondary }}>
+        You can upload up to{" "}
+        {user ? (user.plan_type === "premium" ? 15 : 2) : ""} images
+      </Text>
+
       <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
         {formData.images.map((img, i) => (
           <View key={i}>
@@ -1081,6 +1255,22 @@ const EditProperty = () => {
         <Text style={{ color: COLORS.bg }}>Add Image</Text>
       </TouchableOpacity>
 
+      {loading && uploadProgress > 0 && (
+        <>
+          <View style={styles.progressWrapper}>
+            <View
+              style={[
+                styles.progressBar,
+                { width: `${Math.round(uploadProgress * 100)}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.progressText}>
+            Uploading... {Math.round(uploadProgress * 100)}%
+          </Text>
+        </>
+      )}
+
       <TouchableOpacity onPress={handleSubmit} style={{ ...styles.btn, marginBottom: 50 }}>
         {loading ? (
           <ActivityIndicator color={COLORS.bg} />
@@ -1088,7 +1278,6 @@ const EditProperty = () => {
           <Text style={{ color: COLORS.bg }}>Update Property</Text>
         )}
       </TouchableOpacity>
-
 
       {previewVisible && (
         <View style={styles.previewContainer}>
@@ -1106,6 +1295,36 @@ const EditProperty = () => {
           />
         </View>
       )}
+
+        <Modal
+        visible={videoModalVisible}
+        animationType="fade"
+        onRequestClose={() => setVideoModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+      
+          {/* Close Button */}
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={() => setVideoModalVisible(false)}
+          >
+            <MaterialIcons name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+      
+          {/* Fullscreen Video */}
+          <Video
+            source={{ uri: formData.video }}
+            useNativeControls
+            resizeMode="contain"
+              isBuffering
+  progressUpdateIntervalMillis={500}
+      shouldPlay
+        ref={videoRef}
+            style={styles.fullVideo}
+          />
+      
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -1113,7 +1332,6 @@ const EditProperty = () => {
 
 
 export default EditProperty;
-
 
 
 const styles = StyleSheet.create({
@@ -1291,5 +1509,142 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     minWidth: 36,
     textAlign: "center",
+  }, videoWrapper: {
+  width: "100%",
+  height: 260,
+  marginTop: 15,
+  borderRadius: 20,
+  overflow: "hidden",
+  backgroundColor: "#000",
+  position: "relative",
+},
+
+video: {
+  width: "100%",
+  height: "100%",
+},
+
+videoOverlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "rgba(0,0,0,0.25)",
+},
+
+playButton: {
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+videoLabel: {
+  position: "absolute",
+  top: 10,
+  left: 10,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  borderRadius: 8,
+},
+
+videoLabelText: {
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: "600",
+},
+videoCard: {
+  width: "100%",
+  height: 250,
+  borderRadius: 20,
+  overflow: "hidden",
+  marginTop: 15,
+  backgroundColor: "#000",
+},
+
+videoThumbnail: {
+  width: "100%",
+  height: "100%",
+},
+
+overlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.3)",
+},
+
+playBtn: {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: [{ translateX: -25 }, { translateY: -25 }],
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+videoBadge: {
+  position: "absolute",
+  top: 12,
+  left: 12,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+  borderRadius: 8,
+},
+
+videoBadgeText: {
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: "600",
+},
+
+modalContainer: {
+  flex: 1,
+  backgroundColor: "#000",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+fullVideo: {
+  width: "100%",
+  height: "70%",
+},
+
+closeBtn: {
+  position: "absolute",
+  top: 50,
+  right: 20,
+  zIndex: 10,
+},
+  progressWrapper: {
+    height: 8,
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 6,
+    overflow: "hidden",
+    marginTop: 12,
+    marginBottom: 8,
   },
+  progressBar: {
+    height: "100%",
+    backgroundColor: COLORS.gold,
+  },
+  progressText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginBottom: 10,
+  }
 });

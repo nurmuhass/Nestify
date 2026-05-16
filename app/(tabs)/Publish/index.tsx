@@ -183,15 +183,15 @@ const PublishProperty = () => {
   const [authLoaded, setAuthLoaded] = useState(false);
 
 
-
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
   // Validation functions
   const validateStep = (step: number): boolean => {
     const errors: { [key: string]: string } = {};
+    const effectiveStep = user?.plan_type?.toLowerCase() === "premium" ? step : step === 3 ? 4 : step;
 
-    switch (step) {
+    switch (effectiveStep) {
       case 0: // Property Details
         if (!formData.propertyName.trim()) {
           errors.propertyName = "Property name is required";
@@ -445,7 +445,7 @@ const PublishProperty = () => {
       return;
     }
 
-    if (currentStep === steps.length - 1) {
+    if (currentStep === visibleSteps.length - 1) {
       handleSubmit();
     } else {
       setValidationErrors({});
@@ -1362,6 +1362,16 @@ const PublishProperty = () => {
     },
   ];
 
+  const visibleSteps = user?.plan_type?.toLowerCase() === "premium"
+    ? steps
+    : steps.filter((step) => step.title !== "Add a video to your listing");
+
+  useEffect(() => {
+    if (currentStep >= visibleSteps.length) {
+      setCurrentStep(Math.max(0, visibleSteps.length - 1));
+    }
+  }, [visibleSteps.length]);
+
   // Error modal
   const ErrorModal = () => (
     <View style={styles.modalContainer}>
@@ -1463,7 +1473,7 @@ const PublishProperty = () => {
       </View>
 
       {/* Current Step Content */}
-      {steps[currentStep].render()}
+      {visibleSteps[currentStep].render()}
 
       {/* Navigation Buttons */}
       <View style={styles.navigation}>
@@ -1480,38 +1490,38 @@ const PublishProperty = () => {
           disabled={loading}
           activeOpacity={loading ? 1 : 0.7}
         >
-          {loading && currentStep === steps.length - 1 ? (
+          {loading && currentStep === visibleSteps.length - 1 ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <Text style={styles.nextButtonText}>
-              {currentStep === steps.length - 1 ? "Finish" : "Next"}
+              {currentStep === visibleSteps.length - 1 ? "Finish" : "Next"}
             </Text>
           )}
         </TouchableOpacity>
       </View>
 
-      <PricingModal
-        visible={authLoaded && pricingVisible}
-        onSelectPlan={(planKey: string) => {
-          setPricingVisible(false);
-          switch (planKey) {
-            case "freemium":
-              break;
-            case "semi":
-              router.push(`../../../upgrade/payment?plan=semi`);
-              break;
-            case "annual":
-              router.push(`../../../upgrade/payment?plan=annual`);
-              break;
-            case "monthly":
-              router.push(`../../../upgrade/payment?plan=monthly`);
-              break;
-            default:
-              router.push(`../../../upgrade`);
-          }
-        }}
-        onClose={() => setPricingVisible(false)}
-      />
+            <PricingModal
+       visible={pricingVisible}
+       mode="seller"
+       onClose={() => setPricingVisible(false)}
+       onSelectPlan={(planKey) => {
+     
+         switch (planKey) {
+     
+           case "seller_monthly":
+             router.push("../../../upgrade/payment?plan=seller_monthly");
+             break;
+     
+           case "seller_semi":
+             router.push("../../../upgrade/payment?plan=seller_semi");
+             break;
+     
+           case "seller_annual":
+             router.push("../../../upgrade/payment?plan=seller_annual");
+             break;
+         }
+       }}
+     />
 
       {/* Error Modal */}
       {error && <ErrorModal />}

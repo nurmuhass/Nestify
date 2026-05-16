@@ -139,7 +139,7 @@ const PropertyCard = ({
                 style={styles.newCard}
                 onPress={() =>
                     router.push({
-                        pathname: '/Home/Company/Details',
+                        pathname: '/Home/Properties/Details',
                         params: { id: String(item.id) },
                     })
                 }
@@ -348,7 +348,7 @@ const CompanyCard = ({
                 onPress={() => {
 
                     router.push({
-                        pathname: '/Home/CompanyScreen',
+                        pathname: '/Home/Company/CompanyScreen',
                         params: {
                             id: String(item.company_id),
                         },

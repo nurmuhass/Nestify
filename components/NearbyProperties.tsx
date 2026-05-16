@@ -52,6 +52,7 @@ export default function NearbyEstates() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [user, setUser] = useState(null);
   const [seed] = useState(Math.floor(Math.random() * 99999));
+  const [hasInitialized, setHasInitialized] = useState(false);
 
 
 
@@ -61,13 +62,16 @@ export default function NearbyEstates() {
       const userJson = await AsyncStorage.getItem('authUser');
       if (!token || !userJson) {
         setLoading(false);
+        setHasInitialized(true);
         return;
       }
       setUser(JSON.parse(userJson));
       setLoading(false);
+      setHasInitialized(true);
     };
     checkAuth();
   }, []);
+
 
 
 
@@ -179,7 +183,7 @@ export default function NearbyEstates() {
 
   const filteredProperties = properties;
 
-  if (loading) return null;
+  if (loading && !hasInitialized) return null;
 
   return (
     <View style={styles.container}>
@@ -276,7 +280,7 @@ export default function NearbyEstates() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 8,
+    marginTop: 2,
     paddingBottom: 30,
   },
 

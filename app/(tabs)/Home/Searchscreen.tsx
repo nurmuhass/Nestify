@@ -111,7 +111,7 @@ const ResultCard = ({
                 style={styles.card}
                 activeOpacity={0.88}
                 onPress={() =>
-                    router.push({ pathname: '/Home/Company/Details', params: { id: String(item.id) } })
+                    router.push({ pathname: '/Home/Properties/Details', params: { id: String(item.id) } })
                 }
             >
                 {/* Thumbnail */}
@@ -397,7 +397,7 @@ export default function SearchScreen() {
                     <Text style={styles.emptyTitle}>No properties found</Text>
                     <Text style={styles.emptySub}>
                         No results for{' '}
-                        <Text style={{ color: '#0f172a', fontWeight: '600' }}>"{query}"</Text>
+                        <Text style={{ color: '#0f172a', fontWeight: '600' }}>{`"${query}"`}</Text>
                     </Text>
                     <TouchableOpacity style={styles.emptyReset} onPress={() => setQuery('')}>
                         <Text style={styles.emptyResetText}>Clear search</Text>

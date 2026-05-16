@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import EstateCard from "../../../../components/EstateCard";
 import { useToast } from '@/components/Toast';
+import PremiumLoader from "@/components/PremiumLoader";
+import { getStatusBarHeight } from "react-native-status-bar-height";
 
 export default function AllEstatesScreen() {
   const { companyId } = useLocalSearchParams();
@@ -66,7 +68,7 @@ export default function AllEstatesScreen() {
       {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={26} color="#000" />
+          <Ionicons name="arrow-back" size={26} color="#fff" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>
@@ -78,9 +80,10 @@ export default function AllEstatesScreen() {
 
       {/* Search */}
       <View style={styles.searchBox}>
-        <Ionicons name="search-outline" size={20} color="#777" />
+        <Ionicons name="search-outline" size={20} color="#c9a84c" />
         <TextInput
           placeholder="Search estates..."
+          placeholderTextColor="rgba(255,255,255,0.4)"
           style={styles.input}
           value={search}
           onChangeText={setSearch}
@@ -89,7 +92,7 @@ export default function AllEstatesScreen() {
 
       {/* Empty state while loading */}
       {loading ? (
-        <Text style={styles.empty}>Loading estates...</Text>
+        <PremiumLoader />
       ) : (
         <FlatList
           data={filteredEstates}
@@ -99,7 +102,7 @@ export default function AllEstatesScreen() {
           renderItem={({ item }) => (
             <EstateCard
               item={item}
-              totalCount={estates.length}
+           
               onPress={() => router.push(`/Home/EstateCompanyDetails?id=${item.id}`)}
             />
           )}
@@ -113,7 +116,7 @@ export default function AllEstatesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+  container: { flex: 1, backgroundColor: "#0f0f1a", padding: 16 ,paddingTop:getStatusBarHeight() + 10},
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -123,10 +126,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
+    color: "#fff",
   },
   searchBox: {
     flexDirection: "row",
-    backgroundColor: "#f2f2f2",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(201,168,76,0.2)",
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
@@ -135,11 +141,13 @@ const styles = StyleSheet.create({
   input: {
     marginLeft: 10,
     flex: 1,
+    color: "#fff",
+    fontSize: 14,
   },
   empty: {
     marginTop: 40,
     textAlign: "center",
     fontSize: 15,
-    color: "#777",
+    color: "rgba(255,255,255,0.5)",
   },
 });

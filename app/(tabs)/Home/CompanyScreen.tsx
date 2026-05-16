@@ -349,7 +349,7 @@ export default function EstateCompanyScreen() {
           <TouchableOpacity
             style={styles.propertyCard}
             onPress={() =>
-              router.push({ pathname: "/Home/Company/Details", params: { id: String(item.id) } })
+              router.push({ pathname: "/Home/Properties/Details", params: { id: String(item.id) } })
             }
           >
             <Image

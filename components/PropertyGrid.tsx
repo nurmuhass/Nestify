@@ -90,7 +90,7 @@ export default function PropertyGrid({ properties }: Props) {
         }}
         onPress={() =>
           router.push({
-            pathname: "/Home/Company/Details",
+            pathname: "/Home/Properties/Details",
             params: { id: String(id) },
           })
         }
@@ -275,6 +275,7 @@ export default function PropertyGrid({ properties }: Props) {
         windowSize={5}
         removeClippedSubviews={true}
         showsVerticalScrollIndicator={false}
+        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
         columnWrapperStyle={{
           justifyContent: "space-between",
           paddingHorizontal: 12,

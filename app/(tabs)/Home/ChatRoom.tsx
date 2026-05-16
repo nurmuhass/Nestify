@@ -407,7 +407,7 @@ export default function ChatRoom() {
               style={{ flex: 1 }}
               onPress={() =>
                 router.push({
-                  pathname: '/Home/Company/Details',
+                  pathname: '/Home/Properties/Details',
                   params: { id: property_id },
                 })
               }

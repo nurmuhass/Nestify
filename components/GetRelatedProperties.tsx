@@ -137,7 +137,7 @@ export default function GetRelatedProperties({ propertyId }: Props) {
                 style={styles.card}
                 onPress={() =>
                     router.push({
-                        pathname: '/Home/Company/Details',
+                        pathname: '/Home/Properties/Details',
                         params: { id: String(item.id) },
                     })
                 }

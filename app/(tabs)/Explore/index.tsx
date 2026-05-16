@@ -20,6 +20,7 @@ import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 import LikeButton from '@/components/LikeButton';
 import PremiumLoader from '@/components/PremiumLoader';
+import ExplorePageSkeleton from '@/components/ExplorePageSkeleton';
 import { useToast } from '@/components/Toast';
 
 const { width: SW } = Dimensions.get('window');
@@ -238,9 +239,10 @@ export default function ExplorePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, activeCategory]);
 
+
   if (loading && properties.length === 0) {
-    return <PremiumLoader />;
-  }
+  return <ExplorePageSkeleton />;
+}
 
   return (
     <View style={styles.container}>
@@ -363,7 +365,7 @@ export default function ExplorePage() {
                         style={styles.featuredCard}
                         onPress={() =>
                           router.push({
-                            pathname: '/Home/Company/Details',
+                            pathname: '/Home/Properties/Details',
                             params: { id: String(item.id) },
                           })
                         }
@@ -426,7 +428,7 @@ export default function ExplorePage() {
               activeOpacity={0.92}
               onPress={() =>
                 router.push({
-                  pathname: '/Home/Company/Details',
+                  pathname: '/Home/Properties/Details',
                   params: { id: String(prop.id) },
                 })
               }

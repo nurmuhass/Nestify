@@ -1,16 +1,17 @@
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// BUYER PROFILE
 
 import { ScrollView, View } from "react-native";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useToast } from "@/components/Toast";
+import ConfirmModal from "@/components/ConfirmModal";
 import PricingModal from "@/components/PricingModal";
+import { AuthContext } from '@/store';
+import BuyerProfileSkeleton from '@/components/BuyerProfileSkeleton';
 
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -25,8 +26,11 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
     const router = useRouter();
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const isPremium = user?.plan_type === "premium";
     const [pricingVisible, setPricingVisible] = useState(false);
+    const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
+    const [logoutLoading, setLogoutLoading] = useState(false);
+    const isPremium = user?.plan_type === "premium";
+    const { signOut } = useContext(AuthContext);
 
 
     useFocusEffect(
@@ -74,6 +78,17 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
             if (result.status === "success") setSaved(result.data ?? []);
         } catch { }
         finally { setLoading(false); }
+    };
+
+    const handleLogout = async () => {
+        setLogoutLoading(true);
+        try {
+            await signOut();
+            router.replace('/(auth)/Login');
+        } finally {
+            setLogoutLoading(false);
+            setLogoutConfirmVisible(false);
+        }
     };
 
     const handleBecomeSeller = () => {
@@ -139,9 +154,14 @@ type PricingModalProps = {
                         <AntDesign name="message1" size={18} color="#fff" />
                     </TouchableOpacity>
                     <Text style={styles.buyerHeaderTitle}>Profile</Text>
-                    <TouchableOpacity style={styles.buyerHeaderBtn} onPress={onSettings}>
-                        <Ionicons name="settings-outline" size={18} color="#fff" />
-                    </TouchableOpacity>
+                    <View style={styles.buyerHeaderRight}>
+                        <TouchableOpacity style={styles.buyerHeaderBtn} onPress={() => setLogoutConfirmVisible(true)}>
+                            <Ionicons name="log-out-outline" size={18} color="#fff" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.buyerHeaderBtn} onPress={onSettings}>
+                            <Ionicons name="settings-outline" size={18} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* ── Avatar block ── */}
@@ -233,7 +253,7 @@ type PricingModalProps = {
                                 key={item.id}
                                 style={styles.buyerWishCard}
                                 onPress={() =>
-                                    router.push({ pathname: "/Home/Details/[id]", params: { id: item.id } })
+                                    router.push({ pathname: "/Home/Properties/Details/[id]", params: { id: item.id } })
                                 }
                             >
                                 <Image
@@ -286,11 +306,20 @@ type PricingModalProps = {
 
             </ScrollView>
 
-<PricingModal
-  visible={pricingVisible}
-  mode="buyer"
-  onClose={() => setPricingVisible(false)}
-  onSelectPlan={(planKey) => {
+        <ConfirmModal
+          visible={logoutConfirmVisible}
+          title="Confirm Logout"
+          message="Are you sure you want to logout?"
+          onCancel={() => setLogoutConfirmVisible(false)}
+          onConfirm={handleLogout}
+          loading={logoutLoading}
+          confirmText="Logout"
+        />
+        <PricingModal
+          visible={pricingVisible}
+          mode="buyer"
+          onClose={() => setPricingVisible(false)}
+          onSelectPlan={(planKey) => {
 
     switch (planKey) {
 
@@ -365,6 +394,11 @@ const styles = StyleSheet.create({
         width: 40, height: 40, borderRadius: 12,
         backgroundColor: DARK2,
         alignItems: "center", justifyContent: "center",
+    },
+    buyerHeaderRight: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
     },
     buyerHeaderTitle: { fontSize: 17, fontWeight: "800", color: "#fff" },
 

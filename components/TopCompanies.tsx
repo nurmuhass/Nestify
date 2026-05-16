@@ -101,7 +101,7 @@ export default function TopCompanies() {
                 activeOpacity={0.8}
                 onPress={() =>
                   router.push({
-                    pathname: '/Home/CompanyScreen',
+                    pathname: '/Home/Company/CompanyScreen',
                     params: { id: String(company.id) },
                   })
                 }

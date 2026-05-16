@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import LikeButton from '../../../components/LikeButton';
+import PremiumLoader from '@/components/PremiumLoader';
 
 const formatPrice = (val: any) =>
   Number(String(val).replace(/,/g, '')).toLocaleString('en-NG');
@@ -96,9 +97,7 @@ export default function SavedProperties() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#c9a84c" />
-      </View>
+      <PremiumLoader />
     );
   }
 
@@ -140,7 +139,7 @@ export default function SavedProperties() {
 
               onPress={() =>
                       router.push({
-                        pathname: "/Home/Company/Details",
+                        pathname: "/Home/Properties/Details",
                         params: { id: item.id },
                       })
                     }

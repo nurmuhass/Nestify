@@ -280,7 +280,7 @@ export default function TrendingProperties() {
                             onPress={() =>
                                 router.push({
                                     pathname:
-                                        '/Home/Company/Details',
+                                        '/Home/Properties/Details',
                                     params: {
                                         id: String(
                                             item.id

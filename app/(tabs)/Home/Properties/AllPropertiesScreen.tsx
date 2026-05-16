@@ -500,7 +500,7 @@ export default function AllPropertiesScreen() {
                             onPress={() =>
                               router.push({
                                 pathname:
-                                  "/Home/Company/Details",
+                                  "/Home/Properties/Details",
                                 params: {
                                   id: String(
                                     item.id
@@ -600,7 +600,7 @@ export default function AllPropertiesScreen() {
               onPress={() =>
                 router.push({
                   pathname:
-                    "/Home/Company/Details",
+                    "/Home/Properties/Details",
                   params: {
                     id: String(item.id),
                   },

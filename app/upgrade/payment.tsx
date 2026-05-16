@@ -46,6 +46,12 @@ const PLAN_DETAILS: Record<string, any> = {
     type: 'buyer',
   },
 
+  property_boost: {
+    label: 'Property Boost',
+    amount: '₦5,000',
+    type: 'boost',
+  },
+
   buyer_annual: {
     label: 'Buyer Annual Premium',
     amount: '₦50,000',
@@ -73,7 +79,6 @@ export default function PaymentScreen() {
   const [reference, setReference] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
-
   const initializePayment = async () => {
 
     setLoading(true);
@@ -81,30 +86,32 @@ export default function PaymentScreen() {
     try {
 
       const token = await AsyncStorage.getItem('authToken');
-
       const userJson = await AsyncStorage.getItem('authUser');
 
       let userEmail = '';
-
       if (userJson) {
         const userObj = JSON.parse(userJson);
         userEmail = userObj?.email || '';
       }
 
+      // ── Pull propertyId from params ──────────────────────────
+      const propertyId = Array.isArray(params.propertyId)
+        ? params.propertyId[0]
+        : params.propertyId ?? null;
+
       const response = await fetch(
         `${BASE_URL}/NestifyAPI/initialize_payment.php`,
         {
           method: 'POST',
-
           headers: {
             Authorization: `Token ${token}`,
             'Content-Type': 'application/json',
           },
-
           body: JSON.stringify({
             plan_key: planKey,
             auto_renew: autoRenew,
             email: userEmail,
+            property_id: propertyId,   // <-- send it
           }),
         }
       );
@@ -112,13 +119,9 @@ export default function PaymentScreen() {
       const data = await response.json();
 
       if (data.status === 'success') {
-
         setReference(data.reference);
-
         setPaymentUrl(data.payment_url);
-
       } else {
-
         show({
           type: 'error',
           title: 'Payment Error',
@@ -127,18 +130,16 @@ export default function PaymentScreen() {
       }
 
     } catch (e) {
-
       show({
         type: 'error',
         title: 'Network Error',
         message: 'Something went wrong',
       });
-
     } finally {
-
       setLoading(false);
     }
   };
+
 
   const handleWebViewNav = async (navState: any) => {
 
@@ -191,7 +192,9 @@ export default function PaymentScreen() {
           message:
             plan?.type === 'seller'
               ? 'Seller premium activated successfully'
-              : 'Buyer premium activated successfully',
+              : plan?.type === 'buyer'
+                ? 'Buyer premium activated successfully'
+                : 'Property boost activated successfully',
         });
 
         setTimeout(() => {
@@ -252,13 +255,17 @@ export default function PaymentScreen() {
         <Text style={styles.cardTitle}>
           {plan?.type === 'seller'
             ? 'Seller Premium Access'
-            : 'Buyer Premium Access'}
+            : plan?.type === 'boost'
+              ? 'Boost Your Property'
+              : 'Buyer Premium Access'}
         </Text>
 
         <Text style={styles.cardSub}>
           {plan?.type === 'seller'
             ? 'Boost listings and increase visibility'
-            : 'Unlock chats and company contact access'}
+            : plan?.type === 'boost'
+              ? 'Get more visibility and reach more buyers'
+              : 'Unlock chats and company contact access'}
         </Text>
 
       </View>
@@ -272,6 +279,13 @@ export default function PaymentScreen() {
             <Text style={styles.feature}>✓ Better visibility</Text>
             <Text style={styles.feature}>✓ Analytics dashboard</Text>
           </>
+        ) : plan?.type === 'boost' ? (
+          <>
+            <Text style={styles.feature}>✓ Increased property visibility</Text>
+            <Text style={styles.feature}>✓ Higher search rankings</Text>
+            <Text style={styles.feature}>✓ Featured placement</Text>
+            <Text style={styles.feature}>✓ 30-day boost duration</Text>
+          </>
         ) : (
           <>
             <Text style={styles.feature}>✓ Chat companies directly</Text>
@@ -283,8 +297,23 @@ export default function PaymentScreen() {
 
       </View>
 
+      {/* BOOST PLAN INFO */}
+      {plan?.type === 'boost' && (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>💡 Why Consider Premium Plans?</Text>
+          <Text style={styles.infoText}>
+            <Text style={{ fontWeight: '700', color: GOLD }}>Seller Premium: </Text>
+            Unlock unlimited property uploads, featured listings, and detailed analytics to maximize your reach and close deals faster.
+          </Text>
+          <Text style={styles.infoText}>
+            <Text style={{ fontWeight: '700', color: GOLD }}>Buyer Premium: </Text>
+            Chat directly with sellers and companies, access contact information, and get priority access to new premium listings.
+          </Text>
+        </View>
+      )}
+
       {/* ONLY SELLER PLANS CAN AUTO RENEW */}
-      {plan?.type === 'seller' && (
+      {plan?.type === 'seller' && plan?.type !== 'boost' && (
 
         <View style={styles.row}>
 
@@ -423,5 +452,30 @@ const styles = StyleSheet.create({
     color: DARK,
     fontWeight: '800',
     fontSize: 16,
+  },
+
+  infoCard: {
+    backgroundColor: '#1A1A2A',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#ffffff10',
+    borderLeftWidth: 4,
+    borderLeftColor: GOLD,
+  },
+
+  infoTitle: {
+    color: GOLD,
+    fontWeight: '700',
+    fontSize: 15,
+    marginBottom: 12,
+  },
+
+  infoText: {
+    color: '#ccc',
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 10,
   },
 });

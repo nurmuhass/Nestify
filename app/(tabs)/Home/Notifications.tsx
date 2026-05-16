@@ -156,7 +156,7 @@ export default function NotificationsScreen() {
       if (item.type === 'review' || item.type === 'purchase' ||
         item.type === 'favorite' || item.type === 'approval' ||
         item.type === 'rejection') {
-        router.push({ pathname: '/Home/Company/Details', params: { id: item.related_id } });
+        router.push({ pathname: '/Home/Properties/Details', params: { id: item.related_id } });
         //  router.push(`/Home/Company/Details?id=${item.id}`)
 
       } else if (item.type === 'message') {

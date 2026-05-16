@@ -104,7 +104,7 @@ export default function TopCompanies() {
             }}
             onPress={() =>
               router.push({
-                pathname: '/Home/CompanyScreen',
+                pathname: '/Home/Company/CompanyScreen',
                 params: { id: String(company.id) }
               })
             }

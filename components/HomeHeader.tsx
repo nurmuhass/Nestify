@@ -25,10 +25,6 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
   const [unreadCount, setUnreadCount] = useState(0);
   const { signOut } = useContext(AuthContext);
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace('/(auth)/Login');
-  };
 
   // 🔐 Load user info
   useEffect(() => {
@@ -117,7 +113,7 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
       <View style={styles.topRow}>
 
         <View style={styles.locContainer}>
-          <TouchableOpacity style={styles.locPill}>
+          <View style={styles.locPill}>
             <View style={styles.locDot} />
 
             <Text
@@ -127,15 +123,11 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
             >
               {locationText}
             </Text>
-
-            <Text style={styles.locCaret}>▾</Text>
-          </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.actions}>
 
-          <TouchableOpacity onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={19} color="rgba(255,255,255,0.68)" />
-          </TouchableOpacity>
+       
 
           {/* 🔔 Notification Button with Badge */}
           <View style={{ position: 'relative' }}>
@@ -175,7 +167,10 @@ export default function HomeHeader({ propertiesCount = 0, companiesCount = 0 }: 
             )}
           </View>
 
-          <TouchableOpacity style={styles.avatar}>
+          <TouchableOpacity
+            style={styles.avatar}
+            onPress={() => router.push('/(tabs)/Profile')}
+          >
             {user?.profileImage ? (
               <Image
                 source={{ uri: user.profileImage }}

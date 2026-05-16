@@ -18,6 +18,7 @@ const ConfirmModal = ({
   onConfirm,
   onCancel,
   loading,
+  confirmText = 'Delete',
 }: any) => {
   if (!visible) return null;
 
@@ -36,7 +37,7 @@ const ConfirmModal = ({
             {loading ? (
               <ActivityIndicator color="#0f2044" />
             ) : (
-              <Text style={modalStyles.confirmText}>Delete</Text>
+              <Text style={modalStyles.confirmText}>{confirmText}</Text>
             )}
           </TouchableOpacity>
         </View>

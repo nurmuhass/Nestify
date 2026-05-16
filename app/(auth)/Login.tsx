@@ -25,14 +25,14 @@ import { useToast } from '../../components/Toast';
 const { width: SW, height: SH } = Dimensions.get('window');
 
 /* ─── Palette ────────────────────────────────────────────────── */
-const NAVY   = '#0f2044';
-const NAVY2  = '#091530';
-const GOLD   = '#c9a84c';
-const GOLDT  = '#f0d98a';
-const CREAM  = '#faf8f4';
-const MUTED  = '#8a8a9a';
-const WHITE  = '#ffffff';
-const ERR    = '#ef4444';
+const NAVY = '#0f2044';
+const NAVY2 = '#091530';
+const GOLD = '#c9a84c';
+const GOLDT = '#f0d98a';
+const CREAM = '#faf8f4';
+const MUTED = '#8a8a9a';
+const WHITE = '#ffffff';
+const ERR = '#ef4444';
 
 /* ─── Floating label input ───────────────────────────────────── */
 function FloatingInput({
@@ -52,7 +52,7 @@ function FloatingInput({
   secureTextEntry?: boolean;
   rightIcon?: React.ReactNode;
 }) {
-  const anim   = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
   const [focused, setFocused] = useState(false);
 
   const onFocus = () => {
@@ -64,7 +64,7 @@ function FloatingInput({
     if (!value) Animated.timing(anim, { toValue: 0, duration: 180, useNativeDriver: false }).start();
   };
 
-  const labelTop  = anim.interpolate({ inputRange: [0, 1], outputRange: [16, 4] });
+  const labelTop = anim.interpolate({ inputRange: [0, 1], outputRange: [16, 4] });
   const labelSize = anim.interpolate({ inputRange: [0, 1], outputRange: [15, 11] });
   const labelColor = anim.interpolate({
     inputRange: [0, 1],
@@ -137,41 +137,41 @@ export default function LoginScreen() {
   const { signIn } = useContext(AuthContext);
 
   const [emailOrPhone, setEmailOrPhone] = useState('');
-  const [password,     setPassword]     = useState('');
-  const [showPw,       setShowPw]       = useState(false);
-  const [loading,      setLoading]      = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { show } = useToast();
 
-const handleLogin = async () => {
-  if (!emailOrPhone || !password) {
-    show({
-      type: 'error',
-      title: 'Error',
-      message: 'Please fill all fields',
-    });
-    return;
-  }
+  const handleLogin = async () => {
+    if (!emailOrPhone || !password) {
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'Please fill all fields',
+      });
+      return;
+    }
 
-  setLoading(true);
-  const res = await signIn({ emailOrPhone, password });
-  setLoading(false);
+    setLoading(true);
+    const res = await signIn({ emailOrPhone, password });
+    setLoading(false);
 
-  if (res.error) {
-    show({
-      type: 'error',
-      title: 'Login Failed',
-      message: res.error,
-    });
-  } else {
-    show({
-      type: 'success',
-      title: 'Welcome back 👋',
-      message: 'Login successful',
-    });
+    if (res.error) {
+      show({
+        type: 'error',
+        title: 'Login Failed',
+        message: res.error,
+      });
+    } else {
+      show({
+        type: 'success',
+        title: 'Welcome back 👋',
+        message: 'Login successful',
+      });
 
-    router.replace('/(tabs)/Home');
-  }
-};
+      router.replace('/(tabs)/Home');
+    }
+  };
 
   return (
     <View style={styles.root}>
@@ -199,7 +199,7 @@ const handleLogin = async () => {
           showsVerticalScrollIndicator={false}
         >
           {/* Logo mark */}
-          <TouchableOpacity style={styles.logoWrap}  onPress={() => router.push('./Welcome')}>
+          <TouchableOpacity style={styles.logoWrap} onPress={() => router.push('./Welcome')}>
             <View style={styles.logoRing}>
               <Ionicons name="home" size={26} color={GOLD} />
             </View>
@@ -238,7 +238,8 @@ const handleLogin = async () => {
               }
             />
 
-            <TouchableOpacity style={styles.forgotBtn}>
+            <TouchableOpacity style={styles.forgotBtn}
+              onPress={() => router.push('./ForgotPassword')}>
               <Text style={styles.forgotText}>Forgot password?</Text>
             </TouchableOpacity>
 

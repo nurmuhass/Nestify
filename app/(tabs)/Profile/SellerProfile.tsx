@@ -2,10 +2,8 @@
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import {
-
-
     FlatList,
     Image,
     ScrollView,
@@ -14,8 +12,10 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import ConfirmModal from "../../../components/ConfirmModal";
 import PricingModal from "../../../components/PricingModal";
 import { getStatusBarHeight } from "react-native-status-bar-height";
+import { AuthContext } from '@/store';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const BASE = "https://insighthub.com.ng";
@@ -30,6 +30,15 @@ const formatDate = (d: string) =>
 
 const formatPrice = (v: any) =>
     Number(String(v).replace(/,/g, "")).toLocaleString("en-NG");
+
+const isBoosted = (boostedUntil: any) => {
+    if (!boostedUntil) return false;
+    try {
+        return new Date(boostedUntil) > new Date();
+    } catch {
+        return false;
+    }
+};
 
 // ── Premium Banner ────────────────────────────────────────────────────────────
 const PremiumBanner = ({ onUpgrade }: { onUpgrade: () => void }) => (
@@ -61,8 +70,10 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [pricingVisible, setPricingVisible] = useState(false);
+    const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
+    const [logoutLoading, setLogoutLoading] = useState(false);
     const isPremium = user?.plan_type === "premium";
-
+    const { signOut } = useContext(AuthContext);
 
 
     useFocusEffect(
@@ -85,6 +96,7 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
             );
             const result = await res.json();
             if (result.status === "success") setAllProperties(result.properties ?? []);
+            console.log("Fetched properties:", result.properties);
         } catch { }
     };
 
@@ -110,7 +122,6 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
 
             if (result.status === "success") setEstates(result.Estates ?? []);
 
-            console.log("estates", result);
         } catch { }
     };
 
@@ -124,6 +135,19 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
             const result = await res.json();
             if (result.status === "success") setStaff(result.staffs ?? []);
         } catch { }
+    };
+
+
+
+    const handleLogout = async () => {
+        setLogoutLoading(true);
+        try {
+            await signOut();
+            router.replace('/(auth)/Login');
+        } finally {
+            setLogoutLoading(false);
+            setLogoutConfirmVisible(false);
+        }
     };
 
     const tabData = () => {
@@ -168,6 +192,12 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                 resizeMode="cover"
             />
             <View style={styles.sellerPropOverlay}>
+                {isBoosted(item.boosted_until) && (
+                    <View style={styles.featuredBadge}>
+                        <MaterialIcons name="star" size={12} color="#fff" />
+                        <Text style={styles.featuredBadgeText}>Featured</Text>
+                    </View>
+                )}
                 <View
                     style={[
                         styles.sellerStatusPill,
@@ -241,9 +271,9 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                     <Text style={styles.staffName}>{item.name}</Text>
                     <Text style={styles.staffRole}>{item.email}</Text>
                 </View>
-   
-                <View style={[styles.staffBadge, { backgroundColor: item.is_active ? "#14532d" : "#374151" }]}>
-                    <Text style={styles.staffBadgeText}>{item.is_active ? "Active" : "Inactive"}</Text>
+
+                <View style={[styles.staffBadge, { backgroundColor: item.account_status ? "#14532d" : "#374151" }]}>
+                    <Text style={styles.staffBadgeText}>{item.account_status}</Text>
                 </View>
 
 
@@ -308,6 +338,10 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                                     <Text style={styles.premiumPillText}>Premium</Text>
                                 </View>
                             )}
+
+                            <TouchableOpacity onPress={() => setLogoutConfirmVisible(true)}>
+                                <Ionicons name="log-out-outline" size={19} color="rgba(255,255,255,0.68)" />
+                            </TouchableOpacity>
                             <TouchableOpacity style={styles.heroBtnDark} onPress={onSettings}>
                                 <Ionicons name="settings-outline" size={18} color="#fff" />
                             </TouchableOpacity>
@@ -339,12 +373,23 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                         {user.company_name ?? user.name}
                     </Text>
                     <View style={styles.sellerSubRow}>
-                        <Ionicons name="location-outline" size={12} color="#888" />
+
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                            <Ionicons name="location-outline" size={12} color="#888" />
+                            <Text style={styles.sellerSub}>
+                                {[user.city, user.state].filter(Boolean).join(", ")}
+
+                            </Text>
+                        </View>
+
+
                         <Text style={styles.sellerSub}>
-                            {[user.city, user.state].filter(Boolean).join(", ")}
+
                             {user.date_established ? ` · Est. ${user.date_established}` : ""}
                         </Text>
+
                     </View>
+
 
                     {/* Stats */}
                     <View style={styles.sellerStats}>
@@ -438,28 +483,37 @@ function SellerProfile({ user, onSettings, onMessages }: any) {
                 </View>
 
             </ScrollView>
-       <PricingModal
-  visible={pricingVisible}
-  mode="seller"
-  onClose={() => setPricingVisible(false)}
-  onSelectPlan={(planKey) => {
+            <ConfirmModal
+                visible={logoutConfirmVisible}
+                title="Confirm Logout"
+                message="Are you sure you want to logout?"
+                onCancel={() => setLogoutConfirmVisible(false)}
+                onConfirm={handleLogout}
+                loading={logoutLoading}
+                confirmText="Logout"
+            />
+            <PricingModal
+                visible={pricingVisible}
+                mode="seller"
+                onClose={() => setPricingVisible(false)}
+                onSelectPlan={(planKey) => {
 
-    switch (planKey) {
+                    switch (planKey) {
 
-      case "seller_monthly":
-        router.push("../../../upgrade/payment?plan=seller_monthly");
-        break;
+                        case "seller_monthly":
+                            router.push("../../../upgrade/payment?plan=seller_monthly");
+                            break;
 
-      case "seller_semi":
-        router.push("../../../upgrade/payment?plan=seller_semi");
-        break;
+                        case "seller_semi":
+                            router.push("../../../upgrade/payment?plan=seller_semi");
+                            break;
 
-      case "seller_annual":
-        router.push("../../../upgrade/payment?plan=seller_annual");
-        break;
-    }
-  }}
-/>
+                        case "seller_annual":
+                            router.push("../../../upgrade/payment?plan=seller_annual");
+                            break;
+                    }
+                }}
+            />
         </View>
     );
 }
@@ -577,7 +631,7 @@ const styles = StyleSheet.create({
         paddingBottom: 4,
     },
     sellerName: { fontSize: 20, fontWeight: "800", color: "#fff" },
-    sellerSubRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+    sellerSubRow: { flexDirection: "column", alignItems: "center", gap: 4, marginTop: 4 },
     sellerSub: { fontSize: 12, color: "#888" },
 
     sellerStats: {
@@ -671,6 +725,23 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 8,
         right: 8,
+        gap: 6,
+    },
+    featuredBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        backgroundColor: GOLD,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 20,
+        alignSelf: "flex-start",
+    },
+    featuredBadgeText: {
+        fontSize: 9,
+        fontWeight: "700",
+        color: "#1A1A2E",
+        textTransform: "capitalize",
     },
     sellerStatusPill: {
         paddingHorizontal: 8,

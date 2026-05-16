@@ -10,7 +10,7 @@ const PropertySummaryCard = () => {
   return (
     <View style={styles.container}>
 
-       <TouchableOpacity  style={styles.card} onPress={() => {router.push("../Home/Company/Details")}}>
+       <TouchableOpacity  style={styles.card} onPress={() => {router.push("../Home/Properties/Details")}}>
         <View style={styles.cardContent}>
           <View style={styles.imageContainer}>
                   <Image source={require('@/assets/images/nearby4.jpeg')} style={styles.image} />

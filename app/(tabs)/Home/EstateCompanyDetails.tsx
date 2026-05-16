@@ -45,6 +45,9 @@ export default function EstateDetails() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+const formatPrice = (price: any) => {
+  return Number(String(price).replace(/,/g, '')).toLocaleString();
+};
 
 
   useFocusEffect(
@@ -283,7 +286,7 @@ export default function EstateDetails() {
 
         <TouchableOpacity
           style={styles.agentCard}
-          onPress={() => router.push(`/Home/CompanyScreen?id=${estate.company_id}`)}
+          onPress={() => router.push(`/Home/Company/CompanyScreen?id=${estate.company_id}`)}
         >
           {company?.profile_image ? (
             <Image
@@ -392,7 +395,7 @@ export default function EstateDetails() {
                 <TouchableOpacity
                   style={styles.propertyCard}
                   onPress={() =>
-                    router.push(`/Home/Company/Details?id=${item.id}`)
+                    router.push(`/Home/Properties/Details?id=${item.id}`)
                   }
                 >
                   <Image
@@ -406,10 +409,10 @@ export default function EstateDetails() {
 
                   <Text style={styles.propertyPrice}>
                     {item.listingType === "Rent"
-                      ? `₦${item.rentPrice}`
+                      ? `₦${formatPrice(item.rentPrice)}`
                       : item.listingType === "Sell"
-                        ? `₦${item.sellPrice}`
-                        : `₦${item.sellPrice} / ₦${item.rentPrice}`}
+                        ? `₦${formatPrice(item.sellPrice)}`
+                        : `₦${formatPrice(item.sellPrice)} / ₦${formatPrice(item.rentPrice) }`}
                   </Text>
                 </TouchableOpacity>
               )}
