@@ -1,10 +1,17 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// ─────────────────────────────────────────────────────────────
+// FeaturedEstates.tsx (UPDATED + PREMIUM + OPTIMIZED)
+// ─────────────────────────────────────────────────────────────
+
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+} from '@expo/vector-icons';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import React, { memo } from 'react';
+
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -12,74 +19,81 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useToast } from './Toast';
 
 const fmt = (v?: string | number) =>
-  v ? '₦' + Number(String(v).replace(/,/g, '')).toLocaleString('en-NG') : '—';
+  v
+    ? '₦' +
+    Number(String(v).replace(/,/g, '')).toLocaleString('en-NG')
+    : '—';
 
-export default function FeaturedEstates() {
-  const { show } = useToast();
-  const [estates, setEstates] = useState([]);
-  const [loading, setLoading] = useState(true);
+type Estate = {
+  id?: string | number;
+  name?: string;
+  image_path?: string;
+
+  sellPrice?: string | number;
+  rentPrice?: string | number;
+
+  listingType?: string;
+
+  location?: string;
+  city?: string;
+
+  bedrooms?: string | number;
+  total_properties?: string | number;
+};
+
+type Props = {
+  estates?: Estate[];
+};
+
+function FeaturedEstates({
+  estates = [],
+}: Props) {
   const router = useRouter();
 
-  useEffect(() => {
-    fetchEstates();
-  }, []);
-
-  // ── your original fetch, untouched ──────────────────────────
-  const fetchEstates = async () => {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      const response = await fetch(
-        'https://insighthub.com.ng/NestifyAPI/get_Estates.php',
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Token ' + (token ?? ''),
-          },
-        }
-      );
-      const result = await response.json();
-      if (result.status === 'success') {
-        setEstates(result.Estates || result.estates || []);
-      } else {
-        show({
-          type: 'error',
-          title: 'Error',
-          message: result.msg || 'Failed to load estates',
-        });
-      }
-    } catch (err: any) {
-      show({
-        type: 'error',
-        title: 'Error',
-        message: err.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const estateData = Array.isArray(estates)
+    ? estates
+    : [];
 
   return (
-    <View>
-      {/* ── Section header ── */}
+    <View style={styles.container}>
+      {/* ── Header ───────────────────────── */}
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionTitle}>Featured Estates</Text>
-        <TouchableOpacity onPress={() => router.push('Home/Estates/AllEstates')}>
-          <Text style={styles.sectionLink}>View all →</Text>
+        <Text style={styles.sectionTitle}>
+          Featured Estates
+        </Text>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() =>
+            router.push(
+              '/Home/Estates/AllEstates'
+            )
+          }
+        >
+          <Text style={styles.sectionLink}>
+            View all →
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Loading ── */}
-      {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator color="#c9a84c" />
-        </View>
-      ) : estates.length === 0 ? (
-        <View style={styles.loader}>
-          <Text style={styles.emptyText}>No estates available</Text>
+      {/* ── Empty State ─────────────────── */}
+      {estateData.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <Ionicons
+            name="business-outline"
+            size={42}
+            color="rgba(255,255,255,0.18)"
+          />
+
+          <Text style={styles.emptyTitle}>
+            No Estates Available
+          </Text>
+
+          <Text style={styles.emptySub}>
+            Featured estates will appear here
+          </Text>
         </View>
       ) : (
         <ScrollView
@@ -87,112 +101,151 @@ export default function FeaturedEstates() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
         >
-          {estates.map((estate: any) => {
+          {estateData.map((estate, index) => {
             const price = estate.sellPrice
               ? fmt(estate.sellPrice)
               : estate.rentPrice
-                ? `${fmt(estate.rentPrice)}/yr`
+                ? `${fmt(
+                  estate.rentPrice
+                )}/yr`
                 : null;
 
             const tag =
               estate.listingType === 'Both'
                 ? 'Sell & Rent'
-                : estate.listingType ?? 'Estate';
+                : estate.listingType ||
+                'Estate';
 
             return (
               <TouchableOpacity
-                key={estate.id}
+                key={
+                  estate.id?.toString() ||
+                  index.toString()
+                }
+                activeOpacity={0.92}
                 style={styles.card}
-                activeOpacity={0.9}
                 onPress={() =>
                   router.push({
-                    pathname: '/Home/EstateCompanyDetails',
-                    params: { id: String(estate.id) },
+                    pathname:
+                      '/Home/EstateCompanyDetails',
+                    params: {
+                      id: String(estate.id),
+                    },
                   })
                 }
               >
-                {/* Photo */}
+                {/* ── Background Image ── */}
                 <Image
-                  source={{ uri: estate.image_path }}
-                  style={styles.img}
+                  source={{
+                    uri:
+                      estate.image_path ||
+                      'https://via.placeholder.com/400x300.png',
+                  }}
+                  style={styles.image}
                   resizeMode="cover"
                 />
 
-                {/* Cinematic gradient */}
+                {/* ── Overlay ── */}
                 <LinearGradient
                   colors={[
-                    'transparent',
-                    'rgba(5,8,20,0.55)',
-                    'rgba(5,8,20,0.93)',
+                    'rgba(0,0,0,0)',
+                    'rgba(0,0,0,0.25)',
+                    'rgba(5,10,25,0.96)',
                   ]}
-                  locations={[0.3, 0.65, 1]}
-                  style={StyleSheet.absoluteFillObject}
+                  locations={[0.25, 0.55, 1]}
+                  style={StyleSheet.absoluteFill}
                 />
 
-                {/* Listing type badge */}
-                {estate.listingType ? (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{tag}</Text>
-                  </View>
-                ) : null}
+                {/* ── Badge ── */}
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {tag}
+                  </Text>
+                </View>
 
-                {/* Heart */}
-                <TouchableOpacity style={styles.heart}>
+                {/* ── Favorite Button ── */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.heart}
+                >
                   <Ionicons
                     name="heart-outline"
-                    size={14}
-                    color="rgba(255,255,255,0.85)"
+                    size={15}
+                    color="#fff"
                   />
                 </TouchableOpacity>
 
-                {/* Bottom info */}
+                {/* ── Content ── */}
                 <View style={styles.body}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {estate.name}
+                  <Text
+                    numberOfLines={1}
+                    style={styles.name}
+                  >
+                    {estate.name ||
+                      'Luxury Estate'}
                   </Text>
 
+                  {/* Location */}
                   <View style={styles.locRow}>
                     <Ionicons
                       name="location-outline"
-                      size={11}
-                      color="rgba(255,255,255,0.5)"
+                      size={12}
+                      color="rgba(255,255,255,0.60)"
                     />
-                    <Text style={styles.loc} numberOfLines={1}>
-                      {estate.location || estate.city || 'Nigeria'}
+
+                    <Text
+                      numberOfLines={1}
+                      style={styles.loc}
+                    >
+                      {estate.location ||
+                        estate.city ||
+                        'Nigeria'}
                     </Text>
                   </View>
 
+                  {/* Bottom */}
                   <View style={styles.bottom}>
-                    {/* Price */}
-                    {price ? (
-                      <Text style={styles.price}>{price}</Text>
-                    ) : (
-                      <View />
-                    )}
+                    <View>
+                      <Text style={styles.price}>
+                        {price || 'Contact'}
+                      </Text>
+                    </View>
 
-                    {/* Feature chips */}
                     <View style={styles.chips}>
                       {estate.bedrooms ? (
                         <View style={styles.chip}>
                           <MaterialCommunityIcons
                             name="bed-outline"
                             size={10}
-                            color="rgba(255,255,255,0.7)"
+                            color="#fff"
                           />
-                          <Text style={styles.chipText}>
+
+                          <Text
+                            style={
+                              styles.chipText
+                            }
+                          >
                             {estate.bedrooms}bd
                           </Text>
                         </View>
                       ) : null}
+
                       {estate.total_properties ? (
                         <View style={styles.chip}>
                           <Ionicons
                             name="home-outline"
                             size={10}
-                            color="rgba(255,255,255,0.7)"
+                            color="#fff"
                           />
-                          <Text style={styles.chipText}>
-                            {estate.total_properties}
+
+                          <Text
+                            style={
+                              styles.chipText
+                            }
+                          >
+                            {
+                              estate.total_properties
+                            }
                           </Text>
                         </View>
                       ) : null}
@@ -208,51 +261,55 @@ export default function FeaturedEstates() {
   );
 }
 
+export default memo(FeaturedEstates);
+
 const styles = StyleSheet.create({
-  sectionHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    paddingHorizontal: 18,
-    paddingTop: 22,
-    paddingBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: -0.2,
-  },
-  sectionLink: {
-    fontSize: 12,
-    color: '#c9a84c',
-    fontWeight: '500',
+  container: {
+    marginTop: 4,
   },
 
-  loader: {
-    height: 238,
+  sectionHead: {
+    paddingHorizontal: 18,
+    paddingBottom: 14,
+
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  emptyText: {
-    fontSize: 14,
-    color: '#8a8a9a',
+
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: -0.4,
+    marginVertical: 10,
+  },
+
+  sectionLink: {
+    fontSize: 13,
+    color: '#c9a84c',
+    fontWeight: '600',
   },
 
   scroll: {
-    paddingHorizontal: 16,
-    gap: 13,
+    paddingLeft: 16,
+    paddingRight: 6,
     paddingBottom: 4,
   },
 
   card: {
-    width: 200,
-    height: 238,
-    borderRadius: 20,
+    width: 215,
+    height: 255,
+
+    marginRight: 14,
+
+    borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#1a2035',
+
+    backgroundColor: '#192338',
   },
-  img: {
+
+  image: {
     width: '100%',
     height: '100%',
     position: 'absolute',
@@ -260,87 +317,138 @@ const styles = StyleSheet.create({
 
   badge: {
     position: 'absolute',
-    top: 11,
-    left: 11,
-    backgroundColor: 'rgba(201,168,76,0.88)',
-    borderRadius: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    top: 14,
+    left: 14,
+
+    backgroundColor: 'rgba(201,168,76,0.92)',
+
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+
+    borderRadius: 9,
   },
+
   badgeText: {
-    fontSize: 10,
-    fontWeight: '600',
     color: '#fff',
-    letterSpacing: 0.4,
+    fontSize: 10,
+    fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
   heart: {
     position: 'absolute',
-    top: 11,
-    right: 11,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    top: 14,
+    right: 14,
+
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+
     alignItems: 'center',
     justifyContent: 'center',
+
+    backgroundColor:
+      'rgba(255,255,255,0.18)',
+
+    borderWidth: 1,
+    borderColor:
+      'rgba(255,255,255,0.16)',
   },
 
   body: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    padding: 13,
-    paddingBottom: 15,
+    bottom: 0,
+
+    padding: 15,
   },
+
   name: {
-    fontSize: 15,
-    fontWeight: '700',
     color: '#fff',
-    lineHeight: 19,
-    marginBottom: 4,
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 6,
   },
+
   locRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    marginBottom: 9,
+
+    marginBottom: 12,
   },
+
   loc: {
+    marginLeft: 4,
+
+    color: 'rgba(255,255,255,0.70)',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.48)',
-    fontWeight: '300',
+    fontWeight: '400',
+
+    flex: 1,
   },
+
   bottom: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
+
   price: {
-    fontSize: 17,
-    fontWeight: '700',
     color: '#f0d98a',
-    lineHeight: 18,
+    fontSize: 18,
+    fontWeight: '700',
   },
+
   chips: {
     flexDirection: 'row',
-    gap: 5,
   },
+
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 6,
+
+    backgroundColor:
+      'rgba(255,255,255,0.14)',
+
+    borderRadius: 8,
+
     paddingHorizontal: 7,
-    paddingVertical: 3,
+    paddingVertical: 4,
+
+    marginLeft: 5,
   },
+
   chipText: {
+    marginLeft: 3,
+
+    color: '#fff',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.65)',
+    fontWeight: '600',
+  },
+
+  emptyWrap: {
+    height: 240,
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    paddingHorizontal: 30,
+  },
+
+  emptyTitle: {
+    marginTop: 12,
+
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  emptySub: {
+    marginTop: 5,
+
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: 12,
   },
 });

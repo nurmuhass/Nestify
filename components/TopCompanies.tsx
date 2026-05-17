@@ -1,8 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -10,74 +8,50 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useToast } from './Toast';
 
 const BASE_URL = 'https://insighthub.com.ng/';
 
-export default function TopCompanies() {
-  const { show } = useToast();
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
+type Props = {
+  companies?: any[];
+  onCountChange?: (count: number) => void;
+};
+
+export default function FeaturedCompanies({
+  companies = [],
+  onCountChange,
+}: Props) {
   const router = useRouter();
 
-  useEffect(() => {
-    fetchcompanies();
-  }, []);
-
-  // ── your original fetch, untouched ──────────────────────────
-  const fetchcompanies = async () => {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      const response = await fetch(
-        'https://insighthub.com.ng/NestifyAPI/get_companies.php',
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Token ' + (token ?? ''),
-          },
-        } 
-      );
-      const result = await response.json();
-      if (result.status === 'success') {
-        setCompanies(result.companies || []);
-        // console.log('Companies data:', result.companies || []);
-      } else {
-        show({
-          type: 'error',
-          title: 'Error',
-          message: result.msg || 'Failed to load companies',
-        });
-      }
-    } catch (err: any) {
-      show({
-        type: 'error',
-        title: 'Error',
-        message: err.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // notify parent count
+  if (companies.length > 0 && onCountChange) {
+    onCountChange(companies.length);
+  }
 
   return (
     <View>
-      {/* ── Section header ── */}
+      {/* ── Header ───────────────────── */}
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionTitle}>Top Companies</Text>
-        <TouchableOpacity onPress={() => router.push('Home/Company/AllCompanies')}>
-          <Text style={styles.sectionLink}>Explore →</Text>
+        <Text style={styles.sectionTitle}>
+          Featured Companies
+        </Text>
+
+        <TouchableOpacity
+          onPress={() =>
+            router.push('/Home/Company/AllCompanies')
+          }
+        >
+          <Text style={styles.sectionLink}>
+            Explore →
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Loading ── */}
-      {loading ? (
+      {/* ── Empty State ───────────────── */}
+      {companies.length === 0 ? (
         <View style={styles.loader}>
-          <ActivityIndicator color="#c9a84c" />
-        </View>
-      ) : companies.length === 0 ? (
-        <View style={styles.loader}>
-          <Text style={styles.emptyText}>No companies yet</Text>
+          <Text style={styles.emptyText}>
+            No companies available
+          </Text>
         </View>
       ) : (
         <ScrollView
@@ -86,8 +60,12 @@ export default function TopCompanies() {
           contentContainerStyle={styles.scroll}
         >
           {companies.map((company: any, index: number) => {
-            const initial = (company.name ?? company.company_name ?? 'C')[0].toUpperCase();
-            // profile_image may be a full URL or a relative path
+            const initial = (
+              company.name ??
+              company.company_name ??
+              'C'
+            )[0].toUpperCase();
+
             const imageUri = company.profile_image
               ? company.profile_image.startsWith('http')
                 ? company.profile_image
@@ -98,11 +76,14 @@ export default function TopCompanies() {
               <TouchableOpacity
                 key={company.id ?? index}
                 style={styles.card}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
                 onPress={() =>
                   router.push({
-                    pathname: '/Home/Company/CompanyScreen',
-                    params: { id: String(company.id) },
+                    pathname:
+                      '/Home/Company/CompanyScreen',
+                    params: {
+                      id: String(company.id),
+                    },
                   })
                 }
               >
@@ -115,20 +96,34 @@ export default function TopCompanies() {
                       resizeMode="cover"
                     />
                   ) : (
-                    <View style={[styles.logo, styles.logoFallback]}>
-                      <Text style={styles.logoInitial}>{initial}</Text>
+                    <View
+                      style={[
+                        styles.logo,
+                        styles.logoFallback,
+                      ]}
+                    >
+                      <Text style={styles.logoInitial}>
+                        {initial}
+                      </Text>
                     </View>
                   )}
                 </View>
 
                 {/* Name */}
-                <Text style={styles.name} numberOfLines={2}>
-                  {company.name ?? company.company_name ?? 'Company'}
+                <Text
+                  style={styles.name}
+                  numberOfLines={2}
+                >
+                  {company.name ??
+                    company.company_name ??
+                    'Company'}
                 </Text>
 
-                {/* Property count */}
+                {/* Count */}
                 {company.property_count ? (
-                  <Text style={styles.count}>{company.property_count} props</Text>
+                  <Text style={styles.count}>
+                    {company.property_count} props
+                  </Text>
                 ) : null}
               </TouchableOpacity>
             );
@@ -148,12 +143,14 @@ const styles = StyleSheet.create({
     paddingTop: 22,
     paddingBottom: 12,
   },
+
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: -0.2,
   },
+
   sectionLink: {
     fontSize: 12,
     color: '#c9a84c',
@@ -161,65 +158,74 @@ const styles = StyleSheet.create({
   },
 
   loader: {
-    height: 100,
-    alignItems: 'center',
+    height: 110,
     justifyContent: 'center',
+    alignItems: 'center',
   },
+
   emptyText: {
-    fontSize: 14,
     color: '#8a8a9a',
+    fontSize: 14,
   },
 
   scroll: {
     paddingHorizontal: 16,
-    gap: 11,
+    gap: 12,
     paddingBottom: 4,
   },
 
   card: {
-    width: 95,
+    width: 105,
     alignItems: 'center',
-    gap: 7,
-    paddingVertical: 12,
-    paddingHorizontal: 9,
-    backgroundColor: '#ffffff',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    borderRadius: 18,
+
+    backgroundColor: 'rgba(255,255,255,0.06)',
+
     borderWidth: 1,
-    borderColor: '#e8e4dd',
-    borderRadius: 16,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   logoWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     overflow: 'hidden',
+    marginBottom: 10,
+
     borderWidth: 2,
-    borderColor: '#e8e4dd',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
+
   logo: {
     width: '100%',
     height: '100%',
   },
+
   logoFallback: {
-    backgroundColor: '#dde8f5',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1c315d',
   },
+
   logoInitial: {
-    fontSize: 18,
+    color: '#f0d98a',
+    fontSize: 20,
     fontWeight: '700',
-    color: '#185FA5',
   },
 
   name: {
     fontSize: 11,
-    color: '#0a0a0f',
-    fontWeight: '500',
     textAlign: 'center',
-    lineHeight: 14,
+    color: '#fff',
+    lineHeight: 15,
+    fontWeight: '600',
+    marginBottom: 4,
   },
+
   count: {
     fontSize: 10,
-    color: '#8a8a9a',
+    color: 'rgba(255,255,255,0.45)',
   },
 });

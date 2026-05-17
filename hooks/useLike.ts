@@ -53,16 +53,29 @@ export function useLike(propertyId: number, initialLiked = false, initialCount =
   };
 
   const toggleLike = useCallback(async () => {
-    // Optimistic update — flip immediately
-    setState(prev => ({
-      ...prev,
-      liked: !prev.liked,
-      likesCount: prev.liked ? prev.likesCount - 1 : prev.likesCount + 1,
-      loading: true,
-    }));
+
+    let previousLiked = false;
+    let previousCount = 0;
+
+    setState(prev => {
+
+      previousLiked = prev.liked;
+      previousCount = prev.likesCount;
+
+      return {
+        ...prev,
+        liked: !prev.liked,
+        likesCount: prev.liked
+          ? prev.likesCount - 1
+          : prev.likesCount + 1,
+        loading: true,
+      };
+    });
 
     try {
+
       const token = await AsyncStorage.getItem('authToken');
+
       const res = await fetch(
         `${BASE_URL}/like_property.php?property_id=${propertyId}`,
         {
@@ -73,33 +86,37 @@ export function useLike(propertyId: number, initialLiked = false, initialCount =
           },
         }
       );
+
       const result = await res.json();
 
       if (result.status === 'success') {
-        // Sync with server truth
+
         setState({
           liked: result.data.liked,
           likesCount: result.data.likes_count,
           loading: false,
         });
+
       } else {
-        // Revert on failure
-        setState(prev => ({
-          ...prev,
-          liked: !prev.liked,
-          likesCount: prev.liked ? prev.likesCount - 1 : prev.likesCount + 1,
+
+        setState({
+          liked: previousLiked,
+          likesCount: previousCount,
           loading: false,
-        }));
+        });
+
       }
+
     } catch {
-      // Revert on network error
-      setState(prev => ({
-        ...prev,
-        liked: !prev.liked,
-        likesCount: prev.liked ? prev.likesCount - 1 : prev.likesCount + 1,
+
+      setState({
+        liked: previousLiked,
+        likesCount: previousCount,
         loading: false,
-      }));
+      });
+
     }
+
   }, [propertyId]);
 
   return { ...state, toggleLike };
@@ -129,6 +146,6 @@ export async function fetchBulkLikeStatus(
         countMap: result.data.count_map,
       };
     }
-  } catch {}
+  } catch { }
   return { likedMap: {}, countMap: {} };
 }

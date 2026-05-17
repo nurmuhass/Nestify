@@ -154,6 +154,41 @@ export default function PropertyGrid({ properties }: Props) {
               color={COLORS.danger}
             />
           </TouchableOpacity>
+          {/* LISTING TYPE BADGE */}
+          <View
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              backgroundColor:
+                item.listingType === "Rent"
+                  ? "#2563eb"
+                  : item.listingType === "Sell"
+                    ? "#16a34a"
+                    : "#c9a84c",
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.15)",
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 10,
+                fontWeight: "800",
+                letterSpacing: 0.5,
+                textTransform: "uppercase",
+              }}
+            >
+              {item.listingType === "Rent"
+                ? "FOR RENT"
+                : item.listingType === "Sell"
+                  ? "FOR SALE"
+                  : item.listingType}
+            </Text>
+          </View>
 
           {/* PRICE BADGE */}
           <View

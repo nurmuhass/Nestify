@@ -1,22 +1,19 @@
+// ─────────────────────────────────────────────────────────────
+// TrendingProperties.tsx 
+// ─────────────────────────────────────────────────────────────
+
 import {
     Ionicons,
     MaterialCommunityIcons,
 } from '@expo/vector-icons';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useRouter } from 'expo-router';
 
-import React, {
-    useEffect,
-    useMemo,
-    useState,
-} from 'react';
+import React, { useMemo } from 'react';
 
 import {
-    ActivityIndicator,
     Dimensions,
     FlatList,
     Image,
@@ -25,8 +22,6 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-
-import PremiumLoader from './PremiumLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -42,181 +37,72 @@ const COLORS = {
     border: 'rgba(255,255,255,0.08)',
 };
 
-export default function TrendingProperties() {
+type Props = {
+    properties?: any[];
+};
 
+export default function TrendingProperties({
+    properties = [],
+}: Props) {
     const router = useRouter();
 
-    const [properties, setProperties] =
-        useState<any[]>([]);
-
-    const [loading, setLoading] =
-        useState(true);
-
     /*
-    -----------------------------------------
-    FETCH
-    -----------------------------------------
-    */
-
-    const fetchTrending = async () => {
-
-        try {
-
-            setLoading(true);
-
-            const token =
-                await AsyncStorage.getItem(
-                    'authToken'
-                );
-
-            const response = await fetch(
-                'https://insighthub.com.ng/NestifyAPI/get_trending_properties.php?limit=10',
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type':
-                            'application/json',
-                        Authorization:
-                            `Token ${token}`,
-                    },
-                }
-            );
-
-            const result =
-                await response.json();
-
-            if (
-                response.ok &&
-                result.status === 'success'
-            ) {
-
-                setProperties(
-                    result.data || []
-                );
-            }
-
-        } catch (error) {
-
-            console.log(
-                'Trending Error:',
-                error
-            );
-
-        } finally {
-
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchTrending();
-    }, []);
-
-    /*
-    -----------------------------------------
+    ─────────────────────────────────────────
     PREMIUM COUNT
-    -----------------------------------------
+    ─────────────────────────────────────────
     */
 
     const premiumCount = useMemo(() => {
-
         return properties.filter(
             item =>
-                Number(
-                    item.owner_is_premium
-                ) === 1
+                Number(item.owner_is_premium) === 1
         ).length;
-
     }, [properties]);
 
     /*
-    -----------------------------------------
-    LOADING
-    -----------------------------------------
-    */
-
-    if (loading) {
-
-        return (
-            <View
-                style={{
-                    marginTop: 20,
-                }}
-            >
-                <PremiumLoader />
-            </View>
-        );
-    }
-
-    /*
-    -----------------------------------------
+    ─────────────────────────────────────────
     EMPTY
-    -----------------------------------------
+    ─────────────────────────────────────────
     */
 
     if (!properties.length) {
-
         return null;
     }
 
     /*
-    -----------------------------------------
+    ─────────────────────────────────────────
     FORMAT PRICE
-    -----------------------------------------
+    ─────────────────────────────────────────
     */
 
-    const formatPrice = (
-        value: any
-    ) => {
-
+    const formatPrice = (value: any) => {
         return Number(
-            String(value || 0).replace(
-                /,/g,
-                ''
-            )
-        ).toLocaleString();
+            String(value || 0).replace(/,/g, '')
+        ).toLocaleString('en-NG');
     };
 
     return (
         <View style={styles.container}>
-
             {/* HEADER */}
 
             <View style={styles.header}>
-
                 <View>
-
-                    <View
-                        style={styles.topRow}
-                    >
-
+                    <View style={styles.topRow}>
                         <MaterialCommunityIcons
                             name="fire"
                             size={24}
                             color="#ff7b00"
                         />
 
-                        <Text
-                            style={
-                                styles.title
-                            }
-                        >
+                        <Text style={styles.title}>
                             Trending Now
                         </Text>
-
                     </View>
 
-                    <Text
-                        style={
-                            styles.subtitle
-                        }
-                    >
-                        {
-                            premiumCount
-                        } premium listings
+                    <Text style={styles.subtitle}>
+                        {premiumCount} premium listings
                         trending near you
                     </Text>
-
                 </View>
 
                 <TouchableOpacity
@@ -226,15 +112,10 @@ export default function TrendingProperties() {
                         )
                     }
                 >
-                    <Text
-                        style={
-                            styles.viewAll
-                        }
-                    >
+                    <Text style={styles.viewAll}>
                         View all
                     </Text>
                 </TouchableOpacity>
-
             </View>
 
             {/* LIST */}
@@ -245,24 +126,18 @@ export default function TrendingProperties() {
                 keyExtractor={(item) =>
                     item.id.toString()
                 }
-                showsHorizontalScrollIndicator={
-                    false
-                }
+                showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{
                     paddingLeft: 16,
                     paddingRight: 10,
                 }}
                 renderItem={({ item, index }) => {
-
-                    const image =
-                        item.thumbnail_image
-                            ? `https://insighthub.com.ng/${item.thumbnail_image}`
-                            : null;
+                    const image = item.thumbnail_image
+                        ? `https://insighthub.com.ng/${item.thumbnail_image}`
+                        : null;
 
                     const isPremium =
-                        Number(
-                            item.owner_is_premium
-                        ) === 1;
+                        Number(item.owner_is_premium) === 1;
 
                     const isBoosted =
                         item.boosted_until;
@@ -271,63 +146,39 @@ export default function TrendingProperties() {
                         item.featured_until;
 
                     return (
-
                         <TouchableOpacity
                             activeOpacity={0.92}
-                            style={
-                                styles.cardWrap
-                            }
+                            style={styles.cardWrap}
                             onPress={() =>
                                 router.push({
                                     pathname:
                                         '/Home/Properties/Details',
                                     params: {
-                                        id: String(
-                                            item.id
-                                        ),
+                                        id: String(item.id),
                                     },
                                 })
                             }
                         >
-
                             <LinearGradient
                                 colors={
                                     isPremium
-                                        ? [
-                                            '#172554',
-                                            '#0f172a',
-                                        ]
-                                        : [
-                                            '#0f2044',
-                                            '#0b1733',
-                                        ]
+                                        ? ['#172554', '#0f172a']
+                                        : ['#0f2044', '#0b1733']
                                 }
-                                style={
-                                    styles.card
-                                }
+                                style={styles.card}
                             >
-
                                 {/* IMAGE */}
 
-                                <View
-                                    style={
-                                        styles.imageWrap
-                                    }
-                                >
-
+                                <View style={styles.imageWrap}>
                                     {image ? (
-
                                         <Image
                                             source={{
                                                 uri: image,
                                             }}
-                                            style={
-                                                styles.image
-                                            }
+                                            style={styles.image}
+                                            resizeMode="cover"
                                         />
-
                                     ) : (
-
                                         <View
                                             style={[
                                                 styles.image,
@@ -337,50 +188,34 @@ export default function TrendingProperties() {
                                                 },
                                             ]}
                                         />
-
                                     )}
 
-                                    {/* DARK OVERLAY */}
+                                    {/* OVERLAY */}
 
                                     <LinearGradient
                                         colors={[
                                             'transparent',
                                             'rgba(0,0,0,0.85)',
                                         ]}
-                                        style={
-                                            styles.overlay
-                                        }
+                                        style={styles.overlay}
                                     />
 
-                                    {/* TRENDING RANK */}
+                                    {/* RANK */}
 
-                                    <View
-                                        style={
-                                            styles.rankBadge
-                                        }
-                                    >
-
-                                        <Text
-                                            style={
-                                                styles.rankText
-                                            }
-                                        >
-                                            #
-                                            {index + 1}
+                                    <View style={styles.rankBadge}>
+                                        <Text style={styles.rankText}>
+                                            #{index + 1}
                                         </Text>
-
                                     </View>
 
                                     {/* PREMIUM */}
 
                                     {isPremium && (
-
                                         <View
                                             style={
                                                 styles.premiumBadge
                                             }
                                         >
-
                                             <Ionicons
                                                 name="diamond"
                                                 size={13}
@@ -394,21 +229,17 @@ export default function TrendingProperties() {
                                             >
                                                 PREMIUM
                                             </Text>
-
                                         </View>
-
                                     )}
 
                                     {/* FEATURED */}
 
                                     {isFeatured && (
-
                                         <View
                                             style={
                                                 styles.featuredBadge
                                             }
                                         >
-
                                             <Ionicons
                                                 name="star"
                                                 size={12}
@@ -422,49 +253,29 @@ export default function TrendingProperties() {
                                             >
                                                 FEATURED
                                             </Text>
-
                                         </View>
-
                                     )}
-
                                 </View>
 
                                 {/* CONTENT */}
 
-                                <View
-                                    style={
-                                        styles.content
-                                    }
-                                >
-
+                                <View style={styles.content}>
                                     <Text
                                         numberOfLines={1}
-                                        style={
-                                            styles.name
-                                        }
+                                        style={styles.name}
                                     >
-                                        {
-                                            item.propertyName
-                                        }
+                                        {item.propertyName}
                                     </Text>
 
                                     <Text
-                                        style={
-                                            styles.location
-                                        }
+                                        style={styles.location}
+                                        numberOfLines={1}
                                     >
-                                        {item.city},{' '}
-                                        {item.state}
+                                        {item.city}, {item.state}
                                     </Text>
 
-                                    <Text
-                                        style={
-                                            styles.price
-                                        }
-                                    >
-
+                                    <Text style={styles.price}>
                                         ₦
-
                                         {item.sellPrice
                                             ? formatPrice(
                                                 item.sellPrice
@@ -472,23 +283,12 @@ export default function TrendingProperties() {
                                             : formatPrice(
                                                 item.rentPrice
                                             )}
-
                                     </Text>
 
                                     {/* STATS */}
 
-                                    <View
-                                        style={
-                                            styles.statsRow
-                                        }
-                                    >
-
-                                        <View
-                                            style={
-                                                styles.stat
-                                            }
-                                        >
-
+                                    <View style={styles.statsRow}>
+                                        <View style={styles.stat}>
                                             <Ionicons
                                                 name="eye-outline"
                                                 size={14}
@@ -500,20 +300,12 @@ export default function TrendingProperties() {
                                                     styles.statText
                                                 }
                                             >
-                                                {
-                                                    item.views_count ||
-                                                    0
-                                                }
+                                                {item.views_count ||
+                                                    0}
                                             </Text>
-
                                         </View>
 
-                                        <View
-                                            style={
-                                                styles.stat
-                                            }
-                                        >
-
+                                        <View style={styles.stat}>
                                             <Ionicons
                                                 name="heart"
                                                 size={13}
@@ -525,22 +317,17 @@ export default function TrendingProperties() {
                                                     styles.statText
                                                 }
                                             >
-                                                {
-                                                    item.likes_count ||
-                                                    0
-                                                }
+                                                {item.likes_count ||
+                                                    0}
                                             </Text>
-
                                         </View>
 
                                         {isBoosted && (
-
                                             <View
                                                 style={
                                                     styles.boosted
                                                 }
                                             >
-
                                                 <MaterialCommunityIcons
                                                     name="rocket-launch"
                                                     size={12}
@@ -554,17 +341,11 @@ export default function TrendingProperties() {
                                                 >
                                                     Boosted
                                                 </Text>
-
                                             </View>
-
                                         )}
-
                                     </View>
-
                                 </View>
-
                             </LinearGradient>
-
                         </TouchableOpacity>
                     );
                 }}
@@ -574,7 +355,6 @@ export default function TrendingProperties() {
 }
 
 const styles = StyleSheet.create({
-
     container: {
         marginTop: 18,
         marginBottom: 18,
@@ -583,9 +363,9 @@ const styles = StyleSheet.create({
     header: {
         paddingHorizontal: 16,
         marginBottom: 16,
+
         flexDirection: 'row',
-        justifyContent:
-            'space-between',
+        justifyContent: 'space-between',
         alignItems: 'center',
     },
 
@@ -620,6 +400,7 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: 28,
         overflow: 'hidden',
+
         borderWidth: 1,
         borderColor: COLORS.border,
     },
@@ -646,8 +427,10 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 14,
         left: 14,
+
         backgroundColor:
             'rgba(0,0,0,0.55)',
+
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
@@ -662,12 +445,16 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 14,
         right: 14,
+
         backgroundColor: '#c9a84c',
+
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
+
         paddingHorizontal: 12,
         paddingVertical: 7,
+
         borderRadius: 20,
     },
 
@@ -681,12 +468,16 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 14,
         left: 14,
+
         backgroundColor: '#7c3aed',
+
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
+
         paddingHorizontal: 12,
         paddingVertical: 7,
+
         borderRadius: 18,
     },
 
@@ -721,6 +512,7 @@ const styles = StyleSheet.create({
 
     statsRow: {
         marginTop: 16,
+
         flexDirection: 'row',
         alignItems: 'center',
         flexWrap: 'wrap',
@@ -731,10 +523,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
+
         backgroundColor:
             'rgba(255,255,255,0.06)',
+
         paddingHorizontal: 10,
         paddingVertical: 6,
+
         borderRadius: 20,
     },
 
@@ -748,9 +543,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
+
         backgroundColor: '#f97316',
+
         paddingHorizontal: 12,
         paddingVertical: 7,
+
         borderRadius: 20,
     },
 
@@ -759,5 +557,4 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontSize: 11,
     },
-
 });

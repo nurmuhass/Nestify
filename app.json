@@ -4,16 +4,12 @@
     "slug": "nestify",
     "version": "1.0.0",
     "orientation": "portrait",
-
     "icon": "./assets/images/icon.png",
-
     "scheme": "nestify",
     "userInterfaceStyle": "dark",
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
       "package": "com.nurmuhass.nestify",
       "adaptiveIcon": {
@@ -26,12 +22,10 @@
       },
       "edgeToEdgeEnabled": true
     },
-
     "web": {
       "bundler": "metro",
       "favicon": "./assets/images/favicon.png"
     },
-
     "plugins": [
       "expo-router",
       [
@@ -39,11 +33,19 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#091530", "dark": {
-      "backgroundColor": "#091530"
-    }
+          "backgroundColor": "#091530",
+          "dark": {
+            "backgroundColor": "#091530"
+          }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f123d644-7d1f-4183-a5d9-7624d36edba1"
+      }
+    },
+    "owner": "nurmuhass2"
   }
 }
