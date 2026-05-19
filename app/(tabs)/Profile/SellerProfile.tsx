@@ -19,7 +19,6 @@ import {
 } from "react";
 
 import {
-    FlatList,
     Image,
     ScrollView,
     StyleSheet,
@@ -142,13 +141,18 @@ function SellerProfile({
     const [activeTab, setActiveTab] =
         useState("Properties");
 
-    const [allProperties, setAllProperties] = useState<any[]>([]);
+    const [approvedProperties, setApprovedProperties] = useState<any[]>([]);
+    const [pendingProperties, setPendingProperties] = useState<any[]>([]);
     const [estates, setEstates] = useState<any[]>([]);
     const [staff, setStaff] = useState<any[]>([]);
     const [saved, setSaved] = useState<any[]>([]);
 
     const [initialLoading, setInitialLoading] =
         useState(true);
+
+    useEffect(() => {
+        console.log("Estates State:", estates);
+    }, [estates]);
 
     const [pricingVisible, setPricingVisible] =
         useState(false);
@@ -165,41 +169,20 @@ function SellerProfile({
     // FETCH ALL
     // ─────────────────────────────────────────────
 
-    const fetchAllData = async () => {
-        try {
-            setInitialLoading(true);
-
-            await Promise.all([
-                fetchProperties(),
-                fetchSaved(),
-                fetchEstates(),
-                fetchStaff(),
-            ]);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setInitialLoading(false);
-        }
-    };
-
-    useFocusEffect(
-        useCallback(() => {
-            if (user?.id) {
-                fetchAllData();
-            }
-        }, [user?.id])
-    );
+    // fetchAllData is defined after the individual fetchers so dependencies are initialized.
 
     // ─────────────────────────────────────────────
     // FETCHERS
-    // ─────────────────────────────────────────────
-
-    const fetchProperties = async () => {
+    // ─────────────────────────────────────────────  
+    const fetchProperties = useCallback(async () => {
         try {
-            const token = await AsyncStorage.getItem("authToken");
 
-            const res = await fetch(
-                `${BASE}/NestifyAPI/get_Company_properties.php?companyId=${user.id}`,
+            const token =
+                await AsyncStorage.getItem("authToken");
+
+            // APPROVED
+            const approvedRes = await fetch(
+                `${BASE}/NestifyAPI/get_Company_properties.php?companyId=${user.id}&approval_status=approved`,
                 {
                     headers: {
                         Authorization: `Token ${token}`,
@@ -207,17 +190,40 @@ function SellerProfile({
                 }
             );
 
-            const result = await res.json();
+            const approvedResult =
+                await approvedRes.json();
 
-            if (result.status === "success") {
-                setAllProperties(result.properties ?? []);
+            // PENDING
+            const pendingRes = await fetch(
+                `${BASE}/NestifyAPI/get_Company_properties.php?companyId=${user.id}&approval_status=pending`,
+                {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                }
+            );
+
+            const pendingResult =
+                await pendingRes.json();
+
+            if (approvedResult.status === "success") {
+                setApprovedProperties(
+                    approvedResult.properties ?? []
+                );
             }
+
+            if (pendingResult.status === "success") {
+                setPendingProperties(
+                    pendingResult.properties ?? []
+                );
+            }
+
         } catch (e) {
             console.log(e);
         }
-    };
+    }, [user?.id]);
 
-    const fetchSaved = async () => {
+    const fetchSaved = useCallback(async () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
 
@@ -238,9 +244,9 @@ function SellerProfile({
         } catch (e) {
             console.log(e);
         }
-    };
+    }, []);
 
-    const fetchEstates = async () => {
+    const fetchEstates = useCallback(async () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
 
@@ -257,13 +263,15 @@ function SellerProfile({
 
             if (result.status === "success") {
                 setEstates(result.Estates ?? []);
+
+                console.log("Estates Result:", result.Estates); // Debug log
             }
         } catch (e) {
             console.log(e);
         }
-    };
+    }, [user?.id]);
 
-    const fetchStaff = async () => {
+    const fetchStaff = useCallback(async () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
 
@@ -284,7 +292,36 @@ function SellerProfile({
         } catch (e) {
             console.log(e);
         }
-    };
+    }, [user?.id]);
+
+    // ─────────────────────────────────────────────
+    // FETCH ALL
+    // ─────────────────────────────────────────────
+
+    const fetchAllData = useCallback(async () => {
+        try {
+            setInitialLoading(true);
+
+            await Promise.all([
+                fetchProperties(),
+                fetchSaved(),
+                fetchEstates(),
+                fetchStaff(),
+            ]);
+        } catch (e) {
+            console.log(e);
+        } finally {
+            setInitialLoading(false);
+        }
+    }, [fetchProperties, fetchSaved, fetchEstates, fetchStaff]);
+
+    useFocusEffect(
+        useCallback(() => {
+            if (user?.id) {
+                fetchAllData();
+            }
+        }, [fetchAllData, user?.id])
+    );
 
     // ─────────────────────────────────────────────
     // LOGOUT
@@ -323,18 +360,14 @@ function SellerProfile({
     // ─────────────────────────────────────────────
     // TAB DATA
     // ─────────────────────────────────────────────
-
     const tabData = useMemo(() => {
+
         if (activeTab === "Properties") {
-            return allProperties.filter(
-                (p) => p.approval_status === "approved"
-            );
+            return approvedProperties;
         }
 
         if (activeTab === "Pending") {
-            return allProperties.filter(
-                (p) => p.approval_status === "pending"
-            );
+            return pendingProperties;
         }
 
         if (activeTab === "Estates") {
@@ -346,7 +379,14 @@ function SellerProfile({
         }
 
         return [];
-    }, [activeTab, allProperties, estates, staff]);
+
+    }, [
+        activeTab,
+        approvedProperties,
+        pendingProperties,
+        estates,
+        staff
+    ]);
 
     // ─────────────────────────────────────────────
     // PROPERTY CARD
@@ -354,7 +394,7 @@ function SellerProfile({
 
     const renderPropertyCard = (item: any) => (
         <TouchableOpacity
-            key={item.id}
+            key={`property-${item.id}`}
             style={styles.sellerPropCard}
             onPress={() =>
                 router.push({
@@ -434,6 +474,52 @@ function SellerProfile({
         </TouchableOpacity>
     );
 
+    const renderEstateCard = (item: any) => (
+        <TouchableOpacity
+            key={`estate-${item.id}`}
+            style={styles.estateCard}
+            activeOpacity={0.85}
+            onPress={() =>
+                router.push({ pathname: "/Home/EstateCompanyDetails", params: { id: item.id } })
+            }
+        >
+            <Image
+                source={{ uri: item.image_path }}
+                style={{ width: 90, height: 80 }}
+                resizeMode="cover"
+            />
+            <View style={styles.estateCardBody}>
+                <Text style={styles.estateTitle} numberOfLines={1}>
+                    {item.name || item.estate_name || 'Untitled Estate'}
+                </Text>
+                <Text style={styles.estateSubtitle} numberOfLines={1}>
+                    {item.location || item.city || item.state || 'No location'}
+                </Text>
+                <Text style={styles.estateMeta} numberOfLines={1}>
+                    {item.total_properties
+                        ? `${item.total_properties} properties`
+                        : item.num_properties
+                            ? `${item.num_properties} properties`
+                            : 'No properties'}
+                </Text>
+            </View>
+        </TouchableOpacity>
+    );
+
+    const renderStaffCard = (item: any) => (
+        <View
+            key={`staff-${item.id}`}
+            style={styles.staffCard}
+        >
+            <Text style={styles.staffName} numberOfLines={1}>
+                {item.name || item.staff_name || 'Unnamed'}
+            </Text>
+            <Text style={styles.staffRole} numberOfLines={1}>
+                {item.role || item.position || 'Staff'}
+            </Text>
+        </View>
+    );
+
     // ─────────────────────────────────────────────
     // RENDER CONTENT
     // ─────────────────────────────────────────────
@@ -466,6 +552,22 @@ function SellerProfile({
             return (
                 <View style={styles.propGrid}>
                     {tabData.map(renderPropertyCard)}
+                </View>
+            );
+        }
+
+        if (activeTab === "Estates") {
+            return (
+                <View style={styles.tabList}>
+                    {estates.map(renderEstateCard)}
+                </View>
+            );
+        }
+
+        if (activeTab === "Staffs") {
+            return (
+                <View style={styles.tabList}>
+                    {staff.map(renderStaffCard)}
                 </View>
             );
         }
@@ -583,13 +685,20 @@ function SellerProfile({
                                 </View>
                             )}
 
-                            <View style={styles.verifiedDot}>
-                                <MaterialIcons
-                                    name="verified"
-                                    size={16}
-                                    color={GOLD}
-                                />
-                            </View>
+                            {user.seller_verified === "1" ? (
+
+                                <View style={styles.verifiedDot}>
+                                    <MaterialIcons
+                                        name="verified"
+                                        size={16}
+                                        color={GOLD}
+                                    />
+                                </View>
+
+                            ) : (
+                                null
+                            )}
+
                         </View>
                     </View>
                 </View>
@@ -600,13 +709,26 @@ function SellerProfile({
                     <Text style={styles.sellerName}>
                         {user.company_name ?? user.name}
                     </Text>
+                    <View style={styles.sellerSubRow}>
+                        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "500" }}>
+                            {user.city}, {user.state}
+                        </Text>
+                        <Text style={styles.sellerEstablished}>
+                            Established{" "}
+                            {user.date_established
+                                ? new Date(
+                                    user.date_established
+                                ).getFullYear()
+                                : "N/A"}
+                        </Text>
+                    </View>
 
                     {/* STATS */}
 
                     <View style={styles.sellerStats}>
                         <View style={styles.sellerStatItem}>
                             <Text style={styles.sellerStatNum}>
-                                {allProperties.length}
+                                {approvedProperties.length + pendingProperties.length}
                             </Text>
 
                             <Text style={styles.sellerStatLbl}>
@@ -989,7 +1111,7 @@ const styles = StyleSheet.create({
     },
 
     sellerAvatarInitial: {
-        fontSize: 26,
+        fontSize: 22,
         fontWeight: "800",
         color: GOLD,
     },
@@ -1034,6 +1156,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#16213E",
         borderRadius: 14,
         overflow: "hidden",
+        marginVertical: 10,
     },
 
     sellerPropImg: {
@@ -1121,6 +1244,61 @@ const styles = StyleSheet.create({
         color: "#555",
     },
 
+    tabList: {
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        gap: 12,
+    },
+
+    estateCard: {
+        flexDirection: "row",
+        backgroundColor: "#16213E",
+        borderRadius: 14,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: "#ffffff10",
+        marginBottom: 8,
+    },
+
+    estateCardBody: {
+        flex: 1, padding: 12, justifyContent: "center"
+    },
+
+    estateTitle: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#fff",
+    },
+
+    estateSubtitle: {
+        fontSize: 12,
+        color: "#ccc",
+    },
+
+    estateMeta: {
+        fontSize: 12,
+        color: "#94a3b8",
+    },
+
+    staffCard: {
+        backgroundColor: "#16213E",
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 12,
+    },
+
+    staffName: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#fff",
+    },
+
+    staffRole: {
+        fontSize: 12,
+        color: "#94a3b8",
+        marginTop: 4,
+    },
+
     skeletonCard: {
         width: "48%",
         backgroundColor: "#16213E",
@@ -1174,7 +1352,7 @@ const styles = StyleSheet.create({
     },
 
     sellerName: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: "800",
         color: "#FFFFFF",
         letterSpacing: 0.3,

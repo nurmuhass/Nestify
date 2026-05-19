@@ -1,11 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// ExplorePageSkeleton.tsx
-// FULL UPDATED VERSION
-// Premium Zillow/Airbnb-style skeleton
-// Matches ExplorePage layout properly
-// Scroll FIXED
-// Better spacing + shadows + smoother shimmer
-// ─────────────────────────────────────────────────────────────
 
 import React, { useEffect, useRef } from 'react';
 import {

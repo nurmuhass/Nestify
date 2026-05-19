@@ -17,6 +17,7 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
+import ConfirmModal from '@/components/ConfirmModal';
 import PremiumLoader from '@/components/PremiumLoader';
 import { useToast } from '@/components/Toast';
 import { Video } from 'expo-av';
@@ -65,6 +66,8 @@ const EditProperty = () => {
   const [rawProperty, setRawProperty] = useState(null);
   const [videoModalVisible, setVideoModalVisible] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
     const videoRef = useRef(null);
 
   const fetchCategories = async () => {
@@ -429,61 +432,58 @@ const EditProperty = () => {
     }
   }, [categoryValue, categories]); // ✅ categories added
 
-  const handleDelete = async () => {
-    show({
-      type: 'warning',
-      title: 'Delete Property',
-      message: 'Are you sure you want to delete this property?',
-      action: {
-        label: 'Delete',
-        onPress: async () => {
-          try {
-            setLoading(true);
+  const handleDelete = () => {
+    setDeleteModalVisible(true);
+  };
 
-            const token = await AsyncStorage.getItem("authToken");
+  const confirmDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      setLoading(true);
 
-            const response = await fetch(
-              "https://insighthub.com.ng/NestifyAPI/delete_property.php",
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Token ${token}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  propertyId: id,
-                }),
-              }
-            );
+      const token = await AsyncStorage.getItem("authToken");
 
-            const result = await response.json();
+      const response = await fetch(
+        "https://insighthub.com.ng/NestifyAPI/delete_property.php",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            propertyId: id,
+          }),
+        }
+      );
 
-            if (result.status === "success") {
-              show({
-                type: 'success',
-                title: 'Success',
-                message: 'Property deleted',
-              });
-              router.back();
-            } else {
-              show({
-                type: 'error',
-                title: 'Error',
-                message: result.msg,
-              });
-            }
-          } catch (err) {
-            show({
-              type: 'error',
-              title: 'Error',
-              message: err.message,
-            });
-          } finally {
-            setLoading(false);
-          }
-        },
-      },
-    });
+      const result = await response.json();
+
+      if (result.status === "success") {
+        show({
+          type: 'success',
+          title: 'Success',
+          message: 'Property deleted',
+        });
+        setDeleteModalVisible(false);
+        router.back();
+      } else {
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg,
+        });
+      }
+    } catch (err) {
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message,
+      });
+    } finally {
+      setLoading(false);
+      setDeleteLoading(false);
+    }
   };
 
   const handleBoostProperty = () => {
@@ -746,7 +746,8 @@ const handleSubmit = async () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <>
+      <ScrollView style={styles.container}>
 
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20, justifyContent: "space-between" }}>
         <Text style={styles.title}>Edit Property</Text>
@@ -1325,7 +1326,18 @@ const handleSubmit = async () => {
       
         </View>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+
+      <ConfirmModal
+        visible={deleteModalVisible}
+        title="Delete Property"
+        message="Are you sure you want to delete this property? This action cannot be undone."
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModalVisible(false)}
+        loading={deleteLoading}
+        confirmText="Delete"
+      />
+    </>
   );
 };
 

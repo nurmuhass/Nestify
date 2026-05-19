@@ -15,6 +15,8 @@ import {
     View,
 } from 'react-native';
 import { useToast } from '../../../../components/Toast';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 export default function CompanyProperties() {
 
@@ -36,6 +38,12 @@ export default function CompanyProperties() {
         fetchProperties();
     }, [id]);
 
+
+    const formatPrice = (price: any) => {
+        const n = Number(String(price ?? 0).replace(/,/g, ''));
+        return Number.isFinite(n) ? n.toLocaleString() : '0';
+    };
+
     const fetchProperties = async () => {
 
         try {
@@ -43,7 +51,7 @@ export default function CompanyProperties() {
             const token = await AsyncStorage.getItem('authToken');
 
             const response = await fetch(
-                `https://insighthub.com.ng/NestifyAPI/get_company_properties.php?company_id=${id}`,
+                `https://insighthub.com.ng/NestifyAPI/get_Company_properties.php?companyId=${id}&approval_status=approved`,
                 {
                     method: 'GET',
                     headers: {
@@ -128,18 +136,14 @@ export default function CompanyProperties() {
 
     const renderProperty = ({ item }: any) => {
 
-        const image =
-            item.thumbnail_image ||
-            item.thumbnail ||
-            item.images?.[0] ||
-            'https://via.placeholder.com/400';
+
 
         return (
             <TouchableOpacity
                 activeOpacity={0.92}
                 onPress={() =>
                     router.push({
-                        pathname: '/Home/ProductDetail',
+                        pathname: '/Home/Properties/Details',
                         params: {
                             id: String(item.id),
                         },
@@ -165,7 +169,7 @@ export default function CompanyProperties() {
                 <View style={{ height: 240 }}>
 
                     <Image
-                        source={{ uri: image }}
+                        source={{ uri: `https://insighthub.com.ng/${item.images[0]}` }}
                         style={{
                             width: '100%',
                             height: '100%',
@@ -258,11 +262,17 @@ export default function CompanyProperties() {
                         <Text
                             style={{
                                 color: '#fff',
-                                fontSize: 24,
+                                fontSize: 18,
                                 fontWeight: '800',
                             }}
                         >
-                            ₦{Number(item.price || 0).toLocaleString()}
+
+
+                            {item.listingType === "Rent"
+                                ? `₦${formatPrice(item.rentPrice)}`
+                                : item.listingType === "Sell"
+                                    ? `₦${formatPrice(item.sellPrice)}`
+                                    : `₦${formatPrice(item.sellPrice)} / ₦${formatPrice(item.rentPrice)}`}
                         </Text>
 
                         {item.listingType === 'Rent' && (
@@ -298,7 +308,7 @@ export default function CompanyProperties() {
                     >
                         {item.propertyTitle ||
                             item.title ||
-                            item.property_name}
+                            item.propertyName}
                     </Text>
 
                     {/* LOCATION */}
@@ -387,7 +397,7 @@ export default function CompanyProperties() {
                                     color: '#0f172a',
                                 }}
                             >
-                                {item.bathrooms || 0}
+                                {item.Toilet || 0}
                             </Text>
 
                             <Text
@@ -465,6 +475,7 @@ export default function CompanyProperties() {
             style={{
                 flex: 1,
                 backgroundColor: '#f8fafc',
+                paddingTop: getStatusBarHeight(),
             }}
         >
 
@@ -478,15 +489,31 @@ export default function CompanyProperties() {
                 }}
             >
 
-                <Text
-                    style={{
-                        fontSize: 28,
-                        fontWeight: '800',
-                        color: '#0f172a',
-                    }}
-                >
-                    {company_name || 'Company Listings'}
-                </Text>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                    <Ionicons
+                        name='arrow-back'
+                        size={24}
+                        color='#0f172a'
+                        onPress={() => router.back()}
+
+                    />
+
+                    <Text
+                        style={{
+                            fontSize: 28,
+                            fontWeight: '800',
+                            color: '#0f172a',
+                            marginLeft: 16,
+                        }}
+                    >
+                        {company_name || 'Company Listings'}
+
+                    </Text>
+                </View>
+
+
+
 
                 <Text
                     style={{

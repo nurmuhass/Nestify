@@ -141,6 +141,14 @@ export default function EstateCompanyScreen() {
   const [error, setError] = useState<string | null>(null);
 
 
+
+
+  const formatPrice = (price: any) => {
+    const n = Number(String(price ?? 0).replace(/,/g, ''));
+    return Number.isFinite(n) ? n.toLocaleString() : '0';
+  };
+
+
   useEffect(() => {
     if (id) {
       fetchCompanyById();
@@ -193,30 +201,48 @@ export default function EstateCompanyScreen() {
 
   const fetchPropertiesByCompany = async () => {
     try {
-      const token = await AsyncStorage.getItem('authToken');
+      const token = await AsyncStorage.getItem("authToken");
+
       const response = await fetch(
-        `https://insighthub.com.ng/NestifyAPI/get_Company_properties.php?companyId=${companyDetails.id}`,
+        `https://insighthub.com.ng/NestifyAPI/get_Company_properties.php?companyId=${companyDetails.id}&approval_status=approved`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Token ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
           },
         }
       );
+
       const result = await response.json();
 
-      if (response.ok && result.status === 'success') {
-        setProperties(result.properties);
-        console.log("properties.....", result.properties)
+      if (response.ok && result.status === "success") {
+        setProperties(result.properties ?? []);
+
+        console.log(
+          "approved properties.....",
+          result.properties
+        );
       } else {
-        const msg = result.msg || 'Failed to load property details';
+        const msg =
+          result.msg || "Failed to load property details";
+
         setError(msg);
-        show({ type: 'error', title: 'Error', message: msg });
+
+        show({
+          type: "error",
+          title: "Error",
+          message: msg,
+        });
       }
     } catch (err: any) {
       setError(err.message);
-      show({ type: 'error', title: 'Error', message: err.message });
+
+      show({
+        type: "error",
+        title: "Error",
+        message: err.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -395,10 +421,10 @@ export default function EstateCompanyScreen() {
 
               <Text style={styles.propertyPrice}>
                 {item.listingType === "Rent"
-                  ? `₦${item.rentPrice}`
+                  ? `₦${formatPrice(item.rentPrice)}`
                   : item.listingType === "Sell"
-                    ? `₦${item.sellPrice}`
-                    : `₦${item.sellPrice} / ₦${item.rentPrice}`}
+                    ? `₦${formatPrice(item.sellPrice)}`
+                    : `₦${formatPrice(item.sellPrice)} / ₦${formatPrice(item.rentPrice)}`}
               </Text>
 
               <Text style={styles.propertyMeta}>
@@ -548,7 +574,7 @@ export default function EstateCompanyScreen() {
                 <Image source={{ uri: item.image_path }} style={styles.estateImage} />
                 <Text style={styles.estateName}>{item.name}</Text>
                 <Text style={styles.estateMeta}>
-                  {item.city} • {item.properties} properties
+                  {item.num_properties} properties
                 </Text>
               </TouchableOpacity>
             )}
@@ -780,7 +806,7 @@ const styles = StyleSheet.create({
   propertyImage: { width: "100%", height: 110 },
   propertyBody: { padding: 8 },
   propertyTitle: { fontWeight: "700", fontSize: 13, color: COLORS.textPrimary },
-  propertyPrice: { color: COLORS.gold, fontWeight: "800", marginTop: 6 },
+  propertyPrice: { color: COLORS.gold, fontWeight: "500", marginTop: 6 },
   propertyMeta: { color: COLORS.textSecondary, fontSize: 12, marginTop: 6 },
   propertyLocation: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
 

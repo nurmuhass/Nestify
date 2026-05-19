@@ -5,8 +5,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-
+Platform,
   Image,
+  KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +19,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useToast } from '@/components/Toast';
 import { Animated } from 'react-native';
 import { useRef } from 'react';
+import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 const BASE_URL = 'https://insighthub.com.ng';
 const GOLD = '#C9A84C';
@@ -328,7 +330,11 @@ const EditEstate = () => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
+     <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
       <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
         <Ionicons name="arrow-back" size={24} color={GOLD} />
       </TouchableOpacity>
@@ -421,6 +427,7 @@ const EditEstate = () => {
         </Text>
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -431,6 +438,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DARK,
     padding: 20,
+    paddingTop:getStatusBarHeight(),
   },
   center: {
     flex: 1,

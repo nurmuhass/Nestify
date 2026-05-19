@@ -1,8 +1,9 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { useFocusEffect } from 'expo-router';
 
 // COMPONENTS
 import FeaturedEstates from '../../../components/FeaturedEstates';
@@ -35,11 +36,7 @@ export default function HomeScreen() {
     companiesCount: 0,
   });
 
-  useEffect(() => {
-    loadHomeData();
-  }, []);
-
-  const loadHomeData = async () => {
+  const loadHomeData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -165,7 +162,17 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadHomeData();
+  }, [loadHomeData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadHomeData();
+    }, [loadHomeData])
+  );
 
   if (loading) {
     return (

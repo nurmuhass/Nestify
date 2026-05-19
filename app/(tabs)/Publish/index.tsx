@@ -68,8 +68,8 @@ const PublishProperty = () => {
     parkingspace: number;
     video: string | null;
     managedByUs: boolean;
-    [key: string]: any; // Add index signature for dynamic property access
-
+    estateId: string | null;
+    [key: string]: any;
   };
 
   // State for form data
@@ -102,13 +102,30 @@ const PublishProperty = () => {
     parkingspace: 1,
     managedByUs: false,
     video: null as string | null,
+    estateId: null,
   });
 
   const [categories, setCategories] = useState<any[]>([]);
+  const [estates, setEstates] = useState<any[]>([]);
+  const [openEstate, setOpenEstate] = useState(false);
+  const [estateValue, setEstateValue] = useState(null);
+  const [estateItems, setEstateItems] = useState<{ label: string; value: string | number }[]>([]);
 
   useEffect(() => {
     fetchCategories();
+    fetchEstates();
   }, []);
+
+  // Update estateItems when estates change
+  useEffect(() => {
+    if (estates.length > 0) {
+      const formatted = estates.map((estate: any) => ({
+        label: estate.name,
+        value: estate.id,
+      }));
+      setEstateItems(formatted);
+    }
+  }, [estates]);
 
   /* =========================
      FETCH CATEGORIES
@@ -147,11 +164,44 @@ const PublishProperty = () => {
     }
   };
 
+  const fetchEstates = async () => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+
+      const userJson = await AsyncStorage.getItem("authUser");
+      if (!token || !userJson) {
+        console.log("Error", "Not authenticated");
+        return;
+      }
+      const user = JSON.parse(userJson);
+      const userId = user.id;
+
+
+      const res = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_Company_Estate.php?companyId=${userId}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      const result = await res.json();
+
+      if (result.status === "success") {
+        setEstates(result.Estates ?? []);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   //  const [country, setCountry] = useState(null);
   const [country, setCountry] = useState("NG");
   const [state, setState] = useState(null);
   const [city, setCity] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [countryItems, setCountryItems] = useState<{ label: string, value: string }[]>([]);
   const [stateItems, setStateItems] = useState<{ label: string, value: string }[]>([]);
@@ -364,7 +414,11 @@ const PublishProperty = () => {
     { label: "Old Building", value: "Old Building" },
     { label: "Fair Condition", value: "Fair Condition" },
     { label: "Under Construction", value: "Under Construction" },
+
   ]);
+
+
+
 
   // Sales type
   const [openSales, setOpenSales] = useState(false);
@@ -466,6 +520,7 @@ const PublishProperty = () => {
     try {
       console.log("uploading");
       setLoading(true);
+      setUploadProgress(0);
       // 1) Create a new FormData object
       const data = new FormData();
 
@@ -495,6 +550,12 @@ const PublishProperty = () => {
       data.append("status", formData.status || "");
       data.append("parkingspace", String(formData.parkingspace));
       data.append("managed_by_us", formData.managedByUs ? "1" : "0");
+
+      // Append estateId if present
+      if (formData.estateId) {
+        data.append("estate_id", String(formData.estateId));
+        // console.log("Appending estate_id:", formData.estateId);
+      }
 
       // 3) Append each image under a unique key, e.g. 'images[]'
       let thumbnailIndex = -1;
@@ -529,6 +590,7 @@ const PublishProperty = () => {
       const userJson = await AsyncStorage.getItem("authUser");
       if (!token || !userJson) {
         console.log("Error", "Not authenticated");
+        setLoading(false);
         return;
       }
       const user = JSON.parse(userJson);
@@ -538,30 +600,53 @@ const PublishProperty = () => {
       data.append("user_id", String(userId));
 
       // 4) Fire the fetch request with multipart/form-data
-      const response = await fetch(
-        "https://insighthub.com.ng/NestifyAPI/create_property.php",
-        {
-          method: "POST",
-          headers: {
-            // "Content-Type": "multipart/form-data",
-            Authorization: `Token ${token}`,
-          },
-          body: data,
-        },
-      );
+      const xhr = new XMLHttpRequest();
+      const url = "https://insighthub.com.ng/NestifyAPI/create_property.php";
 
-      const result = await response.json();
-      if (response.ok && result.status === "success") {
-        setSuccess(true);
-        setError(null);
-        setLoading(false);
-        console.log("Property ID:", result.id);
-        console.log("Property created successfully:", result.uploadedImages);
-      } else {
-        setError(result.msg || "Failed to create property");
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Authorization", `Token ${token}`);
+      xhr.setRequestHeader("Accept", "application/json");
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(Math.min(99, Math.max(0, percent)));
+        }
+      };
+
+      xhr.onload = () => {
+        setUploadProgress(100);
+        try {
+          const result = JSON.parse(xhr.responseText || "{}");
+          if (xhr.status >= 200 && xhr.status < 300 && result.status === "success") {
+            setSuccess(true);
+            setError(null);
+          } else {
+            setError(result.msg || "Failed to create property");
+            setSuccess(false);
+          }
+        } catch (parseError) {
+          setError("Failed to parse server response");
+          setSuccess(false);
+        } finally {
+          setLoading(false);
+          setUploadProgress(100);
+        }
+      };
+
+      xhr.onerror = () => {
+        setError("Upload failed. Please try again.");
         setSuccess(false);
         setLoading(false);
-      }
+      };
+
+      xhr.onabort = () => {
+        setError("Upload aborted.");
+        setSuccess(false);
+        setLoading(false);
+      };
+
+      xhr.send(data);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
       setError(errorMsg);
@@ -570,7 +655,7 @@ const PublishProperty = () => {
     }
   };
 
-  const [user, setUser] = useState<{ id: string; name: string; plan_type: string; is_seller?: number } | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; plan_type: string; is_seller?: number; seller_type: string; } | null>(null);
 
   const checkAuth = async () => {
     const token = await AsyncStorage.getItem('authToken');
@@ -711,6 +796,7 @@ const PublishProperty = () => {
                     value={formData.propertyName}
                     onChangeText={(text) => handleChange("propertyName", text)}
                     placeholder="Property title with short description"
+                    placeholderTextColor="#9ca3af"
                   />
                   <Icon
                     name="home"
@@ -725,6 +811,27 @@ const PublishProperty = () => {
                 <Text style={styles.charCount}>
                   {formData.propertyName.length}/100 characters
                 </Text>
+
+                {/* Estate Dropdown - only show if user is company and has estates */}
+                {user && user.seller_type === "company" && estates.length > 0 && (
+                  <>
+                    <Text style={styles.label}>Estate</Text>
+                    <DropDownPicker
+                      listMode="SCROLLVIEW"
+                      open={openEstate}
+                      value={estateValue}
+                      items={estateItems}
+                      setOpen={setOpenEstate}
+                      setValue={setEstateValue}
+                      setItems={setEstateItems}
+                      placeholder="Select Estate (Optional)"
+                      zIndex={3100}
+                      onChangeValue={(val) => {
+                        handleChange("estateId", val);
+                      }}
+                    />
+                  </>
+                )}
 
                 <Text style={styles.label}>Property Category</Text>
 
@@ -812,6 +919,7 @@ const PublishProperty = () => {
                           onChangeText={(text) => handleChange("sellPrice", text)}
                           keyboardType="numeric"
                           placeholder="Enter Sell Price (eg. 5000000)"
+                          placeholderTextColor="#9ca3af"
                         />
                         <Text style={styles.currencyLabel}>N</Text>
                       </View>
@@ -845,6 +953,8 @@ const PublishProperty = () => {
                           onChangeText={(text) => handleChange("rentPrice", text)}
                           keyboardType="numeric"
                           placeholder="Enter Rent Price (eg. 1000000)"
+
+                          placeholderTextColor="#9ca3af"
                         />
                         <Text style={styles.currencyLabel}>N</Text>
                       </View>
@@ -990,6 +1100,7 @@ const PublishProperty = () => {
                 value={formData.location}
                 onChangeText={(text) => handleChange("location", text)}
                 placeholder="Landmark / Area"
+                placeholderTextColor="#9ca3af"
               />
               {validationErrors.location && (
                 <Text style={styles.errorText}>{validationErrors.location}</Text>
@@ -1168,6 +1279,7 @@ const PublishProperty = () => {
               onChangeText={(text) => handleChange("size", text)}
               keyboardType="numeric"
               placeholder="Optional, e.g. 120 sqm"
+              placeholderTextColor="#9ca3af"
             />
             {validationErrors.size && (
               <Text style={styles.errorText}>{validationErrors.size}</Text>
@@ -1385,10 +1497,15 @@ const PublishProperty = () => {
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setError(null)}
+            disabled={loading}
           >
-            <Text style={styles.closeButtonText}>Close</Text>
+            <Text style={[styles.closeButtonText, loading && { opacity: 0.5 }]}>Close</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.retryButton} onPress={handleSubmit}>
+          <TouchableOpacity
+            style={[styles.retryButton, loading && { opacity: 0.5 }]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -1500,28 +1617,39 @@ const PublishProperty = () => {
         </TouchableOpacity>
       </View>
 
-            <PricingModal
-       visible={pricingVisible}
-       mode="seller"
-       onClose={() => setPricingVisible(false)}
-       onSelectPlan={(planKey) => {
-     
-         switch (planKey) {
-     
-           case "seller_monthly":
-             router.push("../../../upgrade/payment?plan=seller_monthly");
-             break;
-     
-           case "seller_semi":
-             router.push("../../../upgrade/payment?plan=seller_semi");
-             break;
-     
-           case "seller_annual":
-             router.push("../../../upgrade/payment?plan=seller_annual");
-             break;
-         }
-       }}
-     />
+      {loading && currentStep === visibleSteps.length - 1 && (
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressLabel}>
+            {uploadProgress === 100 ? "Upload complete" : `Uploading ${uploadProgress}%`}
+          </Text>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${uploadProgress}%` }]} />
+          </View>
+        </View>
+      )}
+
+      <PricingModal
+        visible={pricingVisible}
+        mode="seller"
+        onClose={() => setPricingVisible(false)}
+        onSelectPlan={(planKey) => {
+
+          switch (planKey) {
+
+            case "seller_monthly":
+              router.push("../../../upgrade/payment?plan=seller_monthly");
+              break;
+
+            case "seller_semi":
+              router.push("../../../upgrade/payment?plan=seller_semi");
+              break;
+
+            case "seller_annual":
+              router.push("../../../upgrade/payment?plan=seller_annual");
+              break;
+          }
+        }}
+      />
 
       {/* Error Modal */}
       {error && <ErrorModal />}
@@ -1535,7 +1663,7 @@ const PublishProperty = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FB",   // was #FFFFFF
+    backgroundColor: "#F0F0F0",   // was #FFFFFF
     paddingTop: getStatusBarHeight(),
     paddingBottom: 50,
   },
@@ -1620,6 +1748,29 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 15,
     fontWeight: "700",
+  },
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    backgroundColor: "#fff",
+  },
+  progressLabel: {
+    color: "#111",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  progressBar: {
+    width: "100%",
+    height: 10,
+    borderRadius: 6,
+    backgroundColor: "#e5e7eb",
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 6,
+    backgroundColor: NAVY,
   },
   imageGrid: {
     flexDirection: "row",

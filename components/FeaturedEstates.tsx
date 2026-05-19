@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// FeaturedEstates.tsx (UPDATED + PREMIUM + OPTIMIZED)
+// FeaturedEstates.tsx 
 // ─────────────────────────────────────────────────────────────
 
 import {
@@ -205,11 +205,11 @@ function FeaturedEstates({
 
                   {/* Bottom */}
                   <View style={styles.bottom}>
-                    <View>
+                    {/* <View>
                       <Text style={styles.price}>
                         {price || 'Contact'}
                       </Text>
-                    </View>
+                    </View> */}
 
                     <View style={styles.chips}>
                       {estate.bedrooms ? (
