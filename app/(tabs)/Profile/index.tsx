@@ -2,7 +2,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import BuyerProfile from "./BuyerProfile";
 import SellerProfile from "./SellerProfile";
@@ -13,19 +13,33 @@ import SellerProfileSkeleton from "@/components/SellerProfileSkeleton";
 export default function ProfileScreen() {
   const router = useRouter();
 
+  // ─────────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────────
   const [user, setUser] = useState<any>(null);
 
-  // null means not determined yet
-  const [isSeller, setIsSeller] = useState<boolean | null>(null);
+  // controls hydration completion
+  const [hydrated, setHydrated] = useState(false);
 
-  // ONLY for first app load
-  const [initializing, setInitializing] = useState(true);
+  // determines which skeleton to show
+  const [profileType, setProfileType] = useState<
+    "buyer" | "seller" | null
+  >(null);
 
-  // Background refresh
+  // refresh state
   const [refreshing, setRefreshing] = useState(false);
 
   // ─────────────────────────────────────────────
-  // INITIAL LOAD FROM CACHE
+  // DERIVE SELLER STATUS
+  // ─────────────────────────────────────────────
+  const isSeller = useMemo(() => {
+    if (!user) return false;
+
+    return Number(user?.is_seller) === 1;
+  }, [user]);
+
+  // ─────────────────────────────────────────────
+  // INITIAL CACHE LOAD
   // ─────────────────────────────────────────────
   useEffect(() => {
     const loadCachedUser = async () => {
@@ -33,20 +47,31 @@ export default function ProfileScreen() {
         const userJson = await AsyncStorage.getItem("authUser");
 
         if (!userJson) {
-          setInitializing(false);
+          setProfileType("buyer");
           return;
         }
 
-        const cached = JSON.parse(userJson);
+        const cachedUser = JSON.parse(userJson);
 
-        setUser(cached);
+        console.log(
+          "CACHE is_seller:",
+          cachedUser?.is_seller,
+          typeof cachedUser?.is_seller
+        );
 
-        // VERY IMPORTANT
-        setIsSeller(cached?.is_seller == 1);
+        const seller = Number(cachedUser?.is_seller) === 1;
+
+        // SET PROFILE TYPE IMMEDIATELY
+        setProfileType(seller ? "seller" : "buyer");
+
+        // SET USER
+        setUser(cachedUser);
       } catch (e) {
-        console.log(e);
+        console.log("CACHE ERROR:", e);
+
+        setProfileType("buyer");
       } finally {
-        setInitializing(false);
+        setHydrated(true);
       }
     };
 
@@ -54,7 +79,7 @@ export default function ProfileScreen() {
   }, []);
 
   // ─────────────────────────────────────────────
-  // BACKGROUND REFRESH
+  // REFRESH USER ON FOCUS
   // ─────────────────────────────────────────────
   useFocusEffect(
     useCallback(() => {
@@ -69,10 +94,10 @@ export default function ProfileScreen() {
 
           if (!token || !userJson) return;
 
-          const cached = JSON.parse(userJson);
+          const cachedUser = JSON.parse(userJson);
 
           const res = await fetch(
-            `https://insighthub.com.ng/NestifyAPI/get_user_by_id.php?id=${cached.id}`,
+            `https://insighthub.com.ng/NestifyAPI/get_user_by_id.php?id=${cachedUser.id}`,
             {
               headers: {
                 Authorization: `Token ${token}`,
@@ -87,9 +112,19 @@ export default function ProfileScreen() {
           if (result.status === "success") {
             const freshUser = result.data;
 
-            setUser(freshUser);
+            console.log(
+              "FRESH is_seller:",
+              freshUser?.is_seller,
+              typeof freshUser?.is_seller
+            );
 
-            setIsSeller(freshUser?.is_seller == 1);
+            const seller = Number(freshUser?.is_seller) === 1;
+
+            // UPDATE PROFILE TYPE
+            setProfileType(seller ? "seller" : "buyer");
+
+            // UPDATE USER
+            setUser(freshUser);
 
             await AsyncStorage.setItem(
               "authUser",
@@ -97,7 +132,7 @@ export default function ProfileScreen() {
             );
           }
         } catch (e) {
-          console.log(e);
+          console.log("REFRESH ERROR:", e);
         } finally {
           if (!cancelled) {
             setRefreshing(false);
@@ -113,19 +148,44 @@ export default function ProfileScreen() {
     }, [])
   );
 
-  const onMessages = () => router.push("../Profile/Messages");
+  // ─────────────────────────────────────────────
+  // NAVIGATION
+  // ─────────────────────────────────────────────
+  const onMessages = () => {
+    router.push("../Profile/Messages");
+  };
 
-  const onSettings = () => router.push("../Profile/EditProfile");
+  const onSettings = () => {
+    router.push("../Profile/EditProfile");
+  };
 
   // ─────────────────────────────────────────────
-  // ONLY SHOW SKELETON ON VERY FIRST LOAD
+  // HYDRATING
   // ─────────────────────────────────────────────
-  if (initializing || isSeller === null) {
-    return <SellerProfileSkeleton />;
+  if (!hydrated) {
+    // unknown yet
+    if (profileType === null) {
+      return <SellerProfileSkeleton />;
+    }
+
+    // seller skeleton
+    if (profileType === "seller") {
+      return <SellerProfileSkeleton />;
+    }
+
+    // buyer skeleton
+    return <BuyerProfileSkeleton />;
   }
 
   // ─────────────────────────────────────────────
-  // SELLER
+  // NO USER
+  // ─────────────────────────────────────────────
+  if (!user) {
+    return <BuyerProfileSkeleton />;
+  }
+
+  // ─────────────────────────────────────────────
+  // SELLER PROFILE
   // ─────────────────────────────────────────────
   if (isSeller) {
     return (
@@ -139,7 +199,7 @@ export default function ProfileScreen() {
   }
 
   // ─────────────────────────────────────────────
-  // BUYER
+  // BUYER PROFILE
   // ─────────────────────────────────────────────
   return (
     <BuyerProfile

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useState } from "react";
+import { registerPushToken, savePushToken } from "./services/registerPush";
 
 export const AuthContext = createContext();
 
@@ -56,7 +57,12 @@ export const AuthProvider = ({ children }) => {
         setToken(token);
         setUser(user);
         setIsLoggedIn(true);
-        console.log("Registration successful:", json);
+
+        const expoPushToken = await registerPushToken();
+
+        if (expoPushToken) {
+          await savePushToken(expoPushToken);
+        }
         return { success: true };
       } else {
         const msg = json.msg || "Registration failed";
@@ -86,7 +92,11 @@ export const AuthProvider = ({ children }) => {
         setToken(token);
         setUser(user);
         setIsLoggedIn(true);
-        console.log("Login successful:", json);
+        const expoPushToken = await registerPushToken();
+
+        if (expoPushToken) {
+          await savePushToken(expoPushToken);
+        }
         return { success: true };
       } else {
         const msg = json.msg || "Login failed";
