@@ -1,68 +1,151 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE = 'https://insighthub.com.ng/NestifyAPI';
+export async function registerPushToken() {
+    try {
 
-export async function registerPushToken(): Promise<string | null> {
-    if (!Device.isDevice) {
-        console.log('Push notifications require a real device.');
+        console.log('START registerPushToken');
+
+        // WEB
+        if (Platform.OS === 'web') {
+            console.log('Push notifications skipped on web');
+            return null;
+        }
+
+        // REAL DEVICE
+        if (!Device.isDevice) {
+            // Alert.alert('Error', 'Must use physical device');
+            return null;
+        }
+
+        // ANDROID CHANNEL
+        if (Platform.OS === 'android') {
+            await Notifications.setNotificationChannelAsync('default', {
+                name: 'default',
+                importance: Notifications.AndroidImportance.MAX,
+                vibrationPattern: [0, 250, 250, 250],
+                lightColor: '#C9A84C',
+            });
+        }
+
+        // PERMISSIONS
+        const { status: existingStatus } =
+            await Notifications.getPermissionsAsync();
+
+        let finalStatus = existingStatus;
+
+        if (existingStatus !== 'granted') {
+            const { status } =
+                await Notifications.requestPermissionsAsync();
+
+            finalStatus = status;
+        }
+
+        console.log('Permission status:', finalStatus);
+
+        if (finalStatus !== 'granted') {
+            // Alert.alert(
+            //     'Permission Required',
+            //     'Notification permission not granted'
+            // );
+
+            return null;
+        }
+
+        // IMPORTANT FIX
+        const projectId =
+            Constants.easConfig?.projectId ??
+            Constants.expoConfig?.extra?.eas?.projectId;
+
+        console.log('PROJECT ID:', projectId);
+
+        if (!projectId) {
+            // Alert.alert(
+            //     'Error',
+            //     'Project ID not found'
+            // );
+
+            return null;
+        }
+
+        // GET TOKEN
+        const pushToken =
+            await Notifications.getExpoPushTokenAsync({
+                projectId,
+            });
+
+        const token = pushToken.data;
+
+        console.log('EXPO PUSH TOKEN:', token);
+
+        // Alert.alert(
+        //     'Push Token Generated',
+        //     token
+        // );
+
+        return token;
+
+    } catch (e: any) {
+
+        console.log(
+            'registerPushToken ERROR:',
+            JSON.stringify(e, null, 2)
+        );
+
+        // Alert.alert(
+        //     'Push Error',
+        //     JSON.stringify(e)
+        // );
+
         return null;
     }
-
-    const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-        const { status } =
-            await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-        console.log('Push permission not granted');
-        return null;
-    }
-
-    const projectId =
-        Constants.expoConfig?.extra?.eas?.projectId;
-
-    const token = (
-        await Notifications.getExpoPushTokenAsync({
-            projectId,
-        })
-    ).data;
-
-    return token;
 }
 
-export async function savePushToken(expoToken: string): Promise<boolean> {
+export async function savePushToken(expoToken: string) {
     try {
-        const authToken = await AsyncStorage.getItem('authToken');
 
-        if (!authToken || !expoToken) return false;
+        const authToken =
+            await AsyncStorage.getItem('authToken');
 
-        const res = await fetch(`${BASE}/save_push_token.php`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Token ${authToken}`,
-            },
-            body: JSON.stringify({
-                expo_token: expoToken,
-                platform: Platform.OS,
-            }),
-        });
+        console.log('Saving token:', expoToken);
 
-        const json = await res.json();
+        const response = await fetch(
+            'https://insighthub.com.ng/NestifyAPI/save_push_token.php',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Token ${authToken}`,
+                },
+                body: JSON.stringify({
+                    expo_token: expoToken,
+                    platform: Platform.OS,
+                }),
+            }
+        );
 
-        return res.ok && json.status === 'success';
-    } catch (e) {
-        console.log('savePushToken error:', e);
-        return false;
+        const result = await response.json();
+
+        console.log('SAVE TOKEN RESPONSE:', result);
+
+        // Alert.alert(
+        //     'Save Token Response',
+        //     JSON.stringify(result)
+        // );
+
+    } catch (e: any) {
+
+        console.log(
+            'savePushToken ERROR:',
+            JSON.stringify(e, null, 2)
+        );
+
+        // Alert.alert(
+        //     'Save Error',
+        //     JSON.stringify(e)
+        // );
     }
 }

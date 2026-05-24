@@ -21,10 +21,10 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#091530"
+        "backgroundColor": "#06122C"
       },
       "statusBar": {
-        "backgroundColor": "#091530",
+        "backgroundColor": "#06122C",
         "barStyle": "light-content"
       },
       "edgeToEdgeEnabled": true
@@ -39,10 +39,10 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#091530",
+          "resizeMode": "cover",
+          "backgroundColor": "#06122C",
           "dark": {
-            "backgroundColor": "#091530"
+            "backgroundColor": "#06122C"
           }
         }
       ],

@@ -11,7 +11,7 @@ import {
 const { width, height } = Dimensions.get("window");
 
 const COLORS = {
-    bg: "#091530",
+    bg: "#06122C",
     gold: "#c9a84c",
     text: "#ffffff",
 };
@@ -62,7 +62,7 @@ export default function CustomSplash({ onFinish }: { onFinish: () => void }) {
         <View style={styles.container}>
             {/* Fullscreen Image */}
             <Animated.Image
-                source={require("../assets/images/icon.png")}
+                source={require("../assets/images/splash.png")}
                 style={[
                     styles.image,
                     ,

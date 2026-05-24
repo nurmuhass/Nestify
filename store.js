@@ -58,10 +58,14 @@ export const AuthProvider = ({ children }) => {
         setUser(user);
         setIsLoggedIn(true);
 
-        const expoPushToken = await registerPushToken();
+        try {
+          const expoPushToken = await registerPushToken();
 
-        if (expoPushToken) {
-          await savePushToken(expoPushToken);
+          if (expoPushToken) {
+            await savePushToken(expoPushToken);
+          }
+        } catch (e) {
+          console.log("Push notification setup failed:", e);
         }
         return { success: true };
       } else {
@@ -92,10 +96,14 @@ export const AuthProvider = ({ children }) => {
         setToken(token);
         setUser(user);
         setIsLoggedIn(true);
-        const expoPushToken = await registerPushToken();
+        try {
+          const expoPushToken = await registerPushToken();
 
-        if (expoPushToken) {
-          await savePushToken(expoPushToken);
+          if (expoPushToken) {
+            await savePushToken(expoPushToken);
+          }
+        } catch (e) {
+          console.log("Push notification setup failed:", e);
         }
         return { success: true };
       } else {
