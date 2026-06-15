@@ -47,7 +47,7 @@ export default function ProfileScreen() {
         const userJson = await AsyncStorage.getItem("authUser");
 
         if (!userJson) {
-          setProfileType("buyer");
+          setProfileType("seller"); // default to seller skeleton if no cache
           return;
         }
 
@@ -69,7 +69,7 @@ export default function ProfileScreen() {
       } catch (e) {
         console.log("CACHE ERROR:", e);
 
-        setProfileType("buyer");
+        setProfileType("seller"); // default to seller skeleton if no cache
       } finally {
         setHydrated(true);
       }
@@ -181,15 +181,15 @@ export default function ProfileScreen() {
   // NO USER
   // ─────────────────────────────────────────────
   if (!user) {
-    return <BuyerProfileSkeleton />;
+    return <SellerProfileSkeleton />;
   }
 
   // ─────────────────────────────────────────────
   // SELLER PROFILE
   // ─────────────────────────────────────────────
-  if (isSeller) {
+  if (!isSeller) {
     return (
-      <SellerProfile
+      <BuyerProfile
         user={user}
         refreshing={refreshing}
         onMessages={onMessages}
@@ -202,7 +202,7 @@ export default function ProfileScreen() {
   // BUYER PROFILE
   // ─────────────────────────────────────────────
   return (
-    <BuyerProfile
+    <SellerProfile
       user={user}
       refreshing={refreshing}
       onMessages={onMessages}

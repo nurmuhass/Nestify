@@ -44,11 +44,17 @@ export default function MessagesScreen() {
   const router = useRouter();
   const [userId, setUserId] = useState<number>(0);
   const { conversations, totalUnread, loading, deleteConversation, refresh } = useInbox();
-  const [isPremium, setIsPremium] = useState(false);
+
   const [pricingVisible, setPricingVisible] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const openSwipeable = useRef<Swipeable | null>(null);
   const rowRefs = useRef(new Map<number, Swipeable | null>());
+
+  const [user, setUser] = useState<any>(null);
+
+  const isPremium = user?.plan_type === "premium";
+  const isSeller = user?.is_seller === "1";
+
 
 
   useEffect(() => {
@@ -56,7 +62,8 @@ export default function MessagesScreen() {
       if (j) {
         const user = JSON.parse(j);
         setUserId(user.id);
-        setIsPremium(user.plan_type === 'premium');
+        setUser(user);
+
 
         // Always fetch raw unread count — no premium gate
         if (user.plan_type !== 'premium') {
@@ -221,9 +228,13 @@ export default function MessagesScreen() {
           )}
         </View>
       </View>
-      <View style={styles.swipeHintRow}>
-        <Text style={styles.swipeHintText}>Swipe left on a conversation to delete it.</Text>
-      </View>
+      {isPremium && conversations.length > 0 &&
+        <View style={styles.swipeHintRow}>
+          <Text style={styles.swipeHintText}>Swipe left on a conversation to delete it.</Text>
+        </View>
+
+      }
+
 
       {loading ? (
         <View style={styles.center}>
@@ -291,34 +302,61 @@ export default function MessagesScreen() {
           }
         />
       )}
-      <PricingModal
-        visible={pricingVisible}
-        onSelectPlan={(planKey) => {
-          setPricingVisible(false);
-          // navigate to your payment/upgrade flow, passing planKey
+      {isSeller && (
 
-          switch (planKey) {
-            case "freemium":
-              setPricingVisible(false);
-              break;
-            case "single":
-              router.push("/upgrade/single");
-              break;
-            case "monthly":
-              router.push("/upgrade/monthly");
-              break;
-            case "semi":
-              router.push("/upgrade/semiannual");
-              break;
-            case "annual":
-              router.push("/upgrade/annual");
-              break;
-            default:
-              router.push("/upgrade");
+        <PricingModal
+          visible={pricingVisible}
+          mode="seller"
+          onClose={() =>
+            setPricingVisible(false)
           }
-        }}
-        onClose={() => setPricingVisible(false)}
-      />
+          onSelectPlan={(planKey) => {
+            switch (planKey) {
+              case "seller_monthly":
+                router.push(
+                  "../../../upgrade/payment?plan=seller_monthly"
+                );
+                break;
+
+              case "seller_semi":
+                router.push(
+                  "../../../upgrade/payment?plan=seller_semi"
+                );
+                break;
+
+              case "seller_annual":
+                router.push(
+                  "../../../upgrade/payment?plan=seller_annual"
+                );
+                break;
+            }
+          }}
+        />
+      )}
+
+      {!isSeller && !isPremium &&
+        (
+
+          <PricingModal
+            visible={pricingVisible}
+            mode="buyer"
+            onClose={() => setPricingVisible(false)}
+            onSelectPlan={(planKey) => {
+
+              switch (planKey) {
+
+                case "buyer_monthly":
+                  router.push("/upgrade/payment?plan=buyer_monthly");
+                  break;
+
+                case "buyer_annual":
+                  router.push("/upgrade/payment?plan=buyer_annual");
+                  break;
+              }
+            }}
+          />
+        )}
+
     </View>
   );
 }

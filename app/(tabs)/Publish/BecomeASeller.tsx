@@ -48,7 +48,7 @@ export default function BecomeASeller() {
   };
 
   /* =========================
-     SUBMIT
+     SUBMIT  
   ========================= */
 
   const handleSubmit = async () => {
@@ -583,37 +583,37 @@ export default function BecomeASeller() {
             {(sellerType === 'agent' ||
               sellerType === 'owner') && (
 
-              <View>
+                <View>
 
-                <Text
-                  style={{
-                    marginBottom: 10,
-                    color: '#334155',
-                    fontWeight: '700',
-                  }}
-                >
-                  National Identification Number (NIN)
-                </Text>
+                  <Text
+                    style={{
+                      marginBottom: 10,
+                      color: '#334155',
+                      fontWeight: '700',
+                    }}
+                  >
+                    National Identification Number (NIN)
+                  </Text>
 
-                <TextInput
-                  value={nin}
-                  onChangeText={setNin}
-                  keyboardType="number-pad"
-                  maxLength={11}
-                  placeholder="Enter your 11 digit NIN"
-                  placeholderTextColor="#94A3B8"
-                  style={{
-                    backgroundColor: '#fff',
-                    height: 58,
-                    borderRadius: 18,
-                    paddingHorizontal: 18,
-                    color: PRIMARY,
-                    fontSize: 15,
-                  }}
-                />
+                  <TextInput
+                    value={nin}
+                    onChangeText={setNin}
+                    keyboardType="number-pad"
+                    maxLength={11}
+                    placeholder="Enter your 11 digit NIN"
+                    placeholderTextColor="#94A3B8"
+                    style={{
+                      backgroundColor: '#fff',
+                      height: 58,
+                      borderRadius: 18,
+                      paddingHorizontal: 18,
+                      color: PRIMARY,
+                      fontSize: 15,
+                    }}
+                  />
 
-              </View>
-            )}
+                </View>
+              )}
 
           </View>
 

@@ -156,6 +156,8 @@ export default function PaymentScreen() {
     }
   };
 
+
+
   const verifyPayment = async () => {
 
     if (!reference) return;
@@ -175,15 +177,55 @@ export default function PaymentScreen() {
         }
       );
 
-      const data = await response.json();
+      // Read raw response first
+      const text = await response.text();
+
+
+      console.log(
+        'VERIFY RESPONSE RAW:',
+        JSON.stringify(text)
+      );
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+
+        console.log('JSON PARSE ERROR:', jsonError);
+
+        show({
+          type: 'error',
+          title: 'Server Error',
+          message: 'Invalid server response',
+        });
+
+        return;
+      }
+
+      console.log('VERIFY DATA:', data);
 
       if (data.status === 'success') {
 
+        /**
+         * Store updated user
+         */
         if (data.user) {
-          await AsyncStorage.setItem(
-            'authUser',
-            JSON.stringify(data.user)
-          );
+
+          try {
+
+            await AsyncStorage.setItem(
+              'authUser',
+              JSON.stringify(data.user)
+            );
+
+          } catch (storageError) {
+
+            console.log(
+              'ASYNC STORAGE ERROR:',
+              storageError
+            );
+          }
         }
 
         show({
@@ -206,7 +248,7 @@ export default function PaymentScreen() {
         show({
           type: 'warning',
           title: 'Pending',
-          message: 'Payment still processing',
+          message: data.msg || 'Payment still processing',
         });
 
         setTimeout(() => {
@@ -214,7 +256,9 @@ export default function PaymentScreen() {
         }, 1500);
       }
 
-    } catch {
+    } catch (err) {
+
+      console.log('VERIFY ERROR:', err);
 
       show({
         type: 'error',

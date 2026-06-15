@@ -137,13 +137,13 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
             route: "../Profile/EditProfile",
         },
     ];
-type PricingModalProps = {
-  visible: boolean;
-  userType?: "buyer" | "seller";
-  currentPlan?: string;
-  onSelectPlan: (plan: string) => void;
-  onClose: () => void;
-};
+    type PricingModalProps = {
+        visible: boolean;
+        userType?: "buyer" | "seller";
+        currentPlan?: string;
+        onSelectPlan: (plan: string) => void;
+        onClose: () => void;
+    };
     return (
         <View style={[styles.container, { backgroundColor: DARK }]}>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -196,7 +196,7 @@ type PricingModalProps = {
                 {/* ── Premium banner ── */}
                 {!isPremium && (
                     <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-                        <PremiumBanner onUpgrade={() => setPricingVisible(true)}/>
+                        <PremiumBanner onUpgrade={() => setPricingVisible(true)} />
                     </View>
                 )}
 
@@ -253,7 +253,7 @@ type PricingModalProps = {
                                 key={item.id}
                                 style={styles.buyerWishCard}
                                 onPress={() =>
-                                    router.push({ pathname: "/Home/Properties/Details/[id]", params: { id: item.id } })
+                                    router.push({ pathname: "../Home/Properties/Details", params: { id: item.id } })
                                 }
                             >
                                 <Image
@@ -286,7 +286,7 @@ type PricingModalProps = {
 
                 {/* ── Become a seller ── */}
                 <View style={{ paddingHorizontal: 16, marginBottom: 40 }}>
-                    <TouchableOpacity style={styles.becomeSellerCard}    onPress={() => router.push("../Publish/BecomeASeller")}>
+                    <TouchableOpacity style={styles.becomeSellerCard} onPress={() => router.push("../Publish/BecomeASeller")}>
                         <View style={styles.becomeSellerLeft}>
                             <View style={styles.becomeSellerIcon}>
                                 <MaterialIcons name="business" size={22} color={GOLD} />
@@ -306,35 +306,35 @@ type PricingModalProps = {
 
             </ScrollView>
 
-        <ConfirmModal
-          visible={logoutConfirmVisible}
-          title="Confirm Logout"
-          message="Are you sure you want to logout?"
-          onCancel={() => setLogoutConfirmVisible(false)}
-          onConfirm={handleLogout}
-          loading={logoutLoading}
-          confirmText="Logout"
-        />
-        <PricingModal
-          visible={pricingVisible}
-          mode="buyer"
-          onClose={() => setPricingVisible(false)}
-          onSelectPlan={(planKey) => {
+            <ConfirmModal
+                visible={logoutConfirmVisible}
+                title="Confirm Logout"
+                message="Are you sure you want to logout?"
+                onCancel={() => setLogoutConfirmVisible(false)}
+                onConfirm={handleLogout}
+                loading={logoutLoading}
+                confirmText="Logout"
+            />
+            <PricingModal
+                visible={pricingVisible}
+                mode="buyer"
+                onClose={() => setPricingVisible(false)}
+                onSelectPlan={(planKey) => {
 
-    switch (planKey) {
+                    switch (planKey) {
 
-      case "buyer_monthly":
-        router.push("/upgrade/payment?plan=buyer_monthly");
-        break;
+                        case "buyer_monthly":
+                            router.push("/upgrade/payment?plan=buyer_monthly");
+                            break;
 
-      case "buyer_annual":
-        router.push("/upgrade/payment?plan=buyer_annual");
-        break;
-    }
-  }}
-/>
+                        case "buyer_annual":
+                            router.push("/upgrade/payment?plan=buyer_annual");
+                            break;
+                    }
+                }}
+            />
 
-               
+
         </View>
     );
 }

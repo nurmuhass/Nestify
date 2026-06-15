@@ -26,6 +26,9 @@ import PremiumLoader from '@/components/PremiumLoader';
 import { useToast } from '@/components/Toast';
 import GetRelatedProperties from '@/components/GetRelatedProperties';
 import { Video } from 'expo-av';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
+import { Alert, ActionSheetIOS, Platform } from 'react-native';
 
 const COLORS = {
   bg: '#091530',
@@ -80,6 +83,10 @@ export default function PropertyDetails() {
   const [pricingVisible, setPricingVisible] = useState(false);
   const [videoModalVisible, setVideoModalVisible] = useState(false);
   const videoRef = useRef(null);
+  const isPremium = user?.plan_type === "premium";
+  const isSeller = user?.is_seller === "1";
+
+
 
   const { reviews, summary, loading: reviewsLoading } = useCompanyReviews(
     Number(property?.user_id)
@@ -97,11 +104,14 @@ export default function PropertyDetails() {
     const user = JSON.parse(userJson);
 
     // Premium check — freemium users see upgrade prompt
-    if (user.plan_type !== 'premium') {
+    if (!isPremium) {
+
       show({
         type: 'warning',
+        persistent: true,
         title: '⭐ Premium Feature',
-        message: 'Chat with sellers is available for premium members only. Upgrade to unlock unlimited messaging.',
+        message:
+          'Chat with sellers is available for premium members only.',
         action: {
           label: 'Upgrade',
           onPress: () => setPricingVisible(true),
@@ -151,7 +161,52 @@ export default function PropertyDetails() {
     }
   }, [property]);
 
+  const handleDownload = async () => {
+    try {
+      // Ask permission
+      const { status } = await MediaLibrary.requestPermissionsAsync();
 
+      if (status !== 'granted') {
+        show({
+          type: 'error',
+          title: 'Permission denied',
+          message: 'Allow gallery access to download images',
+        });
+        return;
+      }
+
+      // Current image
+      const imageUrl = `https://insighthub.com.ng/${images[activeIndex]}`;
+
+      // File path
+      const fileUri =
+        FileSystem.documentDirectory +
+        `property_${Date.now()}.jpg`;
+
+      // Download image
+      const downloadResult = await FileSystem.downloadAsync(
+        imageUrl,
+        fileUri
+      );
+
+      // Save to gallery
+      await MediaLibrary.saveToLibraryAsync(downloadResult.uri);
+
+      show({
+        type: 'success',
+        title: 'Downloaded',
+        message: 'Image saved to gallery',
+      });
+    } catch (error) {
+      console.log(error);
+
+      show({
+        type: 'error',
+        title: 'Download failed',
+        message: 'Could not download image',
+      });
+    }
+  };
   useEffect(() => {
     const checkAuth = async () => {
       const token = await AsyncStorage.getItem("authToken");
@@ -447,7 +502,39 @@ export default function PropertyDetails() {
                 <Ionicons name="arrow-back" size={20} color="#fff" />
               </TouchableOpacity>
               <View style={styles.heroActions}>
-                <TouchableOpacity style={styles.actBtn}>
+                <TouchableOpacity
+                  style={styles.actBtn}
+                  onPress={() => {
+                    if (Platform.OS === 'ios') {
+                      ActionSheetIOS.showActionSheetWithOptions(
+                        {
+                          options: ['Cancel', 'Download Photo'],
+                          cancelButtonIndex: 0,
+                        },
+                        (buttonIndex) => {
+                          if (buttonIndex === 1) {
+                            handleDownload();
+                          }
+                        }
+                      );
+                    } else {
+                      Alert.alert(
+                        'Options',
+                        'Choose an action',
+                        [
+                          {
+                            text: 'Download Photo',
+                            onPress: handleDownload,
+                          },
+                          {
+                            text: 'Cancel',
+                            style: 'cancel',
+                          },
+                        ]
+                      );
+                    }
+                  }}
+                >
                   <AntDesign name="upload" size={17} color="#fff" />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -554,11 +641,11 @@ export default function PropertyDetails() {
             </View>
 
             {/* Agent Card */}
-            
-              <TouchableOpacity
-                        style={styles.agentCard}
-                        onPress={() => router.push(`/Home/Company/CompanyScreen?id=${companyData?.id}`)}
-                      >
+
+            <TouchableOpacity
+              style={styles.agentCard}
+              onPress={() => router.push(`/Home/Company/CompanyScreen?id=${companyData?.id}`)}
+            >
               {companyData?.profile_image ? (
                 <Image
                   source={{ uri: companyData.profile_image }}
@@ -582,41 +669,41 @@ export default function PropertyDetails() {
                 </Text>
               </View>
               <Ionicons name="chatbubble-ellipses-outline" size={20} color="#007bff" />
-         </TouchableOpacity>
+            </TouchableOpacity>
 
 
-   {property?.video && (
-  <TouchableOpacity
-    activeOpacity={0.9}
-    style={styles.videoCard}
-    onPress={() => setVideoModalVisible(true)}
-  >
-    {/* Thumbnail (fallback to video itself if no thumbnail) */}
-    <Video
-      ref={videoRef}
-      source={{ uri: `https://insighthub.com.ng/NestifyAPI/${property.video}` }}
-      style={styles.videoThumbnail}
-      resizeMode="cover"
-      shouldPlay={false}
-      isMuted
-    />
+            {property?.video && (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.videoCard}
+                onPress={() => setVideoModalVisible(true)}
+              >
+                {/* Thumbnail (fallback to video itself if no thumbnail) */}
+                <Video
+                  ref={videoRef}
+                  source={{ uri: `https://insighthub.com.ng/NestifyAPI/${property.video}` }}
+                  style={styles.videoThumbnail}
+                  resizeMode="cover"
+                  shouldPlay={false}
+                  isMuted
+                />
 
-    {/* Dark overlay */}
-    <View style={styles.overlay} />
+                {/* Dark overlay */}
+                <View style={styles.overlay} />
 
-    {/* Play button */}
-    <View style={styles.playBtn}>
-      <MaterialIcons name="play-arrow" size={34} color="#fff" />
-    </View>
+                {/* Play button */}
+                <View style={styles.playBtn}>
+                  <MaterialIcons name="play-arrow" size={34} color="#fff" />
+                </View>
 
-    {/* Label */}
-    <View style={styles.videoBadge}>
-      <Text style={styles.videoBadgeText}>Video Tour</Text>
-    </View>
-  </TouchableOpacity>
-)}      
+                {/* Label */}
+                <View style={styles.videoBadge}>
+                  <Text style={styles.videoBadgeText}>Video Tour</Text>
+                </View>
+              </TouchableOpacity>
+            )}
 
-    <View style={styles.divider} />
+            <View style={styles.divider} />
 
             {/* Specs */}
             {specs.length > 0 && (
@@ -780,66 +867,94 @@ export default function PropertyDetails() {
 
             <GetRelatedProperties propertyId={property?.id} />
 
+            {isSeller && (
 
-            <PricingModal
-              visible={pricingVisible}
-              onSelectPlan={(planKey) => {
-                setPricingVisible(false);
-
-                switch (planKey) {
-                  case "freemium":
-                    setPricingVisible(false);
-                    break;
-                  case "single":
-                    router.push("/upgrade/single");
-                    break;
-                  case "monthly":
-                    router.push("/upgrade/monthly");
-                    break;
-                  case "semi":
-                    router.push("/upgrade/semiannual");
-                    break;
-                  case "annual":
-                    router.push("/upgrade/annual");
-                    break;
-                  default:
-                    router.push("/upgrade");
+              <PricingModal
+                visible={pricingVisible}
+                mode="seller"
+                onClose={() =>
+                  setPricingVisible(false)
                 }
-              }}
-              onClose={() => setPricingVisible(false)}
-            />
+                onSelectPlan={(planKey) => {
+                  switch (planKey) {
+                    case "seller_monthly":
+                      router.push(
+                        "../../../upgrade/payment?plan=seller_monthly"
+                      );
+                      break;
+
+                    case "seller_semi":
+                      router.push(
+                        "../../../upgrade/payment?plan=seller_semi"
+                      );
+                      break;
+
+                    case "seller_annual":
+                      router.push(
+                        "../../../upgrade/payment?plan=seller_annual"
+                      );
+                      break;
+                  }
+                }}
+              />
+            )}
+
+            {!isSeller && !isPremium &&
+              (
+
+                <PricingModal
+                  visible={pricingVisible}
+                  mode="buyer"
+                  onClose={() => setPricingVisible(false)}
+                  onSelectPlan={(planKey) => {
+
+                    switch (planKey) {
+
+                      case "buyer_monthly":
+                        router.push("/upgrade/payment?plan=buyer_monthly");
+                        break;
+
+                      case "buyer_annual":
+                        router.push("/upgrade/payment?plan=buyer_annual");
+                        break;
+                    }
+                  }}
+                />
+              )}
+
+
 
           </View>
 
           <Modal
-  visible={videoModalVisible}
-  animationType="fade"
-  onRequestClose={() => setVideoModalVisible(false)}
->
-  <View style={styles.modalContainer}>
+            visible={videoModalVisible}
+            animationType="fade"
+            onRequestClose={() => setVideoModalVisible(false)}
+          >
+            <View style={styles.modalContainer}>
 
-    {/* Close Button */}
-    <TouchableOpacity
-      style={styles.closeBtn}
-      onPress={() => setVideoModalVisible(false)}
-    >
-      <MaterialIcons name="close" size={30} color="#fff" />
-    </TouchableOpacity>
+              {/* Close Button */}
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setVideoModalVisible(false)}
+              >
+                <MaterialIcons name="close" size={30} color="#fff" />
+              </TouchableOpacity>
 
-    {/* Fullscreen Video */}
-    <Video
-      source={{ uri: `https://insighthub.com.ng/NestifyAPI/${property.video}` }}
-      useNativeControls
-      resizeMode="contain"
-        isBuffering
-  progressUpdateIntervalMillis={500}
-      shouldPlay
-        ref={videoRef}
-      style={styles.fullVideo}
-    />
+              {/* Fullscreen Video */}
+              <Video
+                source={{ uri: `https://insighthub.com.ng/NestifyAPI/${property.video}` }}
+                useNativeControls
+                resizeMode="contain"
+                isBuffering
+                progressUpdateIntervalMillis={500}
+                shouldPlay
+                ref={videoRef}
+                style={styles.fullVideo}
+              />
 
-  </View>
-</Modal>
+            </View>
+          </Modal>
 
         </>
       }
@@ -1246,124 +1361,124 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   videoWrapper: {
-  width: "100%",
-  height: 260,
-  marginTop: 15,
-  borderRadius: 20,
-  overflow: "hidden",
-  backgroundColor: "#000",
-  position: "relative",
-},
+    width: "100%",
+    height: 260,
+    marginTop: 15,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#000",
+    position: "relative",
+  },
 
-video: {
-  width: "100%",
-  height: "100%",
-},
+  video: {
+    width: "100%",
+    height: "100%",
+  },
 
-videoOverlay: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "rgba(0,0,0,0.25)",
-},
+  videoOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.25)",
+  },
 
-playButton: {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  backgroundColor: "rgba(0,0,0,0.6)",
-  justifyContent: "center",
-  alignItems: "center",
-},
+  playButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-videoLabel: {
-  position: "absolute",
-  top: 10,
-  left: 10,
-  backgroundColor: "rgba(0,0,0,0.6)",
-  paddingHorizontal: 10,
-  paddingVertical: 4,
-  borderRadius: 8,
-},
+  videoLabel: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
 
-videoLabelText: {
-  color: "#fff",
-  fontSize: 12,
-  fontWeight: "600",
-},
-videoCard: {
-  width: "100%",
-  height: 250,
-  borderRadius: 20,
-  overflow: "hidden",
-  marginTop: 15,
-  backgroundColor: "#000",
-},
+  videoLabelText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  videoCard: {
+    width: "100%",
+    height: 250,
+    borderRadius: 20,
+    overflow: "hidden",
+    marginTop: 15,
+    backgroundColor: "#000",
+  },
 
-videoThumbnail: {
-  width: "100%",
-  height: "100%",
-},
+  videoThumbnail: {
+    width: "100%",
+    height: "100%",
+  },
 
-overlay: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: "rgba(0,0,0,0.3)",
-},
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
 
-playBtn: {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: [{ translateX: -25 }, { translateY: -25 }],
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  backgroundColor: "rgba(0,0,0,0.6)",
-  justifyContent: "center",
-  alignItems: "center",
-},
+  playBtn: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -25 }, { translateY: -25 }],
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-videoBadge: {
-  position: "absolute",
-  top: 12,
-  left: 12,
-  backgroundColor: "rgba(0,0,0,0.6)",
-  paddingHorizontal: 10,
-  paddingVertical: 5,
-  borderRadius: 8,
-},
+  videoBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
 
-videoBadgeText: {
-  color: "#fff",
-  fontSize: 12,
-  fontWeight: "600",
-},
+  videoBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
 
-modalContainer: {
-  flex: 1,
-  backgroundColor: "#000",
-  justifyContent: "center",
-  alignItems: "center",
-},
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-fullVideo: {
-  width: "100%",
-  height: "70%",
-},
+  fullVideo: {
+    width: "100%",
+    height: "70%",
+  },
 
-closeBtn: {
-  position: "absolute",
-  top: 50,
-  right: 20,
-  zIndex: 10,
-},
+  closeBtn: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
+  },
 });
 
