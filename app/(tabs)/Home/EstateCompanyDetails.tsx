@@ -1,0 +1,595 @@
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { initiateChat } from '@/hooks/useChat';
+import PremiumLoader from "@/components/PremiumLoader";
+import { useToast } from "@/components/Toast";
+
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  danger: '#ef4444'
+};
+
+
+
+
+export default function EstateDetails() {
+  const { show } = useToast();
+  const router = useRouter();
+  const { id } = useLocalSearchParams();
+
+  const [company, setCompany] = useState<any>(null);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [chatLoading, setChatLoading] = useState<boolean>(false);
+
+
+  const [estate, setEstate] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+const formatPrice = (price: any) => {
+  return Number(String(price).replace(/,/g, '')).toLocaleString();
+};
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (id) {
+        fetchEstateById();
+      }
+    }, [id])
+  );
+
+  useEffect(() => {
+    if (estate?.id) {
+      fetchPropertiesByEstate();
+      fetchCompanyById();
+    }
+  }, [estate]);  // ✅ triggered when estate loads
+
+
+
+
+  const fetchEstateById = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const userJson = await AsyncStorage.getItem('authUser');
+      if (userJson) {
+        setUser(JSON.parse(userJson));
+      }
+
+      const response = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_estate_by_id.php?id=${id}`,
+
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setEstate(result.estate);
+
+      } else {
+        const msg = result.msg || 'Failed to load property details';
+        setError(msg);
+        show({ type: 'error', title: 'Error', message: msg });
+      }
+    } catch (err: any) {
+      setError(err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const fetchPropertiesByEstate = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const response = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_properties_by_estate.php?estateId=${estate.id}&companyId=${estate.company_id}&page=1&limit=10`, // ✅ use estate from state
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setProperties(result.properties);
+
+      } else {
+        const msg = result.msg || 'Failed to load property details';
+        setError(msg);
+        show({ type: 'error', title: 'Error', message: msg });
+      }
+    } catch (err: any) {
+      setError(err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+
+  const fetchCompanyById = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const response = await fetch(
+        `https://insighthub.com.ng/NestifyAPI/get_CompanyById.php?id=${estate.company_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setCompany(result.user);
+        setLoading(false)
+
+      } else {
+        const msg = result.msg || 'Failed to load property details';
+        setError(msg);
+        show({ type: 'error', title: 'Error', message: msg });
+        setLoading(false)
+      }
+    } catch (err: any) {
+      setError(err.message);
+      show({ type: 'error', title: 'Error', message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChatAction = async (type: 'chat' | 'inspection') => {
+    const userJson = await AsyncStorage.getItem('authUser');
+    if (!userJson) return;
+    const currentUser = JSON.parse(userJson);
+
+    if (currentUser.plan_type !== 'premium') {
+      show({
+        type: 'warning',
+        title: '⭐ Premium Feature',
+        message: 'Chat with agents is available for premium members only.',
+        action: {
+          label: 'Upgrade',
+          onPress: () => router.push('/Subscription'),
+        },
+      });
+      return;
+    }
+
+    // Guard — make sure we have a seller
+    const sellerId = estate?.company_id;
+    if (!sellerId) {
+      show({ type: 'error', title: 'Error', message: 'Could not identify the company. Please try again.' });
+      return;
+    }
+
+    setChatLoading(true);
+
+    const openingMessage = type === 'inspection'
+      ? `Hi, I'd like to schedule an inspection. Are you available?`
+      : `Hi, I'm interested in your properties. Can we talk?`;
+
+    try {
+      const result = await initiateChat(sellerId, null, openingMessage, 'general');
+
+      if (result.success && result.conversationId) {
+        router.push({
+          pathname: '/Home/ChatRoom',
+          params: {
+            conversation_id: result.conversationId,
+            property_name: estate?.name ?? 'General Enquiry',
+            property_id: '',
+            company_id: estate?.company_id ?? '',
+          },
+        });
+      } else if (result.notPremium) {
+        show({ type: 'error', title: 'Premium Required', message: result.msg ?? 'Upgrade to chat.' });
+      } else {
+        show({ type: 'error', title: 'Error', message: result.msg ?? 'Could not start chat' });
+      }
+    } catch (e: any) {
+      show({ type: 'error', title: 'Error', message: e.message ?? 'Something went wrong' });
+    } finally {
+      setChatLoading(false);  // ← always runs, stops the spinner
+    }
+  };
+
+
+
+  if (!estate) {
+    return <PremiumLoader />;
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      {/* Header Image */}
+      <View style={{ position: 'relative' }}>
+        <Image
+          source={{ uri: estate.image_path }}
+          style={styles.coverImage}
+        />
+
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={26} color="#fff" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.favoriteButton}>
+          <Ionicons name="heart-outline" size={22} color="#ff4d4d" />
+        </TouchableOpacity>
+
+
+        {user?.id === estate.company_id && (
+          <View style={{ alignItems: "center", paddingHorizontal: 16, position: "absolute", bottom: 10, right: 0, }}>
+            <TouchableOpacity style={styles.ctaBtn} onPress={() => router.push(`/Home/Estates/EditEstate?id=${estate.id}`)}>
+              <Text style={styles.ctaText}>Edit Estate</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* Company Info */}
+      <View style={styles.section}>
+
+        <View style={{ marginBottom: 12, flexDirection: "column", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={styles.title}>{estate.name}</Text>
+          <Text style={styles.subtitle}>
+            <Ionicons name="location-outline" size={16} />
+            <Text style={{ fontSize: 14 }} numberOfLines={3}>{estate.location}</Text>
+          </Text>
+        </View>
+
+        {/* 
+        {company.verified && (
+          <View style={styles.row}>
+            <Ionicons name="shield-checkmark" size={18} color="#0f2044" />
+            <Text style={styles.verified}>Verified Estate Company</Text>
+          </View>
+        )} */}
+
+        <TouchableOpacity
+          style={styles.agentCard}
+          onPress={() => router.push(`/Home/Company/CompanyScreen?id=${estate.company_id}`)}
+        >
+          {company?.profile_image ? (
+            <Image
+              source={{ uri: company.profile_image }}
+              style={styles.agentImg}
+            />
+          ) : (
+            <View style={styles.agentAvatar}>
+              <Text style={styles.agentInitials}>
+                {(company?.company_name ?? "?")[0].toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.agentName} numberOfLines={1}>
+              {company?.company_name ?? "Company Name"}
+            </Text>
+            <Text style={styles.agentLoc} numberOfLines={1}>
+              {[company?.city, company?.state]
+                .filter(Boolean)
+                .join(", ")}
+            </Text>
+          </View>
+          <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.gold} />
+        </TouchableOpacity>
+
+      </View>
+
+      {/* CTA Buttons */}
+      {user?.id && user.id !== estate.company_id && (
+        <ScrollView contentContainerStyle={{}} horizontal showsHorizontalScrollIndicator={false} scrollEnabled>
+          <View style={styles.ctaRow}>
+            <TouchableOpacity
+              style={styles.ctaBtn}
+              onPress={() => handleChatAction('inspection')}
+              disabled={chatLoading}
+            >
+              {chatLoading
+                ? <ActivityIndicator size="small" color="#c9a84c" />
+                : <Ionicons name="calendar-outline" size={18} color="#fff" />
+              }
+              <Text style={styles.ctaText}>Book Inspection</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.ctaBtn}
+              onPress={() => handleChatAction('chat')}
+              disabled={chatLoading}
+            >
+              {chatLoading
+                ? <ActivityIndicator size="small" color="#c9a84c" />
+                : <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
+              }
+              <Text style={styles.ctaText}>Chat With Company</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.ctaBtn}>
+              <Ionicons name="download-outline" size={18} color={COLORS.textPrimary} />
+              <Text style={styles.ctaText}>Brochure (PDF)</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
+
+
+      {/* About Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>About the Estate</Text>
+        <Text style={styles.bodyText}>{estate.about}</Text>
+      </View>
+
+      {/* Amenities */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Amenities</Text>
+
+        <View style={styles.amenitiesRow}>
+          {estate.estate_facilities.map((name, idx) => (
+            <View key={idx.toString()} style={styles.amenityBox}>
+              <Ionicons name="business-outline" size={20} color={COLORS.textSecondary} />
+              <Text style={styles.amenityText}>{name}</Text>
+            </View>
+          ))}
+        </View>
+
+      </View>
+
+      {/* Properties */}
+      <View style={{ ...styles.section, marginBottom: 5, }}>
+        {properties.length === 0 ? (
+          <Text style={styles.bodyText}>No properties available for this estate yet.</Text>
+        ) : (
+          <>
+            <View style={styles.rowSpace}>
+              <Text style={{ ...styles.sectionTitle, marginBottom: 5 }}>Properties</Text>
+              <TouchableOpacity>
+                <Text style={{ color: COLORS.gold }}>See all</Text>
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={properties}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => (item.id ? item.id.toString() : Math.random().toString())}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.propertyCard}
+                  onPress={() =>
+                    router.push(`/Home/Properties/Details?id=${item.id}`)
+                  }
+                >
+                  <Image
+                    source={{ uri: item.images && item.images.length > 0 ? `https://insighthub.com.ng/${item.images[0]}` : estate.image_path }}
+                    style={styles.propertyImage}
+                  />
+
+                  <Text style={styles.propertyName} numberOfLines={1}>
+                    {item.propertyName}
+                  </Text>
+
+                  <Text style={styles.propertyPrice}>
+                    {item.listingType === "Rent"
+                      ? `₦${formatPrice(item.rentPrice)}`
+                      : item.listingType === "Sell"
+                        ? `₦${formatPrice(item.sellPrice)}`
+                        : `₦${formatPrice(item.sellPrice)} / ₦${formatPrice(item.rentPrice) }`}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </>
+        )}
+      </View>
+
+      {/* Gallery */}
+      {/* <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Gallery</Text>
+
+        <View style={styles.galleryGrid}>
+          {company.gallery.map((img, index) => (
+            <Image key={index} source={{ uri: img }} style={styles.galleryImg} />
+          ))}
+        </View>
+      </View> */}
+
+      {/* Contact */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Contact Information</Text>
+
+        <Text style={styles.contactText}>
+          📍 Address: {user.address}
+        </Text>
+        <Text style={styles.contactText}>
+          📞 Phone: {user.phone}
+        </Text>
+        <Text style={styles.contactText}>
+          ✉ Email: {user.email}
+        </Text>
+        <Text style={styles.contactText}>
+          🌐 Website: {user.website}
+        </Text>
+      </View>
+
+      <View style={{ height: 60 }} />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.bg },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  coverImage: { width: "100%", height: 240 },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 15,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 8,
+    borderRadius: 30,
+  },
+  favoriteButton: {
+    position: "absolute",
+    top: 40,
+    right: 15,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    padding: 8,
+    borderRadius: 30,
+  },
+
+  section: { padding: 16 },
+  title: { fontSize: 22, fontWeight: "700", color: COLORS.textPrimary },
+  subtitle: { marginTop: 6, color: COLORS.textSecondary },
+  verified: { marginLeft: 6, fontSize: 14, color: COLORS.gold },
+
+  row: { flexDirection: "row", alignItems: "center", marginTop: 8 },
+  rowSpace: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  bodyText: { lineHeight: 22, color: COLORS.textSecondary, marginTop: 6 },
+
+  ctaRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingHorizontal: 10,
+    marginTop: 10,
+  },
+  ctaBtn: {
+    backgroundColor: COLORS.gold,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginHorizontal: 2
+  },
+  ctaText: { color: COLORS.textPrimary, fontWeight: "600", fontSize: 12 },
+
+  // Amenities
+  amenitiesRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 10,
+  },
+  amenityBox: {
+    width: "45%",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    margin: 5,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  amenityText: { marginLeft: 8, fontSize: 13, fontWeight: "500", flexShrink: 1, color: COLORS.textSecondary },
+
+  // Properties
+  propertyCard: {
+    width: 150,
+    marginRight: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  propertyImage: {
+    width: "100%",
+    height: 100,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  propertyName: { marginTop: 5, marginLeft: 8, fontWeight: "600", color: COLORS.textPrimary },
+  propertyPrice: {
+    marginLeft: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    color: COLORS.gold,
+    fontWeight: "700",
+  },
+
+  // Gallery
+  galleryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  galleryImg: {
+    width: "48%",
+    height: 120,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  agentCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 2,
+    backgroundColor: COLORS.card,
+  },
+  agentImg: { width: 42, height: 42, borderRadius: 21 },
+  agentAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.gold,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  agentInitials: { fontSize: 16, fontWeight: "600", color: COLORS.bg },
+  agentName: { fontWeight: "bold", fontSize: 14, color: COLORS.textPrimary },
+  agentLoc: { fontSize: 12, color: COLORS.textSecondary },
+
+  contactText: { marginTop: 6, fontSize: 14, color: COLORS.textSecondary },
+  sectionTitle: {
+    marginTop: 6, fontSize: 14, color: COLORS.gold, fontWeight: "600"
+  }
+});

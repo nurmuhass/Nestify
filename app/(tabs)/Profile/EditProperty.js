@@ -1,0 +1,1662 @@
+import { EvilIcons, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { City, State } from "country-state-city";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useEffect, useState,useRef } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,Modal
+} from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
+import { getStatusBarHeight } from "react-native-status-bar-height";
+import { MaterialIcons as Icon } from "@expo/vector-icons";
+import ConfirmModal from '@/components/ConfirmModal';
+import PremiumLoader from '@/components/PremiumLoader';
+import { useToast } from '@/components/Toast';
+import { Video } from 'expo-av';
+
+const COLORS = {
+  bg: '#091530',
+  card: '#0f2044',
+  gold: '#c9a84c',
+  goldLight: '#f0d98a',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  border: 'rgba(255,255,255,0.06)',
+  danger: '#ef4444'
+};
+
+const EditProperty = () => {
+  const { show } = useToast();
+  const router = useRouter();
+  const { id } = useLocalSearchParams();
+
+  const [loading, setLoading] = useState(false);
+  const [property, setProperty] = useState(null);
+  const [user, setUser] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [previewVisible, setPreviewVisible] = useState(false);
+
+  const [categories, setCategories] = useState([]);
+
+  const [categoryValue, setCategoryValue] = useState(null);
+  const [categoryItems, setCategoryItems] = useState([]);
+
+  const [subValue, setSubValue] = useState(null);
+  const [subItems, setSubItems] = useState([]);
+
+  const [stateValue, setStateValue] = useState(null);
+  const [stateItems, setStateItems] = useState([]);
+
+  const [cityValue, setCityValue] = useState(null);
+  const [cityItems, setCityItems] = useState([]);
+
+  const [openCategory, setOpenCategory] = useState(false);
+  const [openSub, setOpenSub] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const [openCity, setOpenCity] = useState(false);
+  // Store raw property data separately so we can prefill dropdowns after items load
+  const [rawProperty, setRawProperty] = useState(null);
+  const [videoModalVisible, setVideoModalVisible] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+    const videoRef = useRef(null);
+
+  const fetchCategories = async () => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+
+      const res = await fetch(
+        "https://insighthub.com.ng/NestifyAPI/get_categories_WithSubs.php",
+        {
+          headers: { Authorization: "Token " + token },
+        }
+      );
+
+      const result = await res.json();
+
+      if (result.status === "success") {
+        setCategories(result.categories);
+
+        const formatted = result.categories.map((cat) => ({
+          label: cat.name,
+          value: cat.id,
+        }));
+
+        setCategoryItems(formatted);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    const states = State.getStatesOfCountry("NG").map((s) => ({
+      label: s.name,
+      value: s.isoCode,
+    }));
+
+    setStateItems(states);
+  }, []);
+
+  useEffect(() => {
+    if (stateValue) {
+      const cities = City.getCitiesOfState("NG", stateValue).map((c) => ({
+        label: c.name,
+        value: c.name,
+      }));
+
+      setCityItems(cities);
+    }
+  }, [stateValue]);
+
+  useEffect(() => {
+    if (categoryValue) {
+      const selected = categories.find((c) => c.id == categoryValue);
+
+      if (selected) {
+        const subs = selected.subcategories.map((s) => ({
+          label: s.name,
+          value: s.id,
+        }));
+
+        setSubItems(subs);
+      }
+    }
+  }, [categoryValue]);
+
+  // Document type
+  const [openDoc, setOpenDoc] = useState(false);
+  const [docValue, setDocValue] = useState(null);
+
+  const [docItems, setDocItems] = useState([
+    { label: "Certificate of Occupancy (C of O)", value: "CofO" },
+    { label: "Right of Occupancy (R of O)", value: "RofO" },
+    { label: "Deed of Assignment", value: "DeedOfAssignment" },
+    { label: "Governor’s Consent", value: "GovernorsConsent" },
+    { label: "Registered Survey", value: "RegisteredSurvey" },
+    { label: "Excision", value: "Excision" },
+    { label: "Gazette", value: "Gazette" },
+    { label: "Others", value: "Others" },
+  ]);
+
+  // Condition
+  const [openCondition, setOpenCondition] = useState(false);
+  const [conditionValue, setConditionValue] = useState(null);
+  const [conditionItems, setConditionItems] = useState([
+    { label: "Newly Built", value: "newly_built" },
+    { label: "Renovated", value: "renovated" },
+    { label: "Needs Renovation", value: "needs_renovation" },
+    { label: "Old Building", value: "Old Building" },
+    { label: "Fair Condition", value: "Fair Condition" },
+    { label: "Under Construction", value: "Under Construction" },
+  ]);
+
+  // Sales type
+  const [openSales, setOpenSales] = useState(false);
+  const [salesValue, setSalesValue] = useState(null);
+  const [salesItems, setSalesItems] = useState([
+    { label: "Bonanza", value: "bonanza" },
+    { label: "Cash Back Sales", value: "cashback" },
+    { label: "Limited Offer", value: "limited_offer" },
+    { label: "Discount Promo", value: "discount_promo" },
+    { label: "Diaspora", value: "Diaspora" },
+    { label: "Distress", value: "Distress" },
+    { label: "Investment", value: "Investment" },
+    { label: "Off-Plan", value: "Off-Plan" },
+  ]);
+
+  // Status
+  const [openStatus, setOpenStatus] = useState(false);
+  const [statusValue, setStatusValue] = useState(null);
+  const [statusItems, setStatusItems] = useState([
+    { label: "Available", value: "available" },
+    { label: "Sold", value: "sold" },
+    { label: "Draft", value: "draft" },
+  ]);
+
+  // Furnishing
+  const [openFurnishing, setOpenFurnishing] = useState(false);
+  const [furnishingValue, setFurnishingValue] = useState(null);
+  const [furnishingItems, setFurnishingItems] = useState([
+    { label: "Furnished", value: "Furnished" },
+    { label: "Unfurnished", value: "Unfurnished" },
+    { label: "Fully Furnished", value: "Fully Furnished" },
+    { label: "Semi Furnished", value: "Semi Furnished" },
+  ]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const LAND_CATEGORY_IDS = [7, 12];
+
+  const isLandCategory = LAND_CATEGORY_IDS.includes(Number(categoryValue));
+
+  const [formData, setFormData] = useState({
+    images: [],
+    thumbnail: "",
+    video: null,
+    propertyName: "",
+    listingType: "Sell",
+    Furnishing: "Unfurnished",
+    sellPrice: "",
+    rentPrice: "",
+    bedrooms: 0,
+    Toilet: 0,
+    BQ: 0,
+    balconies: 0,
+    totalRooms: "",
+    description: "",
+    propertyCategory: "",
+    propertySubCategory: "",
+    country: "Nigeria",
+    state: "",
+    city: "",
+    size: "",
+    status: "",
+    documentType: "",
+    condition: "",
+    salesType: "",
+    location: "",
+    parkingspace: 0,
+    managedByUs: false,
+  });
+
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateFeatureCount = (feature, increment) => {
+    const currentValue = formData[feature] || 0;
+    const newValue = increment
+      ? currentValue + 1
+      : Math.max(0, currentValue - 1);
+
+    handleChange(feature, newValue);
+  };
+
+  /* =========================
+     FETCH PROPERTY
+  ========================= */
+  useEffect(() => {
+    const init = async () => {
+      if (!id) return;
+      setLoading(true);
+
+      try {
+        const token = await AsyncStorage.getItem("authToken");
+
+        // Fetch both in parallel
+        const [catRes, propRes] = await Promise.all([
+          fetch("https://insighthub.com.ng/NestifyAPI/get_categories_WithSubs.php", {
+            headers: { Authorization: "Token " + token },
+          }),
+          fetch(`https://insighthub.com.ng/NestifyAPI/get_property_by_id.php?id=${id}`, {
+            headers: { Authorization: `Token ${token}` },
+          }),
+        ]);
+
+        const [catResult, propResult] = await Promise.all([
+          catRes.json(),
+          propRes.json(),
+        ]);
+
+        // ── Categories ──
+        if (catResult.status === "success") {
+          setCategories(catResult.categories);
+
+          const formatted = catResult.categories.map((cat) => ({
+            label: cat.name,
+            value: String(cat.id),
+          }));
+          setCategoryItems(formatted);
+
+          // ── Property ──
+          if (propResult.status === "success") {
+            const p = propResult.property;
+            setProperty(p);
+
+            setFormData({
+              propertyName: p.propertyName || "",
+              listingType: p.listingType || "Sell",
+              Furnishing: p.Furnishing || "Unfurnished",
+              sellPrice: p.sellPrice || "",
+              rentPrice: p.rentPrice || "",
+              bedrooms: Number(p.bedrooms) || 0,
+              Toilet: Number(p.Toilet) || 0,
+              BQ: Number(p.BQ) || 0,
+              balconies: Number(p.balconies) || 0,
+              totalRooms: p.totalRooms || "",
+              description: p.description || "",
+              propertyCategory: p.propertyCategory || "",
+              propertySubCategory: p.propertySubCategory || "",
+              state: p.state || "",
+              city: p.city || "",
+              size: p.size || "",
+              status: p.status || "",
+              documentType: p.documentType || "",
+              condition: p.condition || "",
+              salesType: p.salesType || "",
+              location: p.location || "",
+              parkingspace: Number(p.parkingspace) || 0,
+              managedByUs: p.managed_by_us == "1",
+              images: p.images.map((img) => `https://insighthub.com.ng/${img}`),
+              thumbnail: p.thumbnail ? `https://insighthub.com.ng/${p.thumbnail}` : "",
+              video: p.video ? `https://insighthub.com.ng/NestifyAPI/${p.video}` : null,
+            });
+
+            // Prefill documentType
+            if (p.documentType) {
+              setDocValue(p.documentType);
+            }
+
+            // Prefill condition
+            if (p.condition) {
+              setConditionValue(p.condition);
+
+            }
+
+            if (p.Furnishing) {
+              setFurnishingValue(p.Furnishing);
+            }
+
+            // Prefill salesType
+            if (p.salesType) {
+              setSalesValue(p.salesType);
+
+            }
+
+            // Prefill status
+            if (p.status) {
+              setStatusValue(p.status);
+              console.log("Prefilled status:", p.status);
+            }
+            // ── Prefill Category (both available now) ──
+            if (p.propertyCategory) {
+              setCategoryValue(String(p.propertyCategory));
+
+              // Derive subcategory items immediately
+              const selectedCat = catResult.categories.find(
+                (c) => String(c.id) === String(p.propertyCategory)
+              );
+              if (selectedCat) {
+                const subs = selectedCat.subcategories.map((s) => ({
+                  label: s.name,
+                  value: String(s.id),
+                }));
+                setSubItems(subs);
+
+                // Prefill subcategory
+                if (p.propertySubCategory) {
+                  setSubValue(String(p.propertySubCategory));
+                }
+              }
+            }
+
+            // ── Prefill State ──
+            if (p.state) {
+              const stateObj = State.getStatesOfCountry("NG").find(
+                (s) => s.name.toLowerCase() === p.state.toLowerCase()
+              );
+              if (stateObj) {
+                setStateValue(stateObj.isoCode);
+
+                // Prefill City
+                if (p.city) {
+                  const cities = City.getCitiesOfState("NG", stateObj.isoCode).map((c) => ({
+                    label: c.name,
+                    value: c.name,
+                  }));
+                  setCityItems(cities);
+
+                  const cityObj = cities.find(
+                    (c) => c.value.toLowerCase() === p.city.toLowerCase()
+                  );
+                  if (cityObj) setCityValue(cityObj.value);
+                }
+              }
+            }
+          } else {
+            show({
+              type: 'error',
+              title: 'Error',
+              message: propResult.msg || 'Failed to load property',
+            });
+          }
+        }
+      } catch (err) {
+        show({
+          type: 'error',
+          title: 'Error',
+          message: err.message,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    init();
+  }, [id]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const userJson = await AsyncStorage.getItem("authUser");
+      if (userJson) {
+        setUser(JSON.parse(userJson));
+
+      }
+    };
+
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    if (categoryValue && categories.length > 0) {
+      const selected = categories.find((c) => String(c.id) === String(categoryValue));
+      if (selected) {
+        const subs = selected.subcategories.map((s) => ({
+          label: s.name,
+          value: String(s.id),
+        }));
+        setSubItems(subs);
+      }
+    }
+  }, [categoryValue, categories]); // ✅ categories added
+
+  const handleDelete = () => {
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      setLoading(true);
+
+      const token = await AsyncStorage.getItem("authToken");
+
+      const response = await fetch(
+        "https://insighthub.com.ng/NestifyAPI/delete_property.php",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            propertyId: id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        show({
+          type: 'success',
+          title: 'Success',
+          message: 'Property deleted',
+        });
+        setDeleteModalVisible(false);
+        router.back();
+      } else {
+        show({
+          type: 'error',
+          title: 'Error',
+          message: result.msg,
+        });
+      }
+    } catch (err) {
+      show({
+        type: 'error',
+        title: 'Error',
+        message: err.message,
+      });
+    } finally {
+      setLoading(false);
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleBoostProperty = () => {
+    router.push({
+      pathname: '/upgrade/payment',
+      params: { plan: 'property_boost', propertyId: id },
+    });
+  };
+
+  const isPropertyBoosted = () => {
+    if (!property?.boosted_until) return false;
+    const boostedUntil = new Date(property.boosted_until);
+    const now = new Date();
+    return boostedUntil > now;
+  };
+
+  /* =========================
+     IMAGE PICKER
+  ========================= */
+  // Prefill category once categoryItems are loaded
+  useEffect(() => {
+    if (categoryItems.length > 0 && rawProperty?.propertyCategory) {
+      setCategoryValue(Number(rawProperty.propertyCategory));
+    }
+  }, [categoryItems, rawProperty]);
+
+  // Prefill subcategory once subItems are derived
+  useEffect(() => {
+    if (subItems.length > 0 && rawProperty?.propertySubCategory) {
+      setSubValue(Number(rawProperty.propertySubCategory));
+    }
+  }, [subItems, rawProperty]);
+
+  // Prefill state once stateItems are loaded
+  useEffect(() => {
+    if (stateItems.length > 0 && rawProperty?.state) {
+      const stateObj = stateItems.find(
+        (s) => s.label.toLowerCase() === rawProperty.state.toLowerCase()
+      );
+      if (stateObj) setStateValue(stateObj.value); // isoCode
+    }
+  }, [stateItems, rawProperty]);
+
+  // Prefill city once cityItems are derived (driven by stateValue change)
+  useEffect(() => {
+    if (cityItems.length > 0 && rawProperty?.city) {
+      const cityObj = cityItems.find(
+        (c) => c.value.toLowerCase() === rawProperty.city.toLowerCase()
+      );
+      if (cityObj) setCityValue(cityObj.value);
+    }
+  }, [cityItems, rawProperty]);
+
+  const pickImage = async () => {
+    const maxImages = user?.plan_type === "premium" ? 15 : 2;
+
+    if (formData.images.length >= maxImages) {
+      show({
+        type: 'warning',
+        title: 'Upgrade Required',
+        message: `Your current plan allows only ${maxImages} images. Upgrade to premium to add more.`,
+      });
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      allowsMultipleSelection: true,
+      quality: 1,
+      selectionLimit: maxImages - formData.images.length,
+    });
+
+    if (!result.canceled) {
+      const newImages = result.assets.map((a) => a.uri);
+
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...newImages],
+      }));
+    }
+  };
+
+  const pickVideo = async () => {
+    if (!user) return;
+
+    if (user.plan_type !== "premium") {
+      show({
+        type: 'warning',
+        title: 'Premium Required',
+        message: 'Only premium users can add or replace videos.',
+      });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 1,
+      allowsEditing: false,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      setVideoDeleted(false);
+      setFormData((prev) => ({
+        ...prev,
+        video: result.assets[0].uri,
+      }));
+    }
+  };
+
+  const removeVideo = () => {
+    if (formData.video?.startsWith("http")) {
+      setVideoDeleted(true);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      video: null,
+    }));
+  };
+
+  /* =========================
+     SUBMIT (UPDATE)
+  ========================= */
+  const [deletedImages, setDeletedImages] = useState([]);
+  const [videoDeleted, setVideoDeleted] = useState(false);
+
+  const removeImage = (index) => {
+    const img = formData.images[index];
+
+    // track deleted server images
+    if (img.startsWith("http")) {
+      setDeletedImages((prev) => [...prev, img]);
+    }
+
+    const newImages = [...formData.images];
+    newImages.splice(index, 1);
+
+    setFormData((prev) => ({
+      ...prev,
+      images: newImages,
+    }));
+  };
+
+const handleSubmit = async () => {
+  try {
+    setLoading(true);
+    setUploadProgress(0);
+
+    const data = new FormData();
+    data.append("propertyId", id);
+
+    Object.keys(formData).forEach((key) => {
+      if (key !== "images" && key !== "video") {
+        data.append(key, formData[key]);
+      }
+    });
+
+    // Images
+    formData.images.forEach((uri) => {
+      if (uri.startsWith("http")) {
+        data.append("existing_images[]", uri);
+      } else {
+        const fileName = uri.split("/").pop();
+
+        data.append("new_images[]", {
+          uri,
+          name: fileName,
+          type: "image/jpeg",
+        });
+      }
+    });
+
+    // Deleted images
+    deletedImages.forEach((img) => {
+      const fileName = img.split("/").pop();
+      data.append("delete_images[]", fileName);
+    });
+
+    // ✅ VIDEO UPLOAD
+    if (formData.video && !formData.video.startsWith("http")) {
+      const fileName = formData.video.split("/").pop();
+
+      data.append("video", {
+        uri: formData.video,
+        name: fileName,
+        type: "video/mp4",
+      });
+    }
+
+    // ✅ VIDEO DELETE
+    if (videoDeleted) {
+      data.append("delete_video", "1");
+    }
+
+    const token = await AsyncStorage.getItem("authToken");
+    const xhr = new XMLHttpRequest();
+    const url = "https://insighthub.com.ng/NestifyAPI/update_property.php";
+
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Authorization", `Token ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        setUploadProgress(event.loaded / event.total);
+      }
+    };
+
+    xhr.onload = () => {
+      setLoading(false);
+      setUploadProgress(1);
+
+      try {
+        const result = JSON.parse(xhr.responseText);
+        if (result.status === "success") {
+          show({
+            type: 'success',
+            title: 'Success',
+            message: 'Property updated successfully',
+          });
+          router.back();
+        } else {
+          show({
+            type: 'error',
+            title: 'Error',
+            message: result.msg || 'Update failed',
+          });
+        }
+      } catch (error) {
+        show({
+          type: 'error',
+          title: 'Error',
+          message: 'Unexpected server response',
+        });
+      }
+    };
+
+    xhr.onerror = () => {
+      setLoading(false);
+      setUploadProgress(0);
+      show({
+        type: 'error',
+        title: 'Error',
+        message: 'Upload failed. Please try again.',
+      });
+    };
+
+    xhr.send(data);
+  } catch (err) {
+    setLoading(false);
+    setUploadProgress(0);
+    show({
+      type: 'error',
+      title: 'Error',
+      message: err.message,
+    });
+  }
+};
+
+  if (loading && !property) {
+    return <PremiumLoader />;
+  }
+
+  return (
+    <>
+      <ScrollView style={styles.container}>
+
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20, justifyContent: "space-between" }}>
+        <Text style={styles.title}>Edit Property</Text>
+
+        <TouchableOpacity onPress={handleDelete}>
+          <EvilIcons name="trash" size={29} color={COLORS.danger} />
+        </TouchableOpacity>
+
+      </View>
+
+      <Text style={styles.sectionTitle}>Property Name</Text>
+      <TextInput
+        style={styles.input}
+        value={formData.propertyName}
+        onChangeText={(text) => handleChange("propertyName", text)}
+        placeholder="Property Name"
+      />
+
+      <Text style={styles.sectionTitle}>Listing type</Text>
+      <View style={styles.toggleContainer}>
+        {["Rent", "Sell", "Both"].map((type) => (
+          <TouchableOpacity
+            key={type}
+            style={[
+              styles.toggleButton,
+              formData.listingType === type &&
+              styles.toggleButtonActive,
+            ]}
+            onPress={() => handleChange("listingType", type)}
+          >
+            <Text
+              style={
+                formData.listingType === type
+                  ? styles.toggleTextActive
+                  : styles.toggleText
+              }
+            >
+              {type}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+
+      <Text style={styles.sectionTitle}>Sell Price</Text>
+      <TextInput
+        style={styles.input}
+        value={formData.sellPrice}
+        onChangeText={(text) => handleChange("sellPrice", text)}
+        placeholder="Sell Price"
+      />
+
+      <Text style={styles.sectionTitle}>Rent Price</Text>
+      <TextInput
+        style={styles.input}
+        value={formData.rentPrice}
+        onChangeText={(text) => handleChange("rentPrice", text)}
+        placeholder="Rent Price"
+      />
+
+      <Text style={styles.sectionTitle}>Category</Text>
+
+      <DropDownPicker
+        listMode="SCROLLVIEW"
+        open={openCategory}
+        value={categoryValue}
+        items={categoryItems}
+        setOpen={setOpenCategory}
+        setValue={setCategoryValue}
+        setItems={setCategoryItems}
+        placeholder="Select Category"
+        zIndex={3000}
+        style={styles.dropdown}
+        textStyle={styles.dropdownText}
+        placeholderStyle={styles.dropdownPlaceholder}
+        dropDownContainerStyle={styles.dropdownContainer}
+        selectedItemContainerStyle={styles.dropdownSelectedItem}
+        selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+        listItemLabelStyle={styles.dropdownListItemLabel}
+        onChangeValue={(val) => {
+          handleChange("propertyCategory", val);
+        }}
+      />
+
+      {subItems.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Subcategory</Text>
+
+          <DropDownPicker
+            listMode="SCROLLVIEW"
+            open={openSub}
+            value={subValue}
+            items={subItems}
+            setOpen={setOpenSub}
+            setValue={setSubValue}
+            setItems={setSubItems}
+            placeholder="Select Subcategory"
+            zIndex={2900}
+            style={styles.dropdown}
+            textStyle={styles.dropdownText}
+            placeholderStyle={styles.dropdownPlaceholder}
+            dropDownContainerStyle={styles.dropdownContainer}
+            selectedItemContainerStyle={styles.dropdownSelectedItem}
+            selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+            listItemLabelStyle={styles.dropdownListItemLabel}
+            onChangeValue={(val) => {
+              handleChange("propertySubCategory", val);
+            }}
+          />
+        </>
+      )}
+
+      <Text style={styles.sectionTitle}>State</Text>
+
+      <DropDownPicker
+        listMode="SCROLLVIEW"
+        open={openState}
+        value={stateValue}
+        items={stateItems}
+        setOpen={setOpenState}
+        setValue={(callback) => {
+          const val =
+            typeof callback === "function" ? callback(stateValue) : callback;
+
+          setStateValue(val);
+
+          const selected = stateItems.find((i) => i.value === val);
+          handleChange("state", selected?.label);
+        }}
+        setItems={setStateItems}
+        placeholder="Select State"
+        searchable
+        zIndex={2800}
+        style={styles.dropdown}
+        textStyle={styles.dropdownText}
+        placeholderStyle={styles.dropdownPlaceholder}
+        dropDownContainerStyle={styles.dropdownContainer}
+        selectedItemContainerStyle={styles.dropdownSelectedItem}
+        selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+        listItemLabelStyle={styles.dropdownListItemLabel}
+        searchTextInputStyle={styles.dropdownSearchInput}
+      />
+      <Text style={styles.sectionTitle}>City</Text>
+
+      <DropDownPicker
+        listMode="SCROLLVIEW"
+        open={openCity}
+        value={cityValue}
+        items={cityItems}
+        setOpen={setOpenCity}
+        setValue={(callback) => {
+          const val =
+            typeof callback === "function" ? callback(cityValue) : callback;
+
+          setCityValue(val);
+
+          const selected = cityItems.find((i) => i.value === val);
+          handleChange("city", selected?.label);
+        }}
+        setItems={setCityItems}
+        placeholder="Select City"
+        searchable
+        zIndex={2700}
+        style={styles.dropdown}
+        textStyle={styles.dropdownText}
+        placeholderStyle={styles.dropdownPlaceholder}
+        dropDownContainerStyle={styles.dropdownContainer}
+        selectedItemContainerStyle={styles.dropdownSelectedItem}
+        selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+        listItemLabelStyle={styles.dropdownListItemLabel}
+        searchTextInputStyle={styles.dropdownSearchInput}
+      />
+
+      <Text style={styles.sectionTitle}>Document Type</Text>
+
+      <DropDownPicker
+        listMode="SCROLLVIEW"
+        open={openDoc}
+        value={docValue}
+        items={docItems}
+        setOpen={setOpenDoc}
+        setValue={(callback) => {
+          const val =
+            typeof callback === "function" ? callback(docValue) : callback;
+
+          setDocValue(val);
+          handleChange("documentType", val);
+        }}
+        setItems={setDocItems}
+        placeholder="Select Document Type"
+        zIndex={2600}
+        style={styles.dropdown}
+        textStyle={styles.dropdownText}
+        placeholderStyle={styles.dropdownPlaceholder}
+        dropDownContainerStyle={styles.dropdownContainer}
+        selectedItemContainerStyle={styles.dropdownSelectedItem}
+        selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+        listItemLabelStyle={styles.dropdownListItemLabel}
+      />
+
+      {!isLandCategory && (
+        <>
+          <Text style={styles.sectionTitle}>Furnishing</Text>
+
+          <DropDownPicker
+            listMode="SCROLLVIEW"
+            open={openFurnishing}
+            value={furnishingValue}
+            items={furnishingItems}
+            setOpen={setOpenFurnishing}
+            setValue={(callback) => {
+              const val =
+                typeof callback === "function"
+                  ? callback(furnishingValue)
+                  : callback;
+
+              setFurnishingValue(val);
+              handleChange("Furnishing", val);
+            }}
+            setItems={setFurnishingItems}
+            placeholder="Select Furnishing"
+            zIndex={2500}
+            style={styles.dropdown}
+            textStyle={styles.dropdownText}
+            placeholderStyle={styles.dropdownPlaceholder}
+            dropDownContainerStyle={styles.dropdownContainer}
+            selectedItemContainerStyle={styles.dropdownSelectedItem}
+            selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+            listItemLabelStyle={styles.dropdownListItemLabel}
+          />
+
+          <Text style={styles.sectionTitle}>Property Features</Text>
+
+          {["bedrooms", "Toilet", "balconies", "parkingspace", "BQ"].map(
+            (feature) => {
+              const label =
+                feature.charAt(0).toUpperCase() + feature.slice(1);
+              return (
+                <View key={feature} style={styles.counterContainer}>
+                  <Text style={styles.counterLabel}>{label}</Text>
+                  <View style={styles.counterControls}>
+                    <TouchableOpacity
+                      style={styles.counterButton}
+                      onPress={() => updateFeatureCount(feature, false)}
+                    >
+                      <Text style={styles.counterButtonText}>−</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.counterValue}>
+                      {formData[feature]}
+                    </Text>
+
+                    <TouchableOpacity
+                      style={styles.counterButton}
+                      onPress={() => updateFeatureCount(feature, true)}
+                    >
+                      <Text style={styles.counterButtonText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            },
+          )}
+
+          <Text style={styles.sectionTitle}>Condition</Text>
+
+          <DropDownPicker
+            listMode="SCROLLVIEW"
+            open={openCondition}
+            value={conditionValue}
+            items={conditionItems}
+            setOpen={setOpenCondition}
+            setValue={(callback) => {
+              const val =
+                typeof callback === "function"
+                  ? callback(conditionValue)
+                  : callback;
+
+              setConditionValue(val);
+              handleChange("condition", val);
+            }}
+            setItems={setConditionItems}
+            placeholder="Select Condition"
+            zIndex={2400}
+            style={styles.dropdown}
+            textStyle={styles.dropdownText}
+            placeholderStyle={styles.dropdownPlaceholder}
+            dropDownContainerStyle={styles.dropdownContainer}
+            selectedItemContainerStyle={styles.dropdownSelectedItem}
+            selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+            listItemLabelStyle={styles.dropdownListItemLabel}
+          />
+
+        </>
+      )}
+      <Text style={styles.sectionTitle}>Sales Type</Text>
+
+      <DropDownPicker
+        listMode="SCROLLVIEW"
+        open={openSales}
+        value={salesValue}
+        items={salesItems}
+        setOpen={setOpenSales}
+        setValue={(callback) => {
+          const val =
+            typeof callback === "function"
+              ? callback(salesValue)
+              : callback;
+
+          setSalesValue(val);
+          handleChange("salesType", val);
+        }}
+        setItems={setSalesItems}
+        placeholder="Select Sales Type"
+        zIndex={2300}
+        style={styles.dropdown}
+        textStyle={styles.dropdownText}
+        placeholderStyle={styles.dropdownPlaceholder}
+        dropDownContainerStyle={styles.dropdownContainer}
+        selectedItemContainerStyle={styles.dropdownSelectedItem}
+        selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+        listItemLabelStyle={styles.dropdownListItemLabel}
+      />
+
+      <Text style={styles.sectionTitle}>Status</Text>
+
+      <DropDownPicker
+        listMode="SCROLLVIEW"
+        open={openStatus}
+        value={statusValue}
+        items={statusItems}
+        setOpen={setOpenStatus}
+        setValue={(callback) => {
+          const val =
+            typeof callback === "function"
+              ? callback(statusValue)
+              : callback;
+
+          setStatusValue(val);
+          handleChange("status", val);
+        }}
+        setItems={setStatusItems}
+        placeholder="Select Status"
+        zIndex={1500}
+        style={styles.dropdown}
+        textStyle={styles.dropdownText}
+        placeholderStyle={styles.dropdownPlaceholder}
+        dropDownContainerStyle={styles.dropdownContainer}
+        selectedItemContainerStyle={styles.dropdownSelectedItem}
+        selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
+        listItemLabelStyle={styles.dropdownListItemLabel}
+      />
+
+      <Text style={styles.sectionTitle}>Location</Text>
+      <TextInput
+        style={styles.input}
+        value={formData.location}
+        onChangeText={(text) => handleChange("location", text)}
+        placeholder="Location"
+      />
+
+      <Text style={styles.sectionTitle}>Description</Text>
+      <View style={styles.formField}>
+        <TextInput
+          value={formData.description}
+          onChangeText={(text) => handleChange("description", text)}
+          placeholder="Enter full description"
+          multiline
+          numberOfLines={4} // Adjust the number of visible lines
+          style={[
+            styles.input,
+            { height: 100, textAlignVertical: "top" },
+          ]} // Custom styling
+        />
+      </View>
+
+      {/* BOOST PROPERTY BUTTON */}
+      {!isPropertyBoosted() && (
+        <TouchableOpacity
+          onPress={handleBoostProperty}
+          style={[
+            styles.btn,
+            {
+              backgroundColor: COLORS.gold,
+              marginTop: 16,
+              marginBottom: 16,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 8,
+            },
+          ]}
+        >
+          <Icon name="trending-up" size={20} color={COLORS.bg} />
+          <Text style={{ color: COLORS.bg, fontWeight: '600' }}>
+            Boost This Property
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* IMAGES */}
+
+      <Text style={{ marginBottom: 6, color: COLORS.textSecondary }}>
+        You can upload up to{" "}
+        {user ? (user.plan_type === "premium" ? 15 : 2) : ""} images
+      </Text>
+
+      {user?.plan_type !== "premium" && (
+        <Text style={{ color: COLORS.goldLight, marginBottom: 10 }}>
+          Upgrade to Premium to upload more images
+        </Text>
+      )}   
+
+      <Text style={styles.sectionTitle}>Property Video</Text>
+      {formData.video ? (
+        <View >
+     <TouchableOpacity
+    activeOpacity={0.9}
+    style={styles.videoCard}
+    onPress={() => setVideoModalVisible(true)}
+  >
+    {/* Thumbnail (fallback to video itself if no thumbnail) */}
+    <Video
+           source={{ uri: formData.video }}
+      style={styles.videoThumbnail}
+      resizeMode="cover"
+      shouldPlay={false}
+      isMuted
+    />
+
+    {/* Dark overlay */}
+    <View style={styles.overlay} />
+
+    {/* Play button */}
+    <View style={styles.playBtn}>
+      <MaterialIcons name="play-arrow" size={34} color="#fff" />
+    </View>
+
+    {/* Label */}
+    <View style={styles.videoBadge}>
+      <Text style={styles.videoBadgeText}>Video Tour</Text>
+    </View>
+  </TouchableOpacity>
+          <TouchableOpacity onPress={removeVideo} style={styles.removeVideoBtn}>
+            <Text style={{ color: COLORS.danger }}>Remove Video</Text>
+          </TouchableOpacity>
+        </View> 
+      ) : (
+        <Text style={{ color: COLORS.textSecondary, marginBottom: 8 }}>
+          {user?.plan_type === 'premium'
+            ? 'Choose a video to replace or add to this listing.'
+            : 'Only premium users can upload videos.'}
+        </Text>
+      )}
+
+      <TouchableOpacity
+        onPress={pickVideo}
+        style={[
+          styles.btn,
+          user?.plan_type !== 'premium' && {
+            backgroundColor: COLORS.textSecondary,
+          },
+        ]}
+        disabled={user?.plan_type !== 'premium'}
+      >
+        <Text style={{ color: COLORS.bg }}>
+          {formData.video ? 'Replace Video' : 'Pick a Video'}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={{ marginBottom: 6, color: COLORS.textSecondary }}>
+        You can upload up to{" "}
+        {user ? (user.plan_type === "premium" ? 15 : 2) : ""} images
+      </Text>
+
+      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+        {formData.images.map((img, i) => (
+          <View key={i}>
+            <TouchableOpacity
+              onPress={() => {
+                setPreviewImage(img);
+                setPreviewVisible(true);
+              }}
+            >
+              <Image source={{ uri: img }} style={styles.image} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => removeImage(i)}>
+              <Text style={{ color: COLORS.danger }}>Remove</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+
+      <TouchableOpacity
+        onPress={pickImage}
+        style={[
+          styles.btn,
+          formData.images.length >= (user?.plan_type === "premium" ? 15 : 2) && {
+            backgroundColor: COLORS.textSecondary,
+          },
+        ]}
+        disabled={
+          formData.images.length >= (user?.plan_type === "premium" ? 15 : 2)
+        }
+      >
+        <Text style={{ color: COLORS.bg }}>Add Image</Text>
+      </TouchableOpacity>
+
+      {loading && uploadProgress > 0 && (
+        <>
+          <View style={styles.progressWrapper}>
+            <View
+              style={[
+                styles.progressBar,
+                { width: `${Math.round(uploadProgress * 100)}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.progressText}>
+            Uploading... {Math.round(uploadProgress * 100)}%
+          </Text>
+        </>
+      )}
+
+      <TouchableOpacity onPress={handleSubmit} style={{ ...styles.btn, marginBottom: 50 }}>
+        {loading ? (
+          <ActivityIndicator color={COLORS.bg} />
+        ) : (
+          <Text style={{ color: COLORS.bg }}>Update Property</Text>
+        )}
+      </TouchableOpacity>
+
+      {previewVisible && (
+        <View style={styles.previewContainer}>
+          <TouchableOpacity
+            style={styles.previewClose}
+            onPress={() => setPreviewVisible(false)}
+          >
+            <Text style={{ color: COLORS.textPrimary, fontSize: 18 }}>✕</Text>
+          </TouchableOpacity>
+
+          <Image
+            source={{ uri: previewImage }}
+            style={styles.previewImage}
+            resizeMode="contain"
+          />
+        </View>
+      )}
+
+        <Modal
+        visible={videoModalVisible}
+        animationType="fade"
+        onRequestClose={() => setVideoModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+      
+          {/* Close Button */}
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={() => setVideoModalVisible(false)}
+          >
+            <MaterialIcons name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+      
+          {/* Fullscreen Video */}
+          <Video
+            source={{ uri: formData.video }}
+            useNativeControls
+            resizeMode="contain"
+              isBuffering
+  progressUpdateIntervalMillis={500}
+      shouldPlay
+        ref={videoRef}
+            style={styles.fullVideo}
+          />
+      
+        </View>
+      </Modal>
+      </ScrollView>
+
+      <ConfirmModal
+        visible={deleteModalVisible}
+        title="Delete Property"
+        message="Are you sure you want to delete this property? This action cannot be undone."
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModalVisible(false)}
+        loading={deleteLoading}
+        confirmText="Delete"
+      />
+    </>
+  );
+};
+
+
+
+export default EditProperty;
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    paddingTop: getStatusBarHeight(),
+    padding: 20,
+    paddingBottom: 20,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.textPrimary,
+  },
+  input: {
+    backgroundColor: COLORS.card,
+    color: COLORS.textPrimary,
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  btn: {
+    backgroundColor: COLORS.gold,
+    padding: 15,
+    marginTop: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  image: {
+    width: 80,
+    height: 80,
+    margin: 5,
+    borderRadius: 8,
+    borderColor: COLORS.border,
+    borderWidth: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  formField: {
+    marginBottom: 16,
+    position: "relative",
+    alignContent: "center",
+  },
+  sectionTitle: {
+    marginTop: 4,
+    marginBottom: 4,
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    fontWeight: "500",
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  toggleButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: COLORS.card,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  toggleButtonActive: {
+    backgroundColor: COLORS.gold,
+    borderColor: COLORS.gold,
+  },
+  toggleText: {
+    color: COLORS.textSecondary,
+    fontWeight: "500",
+  },
+  toggleTextActive: {
+    color: COLORS.bg,
+    fontWeight: "500",
+  },
+  previewContainer: {
+    position: "absolute",
+    top: '60%',
+    left: 0,
+    right: 0,
+    bottom: '10%',
+    backgroundColor: "rgba(0,0,0,0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 3999,
+  },
+  previewImage: {
+    width: "100%",
+    height: "90%",
+  },
+  previewClose: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 1000,
+  },
+  dropdown: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  dropdownText: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+  },
+  dropdownPlaceholder: {
+    color: COLORS.textSecondary,
+  },
+  dropdownContainer: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    borderWidth: 1,
+  },
+  dropdownSelectedItem: {
+    backgroundColor: COLORS.gold,
+  },
+  dropdownSelectedItemLabel: {
+    color: COLORS.bg,
+    fontWeight: "600",
+  },
+  dropdownListItemLabel: {
+    color: COLORS.textPrimary,
+  },
+  dropdownSearchInput: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    color: COLORS.textPrimary,
+  },
+  counterContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: COLORS.card,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  counterLabel: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  counterControls: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  counterButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.gold,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  counterButtonText: {
+    fontSize: 18,
+    color: COLORS.bg,
+    fontWeight: "700",
+    lineHeight: 22,
+  },
+  counterValue: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    fontWeight: "700",
+    paddingHorizontal: 14,
+    minWidth: 36,
+    textAlign: "center",
+  }, videoWrapper: {
+  width: "100%",
+  height: 260,
+  marginTop: 15,
+  borderRadius: 20,
+  overflow: "hidden",
+  backgroundColor: "#000",
+  position: "relative",
+},
+
+video: {
+  width: "100%",
+  height: "100%",
+},
+
+videoOverlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "rgba(0,0,0,0.25)",
+},
+
+playButton: {
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+videoLabel: {
+  position: "absolute",
+  top: 10,
+  left: 10,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  borderRadius: 8,
+},
+
+videoLabelText: {
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: "600",
+},
+videoCard: {
+  width: "100%",
+  height: 250,
+  borderRadius: 20,
+  overflow: "hidden",
+  marginTop: 15,
+  backgroundColor: "#000",
+},
+
+videoThumbnail: {
+  width: "100%",
+  height: "100%",
+},
+
+overlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.3)",
+},
+
+playBtn: {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: [{ translateX: -25 }, { translateY: -25 }],
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+videoBadge: {
+  position: "absolute",
+  top: 12,
+  left: 12,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+  borderRadius: 8,
+},
+
+videoBadgeText: {
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: "600",
+},
+
+modalContainer: {
+  flex: 1,
+  backgroundColor: "#000",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+fullVideo: {
+  width: "100%",
+  height: "70%",
+},
+
+closeBtn: {
+  position: "absolute",
+  top: 50,
+  right: 20,
+  zIndex: 10,
+},
+  progressWrapper: {
+    height: 8,
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 6,
+    overflow: "hidden",
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: COLORS.gold,
+  },
+  progressText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginBottom: 10,
+  }
+});
