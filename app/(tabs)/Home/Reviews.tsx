@@ -5,22 +5,26 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { useTheme } from '@/context/ThemeContext';
+
 const ReviewsScreen = () => {
   const [selectedRating, setSelectedRating] = useState('All');
+  const { colors } = useTheme();
 
   return (
-    <ScrollView style={{ backgroundColor: '#fff',paddingTop:getStatusBarHeight() }}>
+    <ScrollView style={{ backgroundColor: colors.background,paddingTop:getStatusBarHeight() }}>
     
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, height: 50 }}>
-  <Ionicons name="arrow-back-circle-outline" size={29} color="black" style={{ marginLeft: 10 }} />
+  <Ionicons name="arrow-back-circle-outline" size={29} color={colors.icon} style={{ marginLeft: 10 }} />
   
   <Text style={{
     position: 'absolute',
     left: 0,
     right: 0,
     textAlign: 'center',
-    fontWeight: "bold",
-    fontSize: 22
+     fontWeight: "bold",
+    fontSize: 22,
+    color: colors.text
   }}>
     Reviews
   </Text>
@@ -30,7 +34,7 @@ const ReviewsScreen = () => {
       <PropertySummaryCard />
       <RatingFilterBar selected={selectedRating} onSelect={setSelectedRating} />
 
-      <Text style={{ fontSize: 16, fontWeight: '600', marginHorizontal: 16, marginBottom: 8 }}>
+      <Text style={{ fontSize: 16, fontWeight: '600', marginHorizontal: 16, marginBottom: 8, color: colors.text }}>
         User reviews
       </Text>
 

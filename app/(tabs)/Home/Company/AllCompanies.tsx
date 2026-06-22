@@ -9,6 +9,7 @@ import {
   Image,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -17,10 +18,11 @@ import {
 import { useToast } from "../../../../components/Toast";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import PremiumLoader from "@/components/PremiumLoader";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function AllCompanies() {
-
   const { show } = useToast();
+  const { colors } = useTheme();
   const router = useRouter();
 
   const [search, setSearch] = useState("");
@@ -33,9 +35,7 @@ export default function AllCompanies() {
      ========================================= */
 
   const fetchCompanies = async () => {
-
     try {
-
       const token = await AsyncStorage.getItem("authToken");
 
       const response = await fetch(
@@ -46,48 +46,34 @@ export default function AllCompanies() {
             "Content-Type": "application/json",
             Authorization: "Token " + (token ?? ""),
           },
-        }
+        },
       );
 
       const result = await response.json();
 
       if (result.status === "success") {
-
         setCompanies(result.companies || []);
-
       } else {
-
         show({
           type: "error",
           title: "Error",
           message: result.msg || "Failed to load companies",
         });
       }
-
     } catch (err: any) {
-
       show({
         type: "error",
         title: "Error",
         message: err.message,
       });
-
     } finally {
-
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-
-
   useEffect(() => {
-
-    Promise.all([
-      fetchCompanies(),
-
-    ]);
-
+    Promise.all([fetchCompanies()]);
   }, []);
 
   /* =========================================
@@ -104,9 +90,7 @@ export default function AllCompanies() {
      ========================================= */
 
   const filteredCompanies = useMemo(() => {
-
     return companies.filter((company) => {
-
       const searchText = search.toLowerCase();
 
       const matchesSearch =
@@ -118,12 +102,8 @@ export default function AllCompanies() {
         return false;
       }
 
-
-
       return true;
-
     });
-
   }, [companies, search]);
 
   /* =========================================
@@ -131,12 +111,7 @@ export default function AllCompanies() {
      ========================================= */
 
   if (loading) {
-
-    return (
-
-      <PremiumLoader />
-
-    );
+    return <PremiumLoader />;
   }
 
   /* =========================================
@@ -147,55 +122,51 @@ export default function AllCompanies() {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#0f2044",
+        backgroundColor: colors.background,
         paddingTop: getStatusBarHeight(),
       }}
     >
-
-
-
-
       {/* HEADER */}
       <View
         style={{
           paddingHorizontal: 20,
           paddingTop: 18,
           paddingBottom: 16,
-          backgroundColor: "#0f2044",
+          backgroundColor: colors.background,
         }}
       >
-        <View style={{
-          flexDirection: "row",
-          alignItems: "center",
-        }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
           <Ionicons
             name="arrow-back"
             size={24}
-            color="#fff"
+            color={colors.icon}
             style={{
-              marginRight: 8
+              marginRight: 8,
             }}
             onPress={() => router.back()}
           />
-
 
           <Text
             style={{
               fontSize: 18,
               fontWeight: "800",
-              color: "#fff",
+              color: colors.text,
             }}
           >
             Companies / Agents / Owners
           </Text>
-
         </View>
 
         <Text
           style={{
             marginTop: 5,
             fontSize: 14,
-            color: "#bbb",
+            color: colors.mutedText,
           }}
         >
           Discover trusted real estate companies
@@ -207,38 +178,30 @@ export default function AllCompanies() {
             marginTop: 16,
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#1a2f4a",
+            backgroundColor: colors.inputBackground,
             borderRadius: 12,
             paddingHorizontal: 14,
             height: 48,
             borderWidth: 1,
-            borderColor: "#fff",
+            borderColor: colors.border,
           }}
         >
-
-          <Ionicons
-            name="search"
-            size={18}
-            color="#c9a84c"
-          />
+          <Ionicons name="search" size={18} color={colors.buttonBackground} />
 
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Search agency, city, state..."
-            placeholderTextColor="#666"
+            placeholderTextColor={colors.mutedText}
             style={{
               flex: 1,
               marginLeft: 10,
               fontSize: 14,
-              color: "#fff",
+              color: colors.text,
             }}
           />
-
         </View>
-
       </View>
-
 
       {/* LIST */}
       <FlatList
@@ -247,13 +210,13 @@ export default function AllCompanies() {
         contentContainerStyle={{
           padding: 20,
           paddingBottom: 120,
-          backgroundColor: "#0f2044",
+          backgroundColor: colors.background,
         }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#c9a84c"
+            tintColor={colors.buttonBackground}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -264,19 +227,14 @@ export default function AllCompanies() {
               alignItems: "center",
             }}
           >
-
-            <Ionicons
-              name="business-outline"
-              size={60}
-              color="#c9a84c"
-            />
+            <Ionicons name="business-outline" size={60} color={colors.buttonBackground} />
 
             <Text
               style={{
                 marginTop: 14,
                 fontSize: 18,
                 fontWeight: "700",
-                color: "#0f2044",
+                color: colors.text,
               }}
             >
               No companies found
@@ -285,29 +243,28 @@ export default function AllCompanies() {
             <Text
               style={{
                 marginTop: 6,
-                color: "#999",
+                color: colors.mutedText,
                 textAlign: "center",
               }}
             >
               Try adjusting your search or filters
             </Text>
-
           </View>
         )}
         renderItem={({ item }) => {
+          const logo = item.profile_image || "https://via.placeholder.com/100";
+          const cover = item.company_cover_image || item.profile_image || logo;
 
-          const logo =
-            item.profile_image ||
-            "https://via.placeholder.com/100";
-
-          const cover =
-            item.company_cover_image ||
-            item.profile_image;
+          const displayName =
+            item.company_name || item.name || "Unnamed Company";
+          const locationText =
+            item.city && item.state
+              ? `${item.city}, ${item.state}`
+              : item.state || item.city || "Location not available";
 
           return (
-
             <TouchableOpacity
-              activeOpacity={0.92}
+              activeOpacity={0.9}
               onPress={() =>
                 router.push({
                   pathname: "/Home/Company/CompanyScreen",
@@ -317,30 +274,16 @@ export default function AllCompanies() {
                 })
               }
               style={{
-                marginBottom: 24,
-                borderRadius: 20,
-                backgroundColor: "#fff",
+                marginBottom: 22,
+                borderRadius: 24,
+                backgroundColor: colors.cardBackground,
                 overflow: "hidden",
-                shadowColor: "#c9a84c",
-                shadowOpacity: 0.12,
-                shadowRadius: 10,
-                shadowOffset: {
-                  width: 0,
-                  height: 3,
-                },
-                elevation: 6,
                 borderWidth: 1,
-                borderColor: "#f0ebe3",
+                borderColor: colors.border,
               }}
             >
-
-              {/* COVER IMAGE */}
-              <View
-                style={{
-                  height: 220,
-                }}
-              >
-
+              {/* COVER */}
+              <View style={{ height: 210 }}>
                 <Image
                   source={{ uri: cover }}
                   style={{
@@ -349,12 +292,8 @@ export default function AllCompanies() {
                   }}
                 />
 
-                {/* OVERLAY */}
                 <LinearGradient
-                  colors={[
-                    "transparent",
-                    "rgba(0,0,0,0.82)",
-                  ]}
+                  colors={["rgba(15,32,68,0.05)", "rgba(15,32,68,0.95)"]}
                   style={{
                     position: "absolute",
                     left: 0,
@@ -364,263 +303,269 @@ export default function AllCompanies() {
                   }}
                 />
 
-                {/* FEATURED BADGE */}
-                {item.is_featured_company == 1 && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 18,
-                      left: 18,
-                      backgroundColor: "#c9a84c",
-                      borderRadius: 20,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "#fff",
-                        fontWeight: "700",
-                        fontSize: 11,
-                      }}
-                    >
-                      FEATURED
-                    </Text>
-                  </View>
-                )}
-
-                {/* ACTIVE STATUS */}
-                {item.is_online == 1 && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 18,
-                      right: 18,
-                      backgroundColor: "#22c55e",
-                      borderRadius: 20,
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      flexDirection: "row",
-                      alignItems: "center",
-                    }}
-                  >
-
+                {/* TOP BADGES */}
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  {item.is_featured_company == 1 ? (
                     <View
                       style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: "#fff",
-                        marginRight: 5,
-                      }}
-                    />
-
-                    <Text
-                      style={{
-                        color: "#fff",
-                        fontWeight: "700",
-                        fontSize: 11,
+                        backgroundColor: "#c9a84c",
+                        borderRadius: 20,
+                        paddingHorizontal: 12,
+                        paddingVertical: 7,
+                        flexDirection: "row",
+                        alignItems: "center",
                       }}
                     >
-                      ACTIVE
-                    </Text>
+                      <Ionicons name="star" size={13} color="#091530" />
 
-                  </View>
-                )}
+                      <Text
+                        style={{
+                          marginLeft: 5,
+                          color: "#091530",
+                          fontWeight: "900",
+                          fontSize: 11,
+                        }}
+                      >
+                        FEATURED
+                      </Text>
+                    </View>
+                  ) : (
+                    <View />
+                  )}
+
+                  {item.is_online == 1 && (
+                    <View
+                      style={{
+                        backgroundColor: "rgba(34,197,94,0.95)",
+                        borderRadius: 20,
+                        paddingHorizontal: 11,
+                        paddingVertical: 7,
+                        flexDirection: "row",
+                        alignItems: "center",
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 4,
+                          backgroundColor: "#fff",
+                          marginRight: 6,
+                        }}
+                      />
+
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontWeight: "800",
+                          fontSize: 11,
+                        }}
+                      >
+                        ACTIVE
+                      </Text>
+                    </View>
+                  )}
+                </View>
 
                 {/* LOGO */}
                 <View
                   style={{
                     position: "absolute",
-                    bottom: -34,
-                    left: 20,
-                    backgroundColor: "#fff",
+                    bottom: -36,
+                    left: 18,
+                    backgroundColor: colors.cardBackground,
                     borderRadius: 22,
                     padding: 5,
+                    borderWidth: 1,
+                    borderColor: "rgba(201,168,76,0.35)",
                   }}
                 >
-
                   <Image
                     source={{ uri: logo }}
                     style={{
                       width: 74,
                       height: 74,
                       borderRadius: 18,
+                      backgroundColor: colors.inputBackground,
                     }}
                   />
-
                 </View>
-
               </View>
 
-              {/* CONTENT */}
+              {/* BODY */}
               <View
                 style={{
-                  paddingTop: 42,
-                  paddingHorizontal: 20,
-                  paddingBottom: 20,
+                  paddingTop: 48,
+                  paddingHorizontal: 18,
+                  paddingBottom: 18,
                 }}
               >
-
-                {/* COMPANY NAME */}
                 <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
                   }}
                 >
+                  <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        style={{
+                          flex: 1,
+                          fontSize: 17,
+                          fontWeight: "900",
+                          color: colors.text,
+                        }}
+                      >
+                        {displayName}
+                      </Text>
+                      {item.seller_verified == 1 && (
+                        <View style={styles.verifiedBadgeDark}>
+                          <Ionicons
+                            name="shield-checkmark"
+                            size={13}
+                            color="#22c55e"
+                          />
+                          <Text style={styles.verifiedTextDark}>Verified</Text>
+                        </View>
+                      )}
+                    </View>
 
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      flex: 1,
-                      fontSize: 20,
-                      fontWeight: "800",
-                      color: "#0f2044",
-                    }}
-                  >
-                    {item.company_name || item.name}
-                  </Text>
-
-                  {item.seller_verified == 1 && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color="#22c55e"
-                    />
-                  )}
-
+                    <Text
+                      numberOfLines={1}
+                      style={{
+                        marginTop: 5,
+                        color: colors.mutedText,
+                        fontSize: 13,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {locationText}
+                    </Text>
+                  </View>
                 </View>
 
-                {/* LOCATION */}
+                {/* NO RATING / NO REVIEWS */}
                 <View
                   style={{
+                    marginTop: 18,
                     flexDirection: "row",
                     alignItems: "center",
-                    marginTop: 8,
-                  }}
-                >
-
-                  <Ionicons
-                    name="location-outline"
-                    size={15}
-                    color="#c9a84c"
-                  />
-
-                  <Text
-                    style={{
-                      marginLeft: 5,
-                      color: "#999",
-                      fontSize: 14,
-                    }}
-                  >
-                    {item.city}, {item.state}
-                  </Text>
-
-                </View>
-
-                {/* STATS */}
-                <View
-                  style={{
-                    flexDirection: "row",
                     justifyContent: "space-between",
-                    marginTop: 24,
                     borderTopWidth: 1,
-                    borderTopColor: "#e8e5df",
-                    paddingTop: 18,
+                    borderTopColor: colors.border,
+                    paddingTop: 16,
                   }}
                 >
-
-                  {/* PROPERTIES */}
                   <View
                     style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 19,
+                        backgroundColor: "rgba(201,168,76,0.13)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 10,
+                      }}
+                    >
+                        <Ionicons name="home-outline" size={18} color={colors.buttonBackground} />
+                    </View>
+
+                    <View>
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontSize: 16,
+                          fontWeight: "900",
+                        }}
+                      >
+                        {item.properties_count || 0}
+                      </Text>
+
+                      <Text
+                        style={{
+                          color: colors.mutedText,
+                          fontSize: 12,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Listings
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      backgroundColor: colors.buttonBackground,
+                      height: 38,
+                      paddingHorizontal: 14,
+                      borderRadius: 19,
+                      flexDirection: "row",
                       alignItems: "center",
                     }}
                   >
                     <Text
                       style={{
-                        fontSize: 18,
-                        fontWeight: "800",
-                        color: "#0f2044",
-                      }}
-                    >
-                      {item.properties_count || 0}
-                    </Text>
-
-                    <Text
-                      style={{
-                        marginTop: 3,
-                        color: "#999",
+                        color: colors.background,
                         fontSize: 12,
+                        fontWeight: "900",
+                        marginRight: 6,
                       }}
                     >
-                      Listings
+                      View Profile
                     </Text>
+
+                    <Ionicons name="arrow-forward" size={15} color={colors.background} />
                   </View>
-
-                  {/* RATING */}
-                  <View
-                    style={{
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "800",
-                        color: "#c9a84c",
-                      }}
-                    >
-                      {item.average_rating || "0.0"}
-                    </Text>
-
-                    <Text
-                      style={{
-                        marginTop: 3,
-                        color: "#999",
-                        fontSize: 12,
-                      }}
-                    >
-                      Rating
-                    </Text>
-                  </View>
-
-                  {/* REVIEWS */}
-                  <View
-                    style={{
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "800",
-                        color: "#0f2044",
-                      }}
-                    >
-                      {item.review_count || 0}
-                    </Text>
-
-                    <Text
-                      style={{
-                        marginTop: 3,
-                        color: "#999",
-                        fontSize: 12,
-                      }}
-                    >
-                      Reviews
-                    </Text>
-                  </View>
-
                 </View>
-
               </View>
-
             </TouchableOpacity>
           );
         }}
       />
-
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  verifiedBadgeDark: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(34,197,94,0.12)",
+    borderRadius: 20,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "rgba(34,197,94,0.35)",
+    marginLeft: 8,
+  },
+
+  verifiedTextDark: {
+    marginLeft: 4,
+    color: "#86efac",
+    fontSize: 11,
+    fontWeight: "900",
+  },
+});

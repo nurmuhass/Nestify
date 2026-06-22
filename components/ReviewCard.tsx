@@ -2,6 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { useTheme } from '@/context/ThemeContext';
+
 interface Props {
   name: string;
   avatar: any;
@@ -11,21 +13,43 @@ interface Props {
   images?: any[];
 }
 
-const ReviewCard: React.FC<Props> = ({ name, avatar, rating, comment, time, images }) => {
+const ReviewCard: React.FC<Props> = ({
+  name,
+  avatar,
+  rating,
+  comment,
+  time,
+  images,
+}) => {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Image source={avatar} style={styles.avatar} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{name}</Text>
+          <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
           <View style={styles.ratingRow}>
             {[...Array(rating)].map((_, i) => (
-              <MaterialIcons key={i} name="star" size={14} color="#FFB800" />
+              <MaterialIcons
+                key={i}
+                name="star"
+                size={14}
+                color={colors.buttonBackground}
+              />
             ))}
           </View>
         </View>
       </View>
-      <Text style={styles.comment}>{comment}</Text>
+      <Text style={[styles.comment, { color: colors.text }]}>{comment}</Text>
       {images && (
         <View style={styles.imagesRow}>
           {images.map((img, i) => (
@@ -33,7 +57,7 @@ const ReviewCard: React.FC<Props> = ({ name, avatar, rating, comment, time, imag
           ))}
         </View>
       )}
-      <Text style={styles.time}>{time}</Text>
+      <Text style={[styles.time, { color: colors.mutedText }]}>{time}</Text>
     </View>
   );
 };
@@ -42,11 +66,11 @@ export default ReviewCard;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#F6F7FA',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     marginHorizontal: 16,
+    borderWidth: 1,
   },
   header: {
     flexDirection: 'row',
@@ -70,7 +94,6 @@ const styles = StyleSheet.create({
   comment: {
     fontSize: 13,
     marginVertical: 8,
-    color: '#333',
   },
   imagesRow: {
     flexDirection: 'row',
@@ -84,6 +107,5 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 11,
-    color: '#888',
   },
 });

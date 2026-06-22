@@ -24,6 +24,8 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { AuthContext } from '../../store';
 import { useToast } from '../../components/Toast';
+import { colorWithAlpha } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -33,6 +35,11 @@ const NAVY  = '#0f2044';
 const GOLD  = '#c9a84c';
 const MUTED = '#8a8a9a';
 const WHITE = '#ffffff';
+
+type DropdownItem = {
+  label: string;
+  value: string;
+};
 
 /* ─── Floating label input ───────────────────────────────────── */
 function FloatingInput({
@@ -52,6 +59,7 @@ function FloatingInput({
   secureTextEntry?: boolean;
   rightIcon?: React.ReactNode;
 }) {
+  const { colors } = useTheme();
   const anim    = useRef(new Animated.Value(value ? 1 : 0)).current;
   const [focused, setFocused] = useState(false);
 
@@ -68,16 +76,22 @@ function FloatingInput({
   const labelSize  = anim.interpolate({ inputRange: [0, 1], outputRange: [15, 11] });
   const labelColor = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [MUTED, focused ? GOLD : MUTED],
+    outputRange: [colors.mutedText, focused ? colors.buttonBackground : colors.mutedText],
   });
 
   return (
-    <View style={[inp.wrap, focused && inp.wrapFocused]}>
+    <View style={[
+      inp.wrap,
+      {
+        backgroundColor: colorWithAlpha(colors.cardBackground, 0.7),
+        borderColor: focused ? colors.buttonBackground : colors.border,
+      },
+    ]}>
       <Animated.Text style={[inp.label, { top: labelTop, fontSize: labelSize, color: labelColor }]}>
         {label}
       </Animated.Text>
       <TextInput
-        style={inp.field}
+        style={[inp.field, { color: colors.text }]}
         value={value}
         onChangeText={onChangeText}
         onFocus={onFocus}
@@ -130,11 +144,12 @@ const inp = StyleSheet.create({
 
 /* ─── Section label ──────────────────────────────────────────── */
 function SectionLabel({ text }: { text: string }) {
+  const { colors } = useTheme();
   return (
     <View style={sec.row}>
-      <View style={sec.line} />
-      <Text style={sec.text}>{text}</Text>
-      <View style={sec.line} />
+      <View style={[sec.line, { backgroundColor: colors.border }]} />
+      <Text style={[sec.text, { color: colors.mutedText }]}>{text}</Text>
+      <View style={[sec.line, { backgroundColor: colors.border }]} />
     </View>
   );
 }
@@ -173,6 +188,7 @@ const dropSearchStyle = {
 export default function RegisterScreen() {
   const router = useRouter();
   const { signUp } = useContext(AuthContext);
+  const { colors, isDark } = useTheme();
 
   /* ── your original state ── */
   const [name,     setName]     = useState('');
@@ -189,13 +205,32 @@ export default function RegisterScreen() {
   const [nin,            setNin]            = useState('');
 
   const [country]    = useState('NG');
-  const [state,      setState]      = useState(null);
-  const [city,       setCity]       = useState(null);
-  const [stateItems, setStateItems] = useState([]);
-  const [cityItems,  setCityItems]  = useState([]);
+  const [state,      setState]      = useState<string | null>(null);
+  const [city,       setCity]       = useState<string | null>(null);
+  const [stateItems, setStateItems] = useState<DropdownItem[]>([]);
+  const [cityItems,  setCityItems]  = useState<DropdownItem[]>([]);
   const [openState,  setOpenState]  = useState(false);
   const [openCity,   setOpenCity]   = useState(false);
   const { show } = useToast();
+
+  const themedDropStyle = {
+    ...dropStyle,
+    backgroundColor: colorWithAlpha(colors.cardBackground, 0.7),
+    borderColor: colors.border,
+  };
+  const themedDropContainerStyle = {
+    ...dropContainerStyle,
+    backgroundColor: colors.cardBackground,
+    borderColor: colors.border,
+  };
+  const themedDropTextStyle = { ...dropTextStyle, color: colors.text };
+  const themedDropPlaceholderStyle = { ...dropPlaceholderStyle, color: colors.mutedText };
+  const themedDropSearchStyle = {
+    ...dropSearchStyle,
+    backgroundColor: colors.inputBackground,
+    borderColor: colors.border,
+    color: colors.text,
+  };
 
 
   useEffect(() => {
@@ -451,7 +486,7 @@ const handleRegister = async () => {
 };
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY2} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       {/* Background photo */}
       <Image
@@ -460,7 +495,11 @@ const handleRegister = async () => {
         resizeMode="cover"
       />
       <LinearGradient
-        colors={['rgba(9,21,48,0.45)', 'rgba(9,21,48,0.80)', NAVY2]}
+        colors={[
+          colorWithAlpha(colors.background, isDark ? 0.45 : 0.35),
+          colorWithAlpha(colors.background, isDark ? 0.8 : 0.72),
+          colors.background,
+        ]}
         locations={[0, 0.4, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -475,29 +514,29 @@ const handleRegister = async () => {
           showsVerticalScrollIndicator={false}
         >
           {/* Back button */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color={WHITE} />
+          <TouchableOpacity style={[styles.backBtn, { backgroundColor: colorWithAlpha(colors.cardBackground, 0.68) }]} onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={20} color={colors.text} />
           </TouchableOpacity>
 
           {/* Logo */}
           <View style={styles.logoWrap}>
-            <View style={styles.logoRing}>
-              <Ionicons name="home" size={24} color={GOLD} />
+            <View style={[styles.logoRing, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.15), borderColor: colorWithAlpha(colors.buttonBackground, 0.4) }]}>
+              <Ionicons name="home" size={24} color={colors.buttonBackground} />
             </View>
-            <Text style={styles.logoText}>Nestify</Text>
+            <Text style={[styles.logoText, { color: colors.text }]}>Nestify</Text>
           </View>
 
           {/* Hero */}
-          <Text style={styles.headline}>Create{'\n'}Account.</Text>
-          <Text style={styles.sub}>
+          <Text style={[styles.headline, { color: colors.text }]}>Create{'\n'}Account.</Text>
+          <Text style={[styles.sub, { color: colors.mutedText }]}>
             Join thousands finding their perfect home in Nigeria.
           </Text>
 
           {/* Divider */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           {/* ── Personal info ── */}
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colorWithAlpha(colors.cardBackground, 0.72), borderColor: colors.border }]}>
             <SectionLabel text="Personal Information" />
 
             <FloatingInput
@@ -528,7 +567,7 @@ const handleRegister = async () => {
                   <Entypo
                     name={showPw ? 'eye' : 'eye-with-line'}
                     size={20}
-                    color={MUTED}
+                    color={colors.mutedText}
                   />
                 </TouchableOpacity>
               }
@@ -553,21 +592,21 @@ const handleRegister = async () => {
               searchable
               zIndex={3000}
               zIndexInverse={1000}
-              style={dropStyle}
-              dropDownContainerStyle={dropContainerStyle}
-              textStyle={dropTextStyle}
-              placeholderStyle={dropPlaceholderStyle}
-              searchTextInputStyle={dropSearchStyle}
-              searchContainerStyle={{ borderBottomColor: 'rgba(255,255,255,0.08)' }}
+              style={themedDropStyle}
+              dropDownContainerStyle={themedDropContainerStyle}
+              textStyle={themedDropTextStyle}
+              placeholderStyle={themedDropPlaceholderStyle}
+              searchTextInputStyle={themedDropSearchStyle}
+              searchContainerStyle={{ borderBottomColor: colors.border }}
               ArrowDownIconComponent={() => (
-                <Ionicons name="chevron-down" size={16} color={MUTED} />
+                <Ionicons name="chevron-down" size={16} color={colors.mutedText} />
               )}
               ArrowUpIconComponent={() => (
-                <Ionicons name="chevron-up" size={16} color={GOLD} />
+                <Ionicons name="chevron-up" size={16} color={colors.buttonBackground} />
               )}
               listItemContainerStyle={{ backgroundColor: 'transparent' }}
-              selectedItemContainerStyle={{ backgroundColor: 'rgba(201,168,76,0.12)' }}
-              selectedItemLabelStyle={{ color: GOLD, fontWeight: '600' }}
+              selectedItemContainerStyle={{ backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12) }}
+              selectedItemLabelStyle={{ color: colors.buttonBackground, fontWeight: '600' }}
             />
 
             {/* City dropdown */}
@@ -586,46 +625,46 @@ const handleRegister = async () => {
               searchable
               zIndex={2000}
               zIndexInverse={2000}
-              style={dropStyle}
-              dropDownContainerStyle={dropContainerStyle}
-              textStyle={dropTextStyle}
-              placeholderStyle={dropPlaceholderStyle}
-              searchTextInputStyle={dropSearchStyle}
-              searchContainerStyle={{ borderBottomColor: 'rgba(255,255,255,0.08)' }}
+              style={themedDropStyle}
+              dropDownContainerStyle={themedDropContainerStyle}
+              textStyle={themedDropTextStyle}
+              placeholderStyle={themedDropPlaceholderStyle}
+              searchTextInputStyle={themedDropSearchStyle}
+              searchContainerStyle={{ borderBottomColor: colors.border }}
               ArrowDownIconComponent={() => (
-                <Ionicons name="chevron-down" size={16} color={MUTED} />
+                <Ionicons name="chevron-down" size={16} color={colors.mutedText} />
               )}
               ArrowUpIconComponent={() => (
-                <Ionicons name="chevron-up" size={16} color={GOLD} />
+                <Ionicons name="chevron-up" size={16} color={colors.buttonBackground} />
               )}
               listItemContainerStyle={{ backgroundColor: 'transparent' }}
-              selectedItemContainerStyle={{ backgroundColor: 'rgba(201,168,76,0.12)' }}
-              selectedItemLabelStyle={{ color: GOLD, fontWeight: '600' }}
+              selectedItemContainerStyle={{ backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12) }}
+              selectedItemLabelStyle={{ color: colors.buttonBackground, fontWeight: '600' }}
             />
           </View>
 
           {/* ── Company/Agent toggle ── */}
-          <View style={styles.toggleCard}>
+          <View style={[styles.toggleCard, { backgroundColor: colorWithAlpha(colors.cardBackground, 0.72), borderColor: colors.border }]}>
             <View style={styles.toggleLeft}>
-              <View style={styles.toggleIcon}>
-                <Ionicons name="business-outline" size={18} color={GOLD} />
+              <View style={[styles.toggleIcon, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12) }]}>
+                <Ionicons name="business-outline" size={18} color={colors.buttonBackground} />
               </View>
               <View>
-                <Text style={styles.toggleLabel}>Company / Agent / Owner</Text>
-                <Text style={styles.toggleSub}>Register as a real estate company agent or Property Owner</Text>
+                <Text style={[styles.toggleLabel, { color: colors.text }]}>Company / Agent / Owner</Text>
+                <Text style={[styles.toggleSub, { color: colors.mutedText }]}>Register as a real estate company agent or Property Owner</Text>
               </View>
             </View>
             <Switch
               value={isSeller}
               onValueChange={setIsSeller}
-              trackColor={{ false: 'rgba(255,255,255,0.15)', true: 'rgba(201,168,76,0.5)' }}
-              thumbColor={isSeller ? GOLD : 'rgba(255,255,255,0.6)'}
+              trackColor={{ false: colorWithAlpha(colors.mutedText, 0.22), true: colorWithAlpha(colors.buttonBackground, 0.5) }}
+              thumbColor={isSeller ? colors.buttonBackground : colors.cardBackground}
             />
           </View>
 
           {/* ── Seller type selection ── */}
           {isSeller && (
-            <View style={[styles.card, { marginTop: 12 }]}>
+            <View style={[styles.card, { marginTop: 12, backgroundColor: colorWithAlpha(colors.cardBackground, 0.72), borderColor: colors.border }]}>
               <SectionLabel text="Seller Type" />
               <View style={styles.sellerTypeContainer}>
                 {['company', 'agent', 'owner'].map((type) => (
@@ -633,7 +672,10 @@ const handleRegister = async () => {
                     key={type}
                     style={[
                       styles.sellerTypeBtn,
-                      sellerType === type && styles.sellerTypeBtnActive,
+                      {
+                        backgroundColor: sellerType === type ? colors.buttonBackground : colorWithAlpha(colors.cardBackground, 0.7),
+                        borderColor: sellerType === type ? colors.buttonBackground : colorWithAlpha(colors.buttonBackground, 0.4),
+                      },
                     ]}
                     onPress={() => {
                       setSellerType(type as 'company' | 'agent' | 'owner');
@@ -646,13 +688,13 @@ const handleRegister = async () => {
                     <Ionicons
                       name={type === 'company' ? 'business' : type === 'agent' ? 'briefcase' : 'person'}
                       size={16}
-                      color={sellerType === type ? NAVY2 : GOLD}
+                      color={sellerType === type ? colors.background : colors.buttonBackground}
                       style={{ marginRight: 6 }}
                     />
                     <Text
                       style={[
                         styles.sellerTypeBtnText,
-                        sellerType === type && styles.sellerTypeBtnTextActive,
+                        { color: sellerType === type ? colors.background : colors.buttonBackground },
                       ]}
                     >
                       {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -665,7 +707,7 @@ const handleRegister = async () => {
 
           {/* ── Company Details ── */}
           {isSeller && sellerType === 'company' && (
-            <View style={[styles.card, { marginTop: 12 }]}>
+            <View style={[styles.card, { marginTop: 12, backgroundColor: colorWithAlpha(colors.cardBackground, 0.72), borderColor: colors.border }]}>
               <SectionLabel text="Company Information" />
               <FloatingInput
                 label="Company Name"
@@ -684,7 +726,7 @@ const handleRegister = async () => {
 
           {/* ── Agent / Owner Details ── */}
           {isSeller && (sellerType === 'agent' || sellerType === 'owner') && (
-            <View style={[styles.card, { marginTop: 12 }]}>
+            <View style={[styles.card, { marginTop: 12, backgroundColor: colorWithAlpha(colors.cardBackground, 0.72), borderColor: colors.border }]}>
               <SectionLabel text={sellerType === 'agent' ? 'Agent Information' : 'Owner Information'} />
               <FloatingInput
                 label="NIN (National ID Number)"
@@ -697,38 +739,38 @@ const handleRegister = async () => {
 
           {/* ── Register button ── */}
           <TouchableOpacity
-            style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
+            style={[styles.primaryBtn, { backgroundColor: colors.buttonBackground }, loading && styles.primaryBtnDisabled]}
             onPress={handleRegister}
             disabled={loading}
             activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color={NAVY2} size="small" />
+              <ActivityIndicator color={colors.background} size="small" />
             ) : (
               <>
-                <Text style={styles.primaryBtnText}>Create Account</Text>
-                <Ionicons name="arrow-forward" size={18} color={NAVY2} />
+                <Text style={[styles.primaryBtnText, { color: colors.background }]}>Create Account</Text>
+                <Ionicons name="arrow-forward" size={18} color={colors.background} />
               </>
             )}
           </TouchableOpacity>
 
           {/* Login link */}
           <TouchableOpacity
-            style={styles.outlineBtn}
+            style={[styles.outlineBtn, { borderColor: colors.border }]}
             onPress={() => router.replace('./Login')}
             activeOpacity={0.8}
           >
-            <Text style={styles.outlineBtnText}>
+            <Text style={[styles.outlineBtnText, { color: colors.mutedText }]}>
               Already have an account?{' '}
-              <Text style={{ color: GOLD, fontWeight: '700' }}>Sign In</Text>
+              <Text style={{ color: colors.buttonBackground, fontWeight: '700' }}>Sign In</Text>
             </Text>
           </TouchableOpacity>
 
-          <Text style={styles.terms}>
+          <Text style={[styles.terms, { color: colors.mutedText }]}>
             By registering you agree to our{' '}
-            <Text style={{ color: GOLD }}>Terms of Service</Text>
+            <Text style={{ color: colors.buttonBackground }}>Terms of Service</Text>
             {' & '}
-            <Text style={{ color: GOLD }}>Privacy Policy</Text>
+            <Text style={{ color: colors.buttonBackground }}>Privacy Policy</Text>
           </Text>
 
           <View style={{ height: 40 }} />

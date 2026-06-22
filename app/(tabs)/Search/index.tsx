@@ -20,6 +20,8 @@ import {
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { useToast } from '../../../components/Toast';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type Property = {
@@ -71,17 +73,20 @@ const RecentPill = ({
     label: string;
     onPress: () => void;
     onRemove: () => void;
-}) => (
-    <TouchableOpacity style={styles.pill} onPress={onPress} activeOpacity={0.7}>
-        <Ionicons name="time-outline" size={13} color="#94a3b8" style={{ marginRight: 5 }} />
-        <Text style={styles.pillText} numberOfLines={1}>
+}) => {
+    const { colors } = useTheme();
+    return (
+    <TouchableOpacity style={[styles.pill, { backgroundColor: colors.cardBackground, borderColor: colors.border }]} onPress={onPress} activeOpacity={0.7}>
+        <Ionicons name="time-outline" size={13} color={colors.mutedText} style={{ marginRight: 5 }} />
+        <Text style={[styles.pillText, { color: colors.text }]} numberOfLines={1}>
             {label}
         </Text>
         <TouchableOpacity onPress={onRemove} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="close" size={13} color="#94a3b8" style={{ marginLeft: 6 }} />
+            <Ionicons name="close" size={13} color={colors.mutedText} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
     </TouchableOpacity>
-);
+    );
+};
 
 /* ─── Property result card ───────────────────────────────────── */
 const PropertyCard = ({
@@ -91,6 +96,7 @@ const PropertyCard = ({
     item: Property;
     index: number;
 }) => {
+    const { colors } = useTheme();
 
     const anim = useRef(new Animated.Value(0)).current;
 
@@ -136,7 +142,7 @@ const PropertyCard = ({
         >
             <TouchableOpacity
                 activeOpacity={0.9}
-                style={styles.newCard}
+                style={[styles.newCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 onPress={() =>
                     router.push({
                         pathname: '/Home/Properties/Details',
@@ -146,7 +152,7 @@ const PropertyCard = ({
             >
 
                 {/* IMAGE */}
-                <View style={styles.newImageWrap}>
+                <View style={[styles.newImageWrap, { backgroundColor: colors.inputBackground }]}>
 
                     {thumb ? (
                         <Image
@@ -155,18 +161,18 @@ const PropertyCard = ({
                             resizeMode="cover"
                         />
                     ) : (
-                        <View style={styles.newFallback}>
+                        <View style={[styles.newFallback, { backgroundColor: colors.inputBackground }]}>
                             <Ionicons
                                 name="home-outline"
                                 size={34}
-                                color="#94a3b8"
+                                color={colors.mutedText}
                             />
                         </View>
                     )}
 
                     {/* TYPE BADGE */}
-                    <View style={styles.typeBadge}>
-                        <Text style={styles.typeBadgeText}>
+                    <View style={[styles.typeBadge, { backgroundColor: colors.buttonBackground }]}>
+                        <Text style={[styles.typeBadgeText, { color: colors.background }]}>
                             {tag}
                         </Text>
                     </View>
@@ -177,9 +183,9 @@ const PropertyCard = ({
                             <Ionicons
                                 name="diamond"
                                 size={11}
-                                color="#091530"
+                                color={colors.background}
                             />
-                            <Text style={styles.premiumPillText}>
+                            <Text style={[styles.premiumPillText, { color: colors.background }]}>
                                 Premium
                             </Text>
                         </View>
@@ -193,14 +199,14 @@ const PropertyCard = ({
                     {/* TITLE */}
                     <Text
                         numberOfLines={2}
-                        style={styles.newTitle}
+                        style={[styles.newTitle, { color: colors.text }]}
                     >
                         {item.propertyName}
                     </Text>
 
                     {/* COMPANY */}
                     {item.company_name ? (
-                        <Text style={styles.newCompany}>
+                        <Text style={[styles.newCompany, { color: colors.mutedText }]}>
                             {item.company_name}
                         </Text>
                     ) : null}
@@ -210,12 +216,12 @@ const PropertyCard = ({
                         <Ionicons
                             name="location-outline"
                             size={14}
-                            color="#94a3b8"
+                            color={colors.mutedText}
                         />
 
                         <Text
                             numberOfLines={1}
-                            style={styles.locationText}
+                            style={[styles.locationText, { color: colors.mutedText }]}
                         >
                             {[item.city, item.state]
                                 .filter(Boolean)
@@ -227,26 +233,26 @@ const PropertyCard = ({
                     <View style={styles.featuresRow}>
 
                         {item.bedrooms ? (
-                            <View style={styles.featureBox}>
+                            <View style={[styles.featureBox, { backgroundColor: colors.inputBackground }]}>
                                 <MaterialCommunityIcons
                                     name="bed-outline"
                                     size={14}
-                                    color="#cbd5e1"
+                                    color={colors.icon}
                                 />
-                                <Text style={styles.featureValue}>
+                                <Text style={[styles.featureValue, { color: colors.text }]}>
                                     {item.bedrooms} Beds
                                 </Text>
                             </View>
                         ) : null}
 
                         {item.bathrooms ? (
-                            <View style={styles.featureBox}>
+                            <View style={[styles.featureBox, { backgroundColor: colors.inputBackground }]}>
                                 <MaterialCommunityIcons
                                     name="shower"
                                     size={14}
-                                    color="#cbd5e1"
+                                    color={colors.icon}
                                 />
-                                <Text style={styles.featureValue}>
+                                <Text style={[styles.featureValue, { color: colors.text }]}>
                                     {item.bathrooms} Baths
                                 </Text>
                             </View>
@@ -258,11 +264,11 @@ const PropertyCard = ({
                     <View style={styles.cardFooter}>
 
                         <View>
-                            <Text style={styles.priceLabel}>
+                            <Text style={[styles.priceLabel, { color: colors.mutedText }]}>
                                 Price
                             </Text>
 
-                            <Text style={styles.newPrice}>
+                            <Text style={[styles.newPrice, { color: colors.buttonBackground }]}>
                                 {price}
                             </Text>
                         </View>
@@ -273,9 +279,9 @@ const PropertyCard = ({
                                 <Ionicons
                                     name="eye-outline"
                                     size={14}
-                                    color="#94a3b8"
+                                    color={colors.mutedText}
                                 />
-                                <Text style={styles.statText}>
+                                <Text style={[styles.statText, { color: colors.mutedText }]}>
                                     {item.views_count || 0}
                                 </Text>
                             </View>
@@ -284,9 +290,9 @@ const PropertyCard = ({
                                 <Ionicons
                                     name="heart-outline"
                                     size={14}
-                                    color="#94a3b8"
+                                    color={colors.mutedText}
                                 />
-                                <Text style={styles.statText}>
+                                <Text style={[styles.statText, { color: colors.mutedText }]}>
                                     {item.likes_count || 0}
                                 </Text>
                             </View>
@@ -310,6 +316,7 @@ const CompanyCard = ({
     item: Property;
     index: number;
 }) => {
+    const { colors } = useTheme();
 
     const anim = useRef(
         new Animated.Value(0)
@@ -344,7 +351,7 @@ const CompanyCard = ({
 
             <TouchableOpacity
                 activeOpacity={0.88}
-                style={styles.companyCard}
+                style={[styles.companyCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 onPress={() => {
 
                     router.push({
@@ -359,12 +366,12 @@ const CompanyCard = ({
 
                 {/* AVATAR */}
 
-                <View style={styles.companyAvatar}>
+                <View style={[styles.companyAvatar, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.14) }]}>
 
                     <Ionicons
                         name="business-outline"
                         size={28}
-                        color="#f0d98a"
+                        color={colors.buttonBackground}
                     />
 
                 </View>
@@ -377,7 +384,7 @@ const CompanyCard = ({
 
                         <Text
                             numberOfLines={1}
-                            style={styles.companyCardName}
+                            style={[styles.companyCardName, { color: colors.text }]}
                         >
                             {item.company_name}
                         </Text>
@@ -387,7 +394,7 @@ const CompanyCard = ({
                                 <Ionicons
                                     name="diamond"
                                     size={10}
-                                    color="#091530"
+                                    color={colors.background}
                                 />
                             </View>
                         )}
@@ -396,7 +403,7 @@ const CompanyCard = ({
 
                     <Text
                         numberOfLines={2}
-                        style={styles.companySub}
+                        style={[styles.companySub, { color: colors.mutedText }]}
                     >
                         Real estate company
                     </Text>
@@ -407,9 +414,9 @@ const CompanyCard = ({
                             <Ionicons
                                 name="home-outline"
                                 size={13}
-                                color="#94a3b8"
+                                color={colors.mutedText}
                             />
-                            <Text style={styles.companyStatText}>
+                            <Text style={[styles.companyStatText, { color: colors.mutedText }]}>
                                 Listings Available
                             </Text>
                         </View>
@@ -421,7 +428,7 @@ const CompanyCard = ({
                 <Ionicons
                     name="chevron-forward"
                     size={18}
-                    color="#64748b"
+                    color={colors.mutedText}
                 />
 
             </TouchableOpacity>
@@ -431,6 +438,7 @@ const CompanyCard = ({
 };
 /* ─── Main Screen ────────────────────────────────────────────── */
 export default function SearchScreen() {
+    const { colors } = useTheme();
     const { show } = useToast();
     const inputRef = useRef<TextInput>(null);
 
@@ -626,27 +634,27 @@ export default function SearchScreen() {
 
     const borderColor = borderAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: ['#e2e8f0', '#3b82f6'],
+        outputRange: [colors.border, colors.buttonBackground],
     });
 
     return (
         <KeyboardAvoidingView
-            style={styles.root}
+            style={[styles.root, { backgroundColor: colors.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             {/* ── Top bar ── */}
-            <View style={styles.topBar}>
-                <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={20} color="#fff" />
+            <View style={[styles.topBar, { backgroundColor: colors.background }]}>
+                <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.cardBackground }]} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={20} color={colors.icon} />
                 </TouchableOpacity>
 
-                <Animated.View style={[styles.searchBox, { borderColor }]}>
-                    <Ionicons name="search" size={17} color={query ? '#3b82f6' : '#94a3b8'} />
+                <Animated.View style={[styles.searchBox, { borderColor, backgroundColor: colors.cardBackground }]}>
+                    <Ionicons name="search" size={17} color={query ? colors.buttonBackground : colors.mutedText} />
                     <TextInput
                         ref={inputRef}
-                        style={styles.searchInput}
+                        style={[styles.searchInput, { color: colors.text }]}
                         placeholder="Search properties, cities…"
-                        placeholderTextColor="#94a3b8"
+                        placeholderTextColor={colors.mutedText}
                         value={query}
                         onChangeText={setQuery}
                         onSubmitEditing={handleSubmit}
@@ -658,15 +666,15 @@ export default function SearchScreen() {
                     />
                     {query.length > 0 && (
                         <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                            <View style={styles.clearBtn}>
-                                <Ionicons name="close" size={12} color="#fff" />
+                            <View style={[styles.clearBtn, { backgroundColor: colors.buttonBackground }]}>
+                                <Ionicons name="close" size={12} color={colors.background} />
                             </View>
                         </TouchableOpacity>
                     )}
                 </Animated.View>
             </View>
 
-            <View style={styles.searchTypeWrap}>
+            <View style={[styles.searchTypeWrap, { backgroundColor: colors.background }]}>
 
                 {[
                     { key: 'all', label: 'All' },
@@ -681,14 +689,15 @@ export default function SearchScreen() {
                             key={item.key}
                             style={[
                                 styles.searchTypeBtn,
-                                active && styles.searchTypeBtnActive
+                                { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                                active && { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground }
                             ]}
                             onPress={() => setSearchType(item.key as any)}
                         >
                             <Text
                                 style={[
                                     styles.searchTypeText,
-                                    active && styles.searchTypeTextActive
+                                    { color: active ? colors.background : colors.mutedText }
                                 ]}
                             >
                                 {item.label}
@@ -699,15 +708,19 @@ export default function SearchScreen() {
             </View>
 
             {/* ── Filter chips ── */}
-            <View style={styles.filters}>
+            <View style={[styles.filters, { backgroundColor: colors.background }]}>
                 {FILTERS.map((f) => (
                     <TouchableOpacity
                         key={f}
-                        style={[styles.filterChip, activeFilter === f && styles.filterChipActive]}
+                        style={[
+                            styles.filterChip,
+                            { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                            activeFilter === f && { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground },
+                        ]}
                         onPress={() => setFilter(f)}
                         activeOpacity={0.75}
                     >
-                        <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>
+                        <Text style={[styles.filterText, { color: activeFilter === f ? colors.background : colors.mutedText }]}>
                             {f === 'All' ? 'All types' : `For ${f}`}
                         </Text>
                     </TouchableOpacity>
@@ -715,8 +728,8 @@ export default function SearchScreen() {
 
                 {/* Result count badge */}
                 {query.trim().length > 0 && (
-                    <View style={styles.countBadge}>
-                        <Text style={styles.countText}>
+                    <View style={[styles.countBadge, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                        <Text style={[styles.countText, { color: colors.mutedText }]}>
                             {results.length} {results.length === 1 ? 'result' : 'results'}
                         </Text>
                     </View>
@@ -724,7 +737,7 @@ export default function SearchScreen() {
             </View>
 
             <TouchableOpacity
-                style={styles.advancedBtn}
+                style={[styles.advancedBtn, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 onPress={() =>
                     setShowAdvancedFilters(!showAdvancedFilters)
                 }
@@ -733,10 +746,10 @@ export default function SearchScreen() {
                 <Ionicons
                     name="options-outline"
                     size={18}
-                    color="#f0d98a"
+                    color={colors.buttonBackground}
                 />
 
-                <Text style={styles.advancedBtnText}>
+                <Text style={[styles.advancedBtnText, { color: colors.buttonBackground }]}>
                     Advanced Filters
                 </Text>
 
@@ -744,7 +757,7 @@ export default function SearchScreen() {
 
             {showAdvancedFilters && (
 
-                <View style={styles.advancedPanel}>
+                <View style={[styles.advancedPanel, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
 
                     {/* PRICE */}
 
@@ -752,20 +765,20 @@ export default function SearchScreen() {
 
                         <TextInput
                             placeholder="Min Price"
-                            placeholderTextColor="#64748b"
+                            placeholderTextColor={colors.mutedText}
                             value={minPrice}
                             onChangeText={setMinPrice}
                             keyboardType="numeric"
-                            style={styles.priceInput}
+                            style={[styles.priceInput, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
                         />
 
                         <TextInput
                             placeholder="Max Price"
-                            placeholderTextColor="#64748b"
+                            placeholderTextColor={colors.mutedText}
                             value={maxPrice}
                             onChangeText={setMaxPrice}
                             keyboardType="numeric"
-                            style={styles.priceInput}
+                            style={[styles.priceInput, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
                         />
 
                     </View>
@@ -788,8 +801,8 @@ export default function SearchScreen() {
                                     key={b}
                                     style={[
                                         styles.bedroomChip,
-                                        active &&
-                                        styles.bedroomChipActive
+                                        { backgroundColor: colors.inputBackground, borderColor: colors.border },
+                                        active && { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground }
                                     ]}
                                     onPress={() =>
                                         setBedroomFilter(b)
@@ -798,8 +811,7 @@ export default function SearchScreen() {
                                     <Text
                                         style={[
                                             styles.bedroomText,
-                                            active &&
-                                            styles.bedroomTextActive
+                                            { color: active ? colors.background : colors.mutedText }
                                         ]}
                                     >
                                         {b} Beds
@@ -826,10 +838,10 @@ export default function SearchScreen() {
                                     : 'square-outline'
                             }
                             size={20}
-                            color="#c9a84c"
+                            color={colors.buttonBackground}
                         />
 
-                        <Text style={styles.premiumFilterText}>
+                        <Text style={[styles.premiumFilterText, { color: colors.text }]}>
                             Premium listings only
                         </Text>
 
@@ -839,29 +851,29 @@ export default function SearchScreen() {
             )}
 
             {/* ── Divider ── */}
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             {/* ── Body ── */}
             {loading || searching ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color="#c9a84c" />
-                    <Text style={styles.loadingText}>Finding properties…</Text>
+                <View style={[styles.center, { backgroundColor: colors.background }]}>
+                    <ActivityIndicator size="large" color={colors.buttonBackground} />
+                    <Text style={[styles.loadingText, { color: colors.mutedText }]}>Finding properties…</Text>
                 </View>
 
             ) : isIdle ? (
                 /* Recent searches */
-                <View style={styles.idleWrap}>
+                <View style={[styles.idleWrap, { backgroundColor: colors.background }]}>
                     {recent.length > 0 ? (
                         <>
                             <View style={styles.idleHeader}>
-                                <Text style={styles.idleTitle}>Recent searches</Text>
+                                <Text style={[styles.idleTitle, { color: colors.text }]}>Recent searches</Text>
                                 <TouchableOpacity
                                     onPress={async () => {
                                         setRecent([]);
                                         await AsyncStorage.removeItem(RECENT_KEY);
                                     }}
                                 >
-                                    <Text style={styles.clearAll}>Clear all</Text>
+                                    <Text style={[styles.clearAll, { color: colors.buttonBackground }]}>Clear all</Text>
                                 </TouchableOpacity>
                             </View>
                             <View style={styles.pillsWrap}>
@@ -879,11 +891,11 @@ export default function SearchScreen() {
 
                     {/* Prompt illustration */}
                     <View style={styles.promptWrap}>
-                        <View style={styles.promptIcon}>
-                            <Ionicons name="search" size={32} color="#3b82f6" />
+                        <View style={[styles.promptIcon, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12) }]}>
+                            <Ionicons name="search" size={32} color={colors.buttonBackground} />
                         </View>
-                        <Text style={styles.promptTitle}>Find your next home</Text>
-                        <Text style={styles.promptSub}>
+                        <Text style={[styles.promptTitle, { color: colors.text }]}>Find your next home</Text>
+                        <Text style={[styles.promptSub, { color: colors.mutedText }]}>
                             Search by property name, city, or state across thousands of listings.
                         </Text>
                     </View>
@@ -891,17 +903,17 @@ export default function SearchScreen() {
 
             ) : isEmpty ? (
                 /* No results */
-                <View style={styles.center}>
-                    <View style={styles.emptyIcon}>
-                        <Ionicons name="home-outline" size={34} color="#94a3b8" />
+                <View style={[styles.center, { backgroundColor: colors.background }]}>
+                    <View style={[styles.emptyIcon, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                        <Ionicons name="home-outline" size={34} color={colors.mutedText} />
                     </View>
-                    <Text style={styles.emptyTitle}>No search results</Text>
-                    <Text style={styles.emptySub}>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>No search results</Text>
+                    <Text style={[styles.emptySub, { color: colors.mutedText }]}>
                         No results for{' '}
-                        <Text style={{ color: '#fff', fontWeight: '600' }}>"{query}"</Text>
+                        <Text style={{ color: colors.text, fontWeight: '600' }}>"{query}"</Text>
                     </Text>
-                    <TouchableOpacity style={styles.emptyReset} onPress={() => setQuery('')}>
-                        <Text style={styles.emptyResetText}>Clear search</Text>
+                    <TouchableOpacity style={[styles.emptyReset, { backgroundColor: colors.buttonBackground }]} onPress={() => setQuery('')}>
+                        <Text style={[styles.emptyResetText, { color: colors.background }]}>Clear search</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -931,7 +943,7 @@ export default function SearchScreen() {
                             />
                         );
                     }}
-                    contentContainerStyle={styles.listContent}
+                    contentContainerStyle={[styles.listContent, { backgroundColor: colors.background }]}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                     ItemSeparatorComponent={() => <View style={{ height: 10 }} />}

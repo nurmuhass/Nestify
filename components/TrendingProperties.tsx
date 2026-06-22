@@ -22,6 +22,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -45,6 +47,7 @@ export default function TrendingProperties({
     properties = [],
 }: Props) {
     const router = useRouter();
+    const { colors } = useTheme();
 
     /*
     ─────────────────────────────────────────
@@ -91,15 +94,15 @@ export default function TrendingProperties({
                         <MaterialCommunityIcons
                             name="fire"
                             size={24}
-                            color="#ff7b00"
+                            color={colors.warning}
                         />
 
-                        <Text style={styles.title}>
+                        <Text style={[styles.title, { color: colors.text }]}>
                             Trending Now
                         </Text>
                     </View>
 
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.subtitle, { color: colors.mutedText }]}>
                         {premiumCount} premium listings
                         trending near you
                     </Text>
@@ -112,7 +115,7 @@ export default function TrendingProperties({
                         )
                     }
                 >
-                    <Text style={styles.viewAll}>
+                    <Text style={[styles.viewAll, { color: colors.buttonBackground }]}>
                         View all
                     </Text>
                 </TouchableOpacity>
@@ -162,8 +165,8 @@ export default function TrendingProperties({
                             <LinearGradient
                                 colors={
                                     isPremium
-                                        ? ['#172554', '#0f172a']
-                                        : ['#0f2044', '#0b1733']
+                                        ? [colors.cardBackground, colors.background]
+                                        : [colors.cardBackground, colors.background]
                                 }
                                 style={styles.card}
                             >
@@ -182,10 +185,7 @@ export default function TrendingProperties({
                                         <View
                                             style={[
                                                 styles.image,
-                                                {
-                                                    backgroundColor:
-                                                        '#1e293b',
-                                                },
+                                                { backgroundColor: colors.inputBackground },
                                             ]}
                                         />
                                     )}
@@ -219,13 +219,11 @@ export default function TrendingProperties({
                                             <Ionicons
                                                 name="diamond"
                                                 size={13}
-                                                color="#fff"
+                                                color={colors.background}
                                             />
 
                                             <Text
-                                                style={
-                                                    styles.premiumText
-                                                }
+                                                style={[styles.premiumText, { color: colors.background }]}
                                             >
                                                 PREMIUM
                                             </Text>
@@ -243,13 +241,11 @@ export default function TrendingProperties({
                                             <Ionicons
                                                 name="star"
                                                 size={12}
-                                                color="#fff"
+                                                color={colors.background}
                                             />
 
                                             <Text
-                                                style={
-                                                    styles.featuredText
-                                                }
+                                                style={[styles.featuredText, { color: colors.background }]}
                                             >
                                                 FEATURED
                                             </Text>
@@ -262,19 +258,19 @@ export default function TrendingProperties({
                                 <View style={styles.content}>
                                     <Text
                                         numberOfLines={1}
-                                        style={styles.name}
+                                        style={[styles.name, { color: colors.text }]}
                                     >
                                         {item.propertyName}
                                     </Text>
 
                                     <Text
-                                        style={styles.location}
+                                        style={[styles.location, { color: colors.mutedText }]}
                                         numberOfLines={1}
                                     >
                                         {item.city}, {item.state}
                                     </Text>
 
-                                    <Text style={styles.price}>
+                                    <Text style={[styles.price, { color: colors.warning }]}>
                                         ₦
                                         {item.sellPrice
                                             ? formatPrice(
@@ -288,16 +284,16 @@ export default function TrendingProperties({
                                     {/* STATS */}
 
                                     <View style={styles.statsRow}>
-                                        <View style={styles.stat}>
+                                        <View style={[styles.stat, { backgroundColor: colorWithAlpha(colors.inputBackground, 0.7) }]}>
                                             <Ionicons
                                                 name="eye-outline"
                                                 size={14}
-                                                color="#cbd5e1"
+                                                color={colors.icon}
                                             />
 
                                             <Text
                                                 style={
-                                                    styles.statText
+                                                    [styles.statText, { color: colors.text }]
                                                 }
                                             >
                                                 {item.views_count ||
@@ -305,7 +301,7 @@ export default function TrendingProperties({
                                             </Text>
                                         </View>
 
-                                        <View style={styles.stat}>
+                                        <View style={[styles.stat, { backgroundColor: colorWithAlpha(colors.inputBackground, 0.7) }]}>
                                             <Ionicons
                                                 name="heart"
                                                 size={13}
@@ -314,7 +310,7 @@ export default function TrendingProperties({
 
                                             <Text
                                                 style={
-                                                    styles.statText
+                                                    [styles.statText, { color: colors.text }]
                                                 }
                                             >
                                                 {item.likes_count ||
@@ -324,19 +320,17 @@ export default function TrendingProperties({
 
                                         {isBoosted && (
                                             <View
-                                                style={
-                                                    styles.boosted
-                                                }
+                                                style={[styles.boosted, { backgroundColor: colors.warning }]}
                                             >
                                                 <MaterialCommunityIcons
                                                     name="rocket-launch"
                                                     size={12}
-                                                    color="#fff"
+                                                    color={colors.background}
                                                 />
 
                                                 <Text
                                                     style={
-                                                        styles.boostedText
+                                                        [styles.boostedText, { color: colors.background }]
                                                     }
                                                 >
                                                     Boosted

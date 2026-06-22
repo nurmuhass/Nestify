@@ -19,6 +19,8 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { useToast } from '@/components/Toast';
 import { CompanyReview, useCompanyReviews } from '@/hooks/useCompanyReviews';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const COLORS = {
   bg: '#091530',
@@ -51,6 +53,7 @@ const formatTime = (d: string) => {
 
 export default function CompanyReviewsScreen() {
   const { show } = useToast();
+  const { colors } = useTheme();
   const router = useRouter();
   const { company_id, company_name, company_image } = useLocalSearchParams() as {
     company_id: string;
@@ -92,32 +95,32 @@ export default function CompanyReviewsScreen() {
         style={styles.ratingBarRow}
         onPress={() => applyFilter(filterRating === star ? null : star)}
       >
-        <Text style={styles.ratingBarStar}>{star}</Text>
-        <MaterialIcons name="star" size={12} color={COLORS.gold} />
-        <View style={styles.ratingBarTrack}>
-          <View style={[styles.ratingBarFill, { width: `${pct}%` as any }]} />
+        <Text style={[styles.ratingBarStar, { color: colors.mutedText }]}>{star}</Text>
+        <MaterialIcons name="star" size={12} color={colors.buttonBackground} />
+        <View style={[styles.ratingBarTrack, { backgroundColor: colors.border }]}>
+          <View style={[styles.ratingBarFill, { backgroundColor: colors.buttonBackground, width: `${pct}%` as any }]} />
         </View>
-        <Text style={styles.ratingBarCount}>{count}</Text>
+        <Text style={[styles.ratingBarCount, { color: colors.mutedText }]}>{count}</Text>
       </TouchableOpacity>
     );
   };
 
   // ── Summary block ─────────────────────────────────────────────────────────
   const Summary = () => (
-    <View style={styles.summaryCard}>
+    <View style={[styles.summaryCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <View style={styles.summaryLeft}>
-        <Text style={styles.avgScore}>{summary?.average?.toFixed(1) ?? '—'}</Text>
+        <Text style={[styles.avgScore, { color: colors.buttonBackground }]}>{summary?.average?.toFixed(1) ?? '—'}</Text>
         <View style={styles.summaryStars}>
           {[1, 2, 3, 4, 5].map(i => (
             <MaterialIcons
               key={i}
               name="star"
               size={18}
-              color={i <= Math.round(summary?.average ?? 0) ? COLORS.gold : COLORS.border}
+              color={i <= Math.round(summary?.average ?? 0) ? colors.buttonBackground : colors.border}
             />
           ))}
         </View>
-        <Text style={styles.summaryTotal}>{summary?.total ?? 0} reviews</Text>
+        <Text style={[styles.summaryTotal, { color: colors.mutedText }]}>{summary?.total ?? 0} reviews</Text>
       </View>
       <View style={styles.summaryRight}>
         {[5, 4, 3, 2, 1].map(s => (
@@ -138,31 +141,35 @@ export default function CompanyReviewsScreen() {
     const isLong = item.comment.length > 120;
 
     return (
-      <View style={[styles.reviewCard, isOwn && styles.reviewCardOwn]}>
+      <View style={[
+        styles.reviewCard,
+        { backgroundColor: colors.cardBackground, borderColor: colors.border },
+        isOwn && { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.1), borderColor: colors.buttonBackground },
+      ]}>
         {isOwn && (
-          <View style={styles.ownBadge}>
-            <Text style={styles.ownBadgeText}>Your review</Text>
+          <View style={[styles.ownBadge, { backgroundColor: colors.buttonBackground }]}>
+            <Text style={[styles.ownBadgeText, { color: colors.background }]}>Your review</Text>
           </View>
         )}
         <View style={styles.reviewHeader}>
           {item.reviewer_avatar ? (
             <Image source={{ uri: item.reviewer_avatar }} style={styles.avatar} />
           ) : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarInitial}>
+            <View style={[styles.avatarFallback, { backgroundColor: colors.buttonBackground }]}>
+              <Text style={[styles.avatarInitial, { color: colors.background }]}>
                 {(item.reviewer_name ?? '?')[0].toUpperCase()}
               </Text>
             </View>
           )}
           <View style={styles.reviewerInfo}>
-            <Text style={styles.reviewerName}>{item.reviewer_name}</Text>
+            <Text style={[styles.reviewerName, { color: colors.text }]}>{item.reviewer_name}</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(i => (
                 <MaterialIcons
                   key={i}
                   name="star"
                   size={13}
-                  color={i <= item.rating ? COLORS.gold : COLORS.border}
+                  color={i <= item.rating ? colors.buttonBackground : colors.border}
                 />
               ))}
               <Text style={styles.reviewTime}> · {formatTime(item.created_at)}</Text>
@@ -174,24 +181,24 @@ export default function CompanyReviewsScreen() {
                 style={styles.actionBtn}
                 onPress={() => { setEditingReview(item); setModalVisible(true); }}
               >
-                <Ionicons name="pencil-outline" size={15} color={COLORS.gold} />
+                <Ionicons name="pencil-outline" size={15} color={colors.buttonBackground} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => handleDelete(item.id)}
               >
-                <Ionicons name="trash-outline" size={15} color={COLORS.danger} />
+                <Ionicons name="trash-outline" size={15} color={colors.error} />
               </TouchableOpacity>
             </View>
           )}
         </View>
 
-        <Text style={styles.reviewComment}>
+        <Text style={[styles.reviewComment, { color: colors.text }]}>
           {isLong && !expanded ? item.comment.slice(0, 120) + '...' : item.comment}
         </Text>
         {isLong && (
           <TouchableOpacity onPress={() => setExpanded(e => !e)}>
-            <Text style={styles.readMore}>{expanded ? 'Show less' : 'Read more'}</Text>
+            <Text style={[styles.readMore, { color: colors.buttonBackground }]}>{expanded ? 'Show less' : 'Read more'}</Text>
           </TouchableOpacity>
         )}
 
@@ -201,7 +208,7 @@ export default function CompanyReviewsScreen() {
               <Image
                 key={i}
                 source={{ uri: `https://insighthub.com.ng/${img}` }}
-                style={styles.reviewImg}
+                style={[styles.reviewImg, { borderColor: colors.border }]}
                 resizeMode="cover"
               />
             ))}
@@ -212,32 +219,32 @@ export default function CompanyReviewsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.inputBackground }]} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={22} color={colors.icon} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Reviews</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Reviews</Text>
           {company_name && (
-            <Text style={styles.headerSub} numberOfLines={1}>{company_name}</Text>
+            <Text style={[styles.headerSub, { color: colors.mutedText }]} numberOfLines={1}>{company_name}</Text>
           )}
         </View>
         <TouchableOpacity
-          style={styles.writeBtn}
+          style={[styles.writeBtn, { borderColor: colors.buttonBackground }]}
           onPress={() => { setEditingReview(null); setModalVisible(true); }}
         >
-          <Ionicons name={hasReviewed ? 'pencil-outline' : 'add'} size={17} color={COLORS.gold} />
-          <Text style={styles.writeBtnText}>{hasReviewed ? 'Edit' : 'Review'}</Text>
+          <Ionicons name={hasReviewed ? 'pencil-outline' : 'add'} size={17} color={colors.buttonBackground} />
+          <Text style={[styles.writeBtnText, { color: colors.buttonBackground }]}>{hasReviewed ? 'Edit' : 'Review'}</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.ownerSection}>
+      <View style={[styles.ownerSection, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
         <Image source={{ uri: company_image }} style={styles.ownerImage} />
         <View>
-          <Text style={styles.ownerName}>{company_name}</Text>
-          <Text style={{ color: 'gray' }}>Owner</Text>
+          <Text style={[styles.ownerName, { color: colors.text }]}>{company_name}</Text>
+          <Text style={{ color: colors.mutedText }}>Owner</Text>
         </View>
 
       </View>
@@ -265,10 +272,14 @@ export default function CompanyReviewsScreen() {
                 const active = filterRating === f.value;
                 return (
                   <TouchableOpacity
-                    style={[styles.filterPill, active && styles.filterPillActive]}
+                    style={[
+                      styles.filterPill,
+                      { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                      active && { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground },
+                    ]}
                     onPress={() => applyFilter(f.value)}
                   >
-                    <Text style={[styles.filterText, active && styles.filterTextActive]}>
+                    <Text style={[styles.filterText, { color: active ? colors.background : colors.mutedText }]}>
                       {f.label}
                     </Text>
                   </TouchableOpacity>
@@ -281,26 +292,26 @@ export default function CompanyReviewsScreen() {
               <ReviewItem item={myReview} isOwn />
             )}
 
-            <Text style={styles.sectionLabel}>
+            <Text style={[styles.sectionLabel, { color: colors.mutedText }]}>
               {filterRating ? `${filterRating}-star reviews` : 'All reviews'} ({summary?.total ?? 0})
             </Text>
           </>
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator style={{ marginTop: 40 }} color={COLORS.gold} />
+            <ActivityIndicator style={{ marginTop: 40 }} color={colors.buttonBackground} />
           ) : (
             <View style={styles.empty}>
-              <Ionicons name="star-outline" size={44} color={COLORS.gold} />
-              <Text style={styles.emptyTitle}>No reviews yet</Text>
-              <Text style={styles.emptySub}>
+              <Ionicons name="star-outline" size={44} color={colors.buttonBackground} />
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No reviews yet</Text>
+              <Text style={[styles.emptySub, { color: colors.mutedText }]}>
                 Be the first to share your experience with this agent
               </Text>
               <TouchableOpacity
-                style={styles.emptyBtn}
+                style={[styles.emptyBtn, { backgroundColor: colors.buttonBackground }]}
                 onPress={() => { setEditingReview(null); setModalVisible(true); }}
               >
-                <Text style={styles.emptyBtnText}>Write a review</Text>
+                <Text style={[styles.emptyBtnText, { color: colors.background }]}>Write a review</Text>
               </TouchableOpacity>
             </View>
           )

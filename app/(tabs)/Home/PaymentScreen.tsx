@@ -3,10 +3,10 @@ import { View, Text, Switch, TouchableOpacity, StyleSheet, ActivityIndicator, Al
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { brandColors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const BASE_URL = 'https://insighthub.com.ng';
-const GOLD = '#C9A84C';
-const DARK = '#0F0F1A';
 
 const PLAN_LABELS: Record<string, string> = {
   single: 'Single Listing — ₦500',
@@ -17,6 +17,7 @@ const PLAN_LABELS: Record<string, string> = {
 
 export default function PaymentScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const params = useLocalSearchParams();
   const planKey = Array.isArray(params.plan) ? params.plan[0] : params.plan;
 
@@ -100,39 +101,39 @@ export default function PaymentScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Complete Upgrade</Text>
-      <Text style={styles.planLabel}>{PLAN_LABELS[planKey ?? ''] ?? planKey}</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>Complete Upgrade</Text>
+      <Text style={[styles.planLabel, { color: colors.buttonBackground }]}>{PLAN_LABELS[planKey ?? ''] ?? planKey}</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Payment via Paystack</Text>
-        <Text style={styles.cardSub}>Card · Bank Transfer · Opay · Mobile Money</Text>
+      <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+        <Text style={[styles.cardTitle, { color: colors.text }]}>Payment via Paystack</Text>
+        <Text style={[styles.cardSub, { color: colors.mutedText }]}>Card · Bank Transfer · Opay · Mobile Money</Text>
       </View>
 
       {/* Only show auto-renew for recurring plans */}
       {planKey !== 'single' && (
-        <View style={styles.row}>
+        <View style={[styles.row, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <View>
-            <Text style={styles.rowLabel}>Auto-Renew</Text>
-            <Text style={styles.rowSub}>Automatically renew when plan expires</Text>
+            <Text style={[styles.rowLabel, { color: colors.text }]}>Auto-Renew</Text>
+            <Text style={[styles.rowSub, { color: colors.mutedText }]}>Automatically renew when plan expires</Text>
           </View>
           <Switch
             value={autoRenew}
             onValueChange={setAutoRenew}
-            trackColor={{ true: GOLD }}
-            thumbColor="#fff"
+            trackColor={{ false: colors.border, true: colors.buttonBackground }}
+            thumbColor={colors.cardBackground}
           />
         </View>
       )}
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { backgroundColor: colors.buttonBackground }]}
         onPress={initializePayment}
         disabled={loading}
       >
         {loading
-          ? <ActivityIndicator color={DARK} />
-          : <Text style={styles.buttonText}>Proceed to Payment</Text>
+          ? <ActivityIndicator color={colors.background} />
+          : <Text style={[styles.buttonText, { color: colors.background }]}>Proceed to Payment</Text>
         }
       </TouchableOpacity>
     </View>
@@ -142,7 +143,7 @@ export default function PaymentScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F0F1A', padding: 24, justifyContent: 'center' },
   title: { color: '#fff', fontSize: 24, fontWeight: '800', marginBottom: 6 },
-  planLabel: { color: GOLD, fontSize: 16, marginBottom: 28 },
+  planLabel: { color: brandColors.goldCta, fontSize: 16, marginBottom: 28 },
   card: {
     backgroundColor: '#1A1A2A', borderRadius: 16, padding: 20,
     borderWidth: 1, borderColor: '#ffffff10', marginBottom: 24,
@@ -157,8 +158,8 @@ const styles = StyleSheet.create({
   rowLabel: { color: '#fff', fontWeight: '600', marginBottom: 2 },
   rowSub: { color: '#888', fontSize: 12 },
   button: {
-    backgroundColor: GOLD, paddingVertical: 16,
+    backgroundColor: brandColors.goldCta, paddingVertical: 16,
     borderRadius: 14, alignItems: 'center',
   },
-  buttonText: { color: DARK, fontWeight: '800', fontSize: 16 },
+  buttonText: { color: brandColors.primaryNavy, fontWeight: '800', fontSize: 16 },
 });

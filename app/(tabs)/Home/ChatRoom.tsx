@@ -21,6 +21,8 @@ import { getStatusBarHeight } from 'react-native-status-bar-height';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Message, useMessages } from '@/hooks/useChat';
 import { useToast } from '@/components/Toast';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const BASE_URL = 'https://insighthub.com.ng/';
 
@@ -54,10 +56,11 @@ const InspectionBubble = ({
   isMine: boolean;
   onRespond: (id: number, status: 'confirmed' | 'declined') => void;
 }) => {
+  const { colors } = useTheme();
   const statusColor = {
-    pending: '#F59E0B',
-    confirmed: '#22C55E',
-    declined: '#EF4444',
+    pending: colors.warning,
+    confirmed: colors.success,
+    declined: colors.error,
   }[msg.inspection_status];
 
   const statusLabel = {
@@ -67,25 +70,32 @@ const InspectionBubble = ({
   }[msg.inspection_status];
 
   return (
-    <View style={[styles.inspectionCard, isMine && styles.inspectionCardMine]}>
+    <View style={[
+      styles.inspectionCard,
+      { backgroundColor: colors.cardBackground, borderColor: colors.border },
+      isMine && {
+        backgroundColor: colorWithAlpha(colors.buttonBackground, 0.16),
+        borderColor: colorWithAlpha(colors.buttonBackground, 0.35),
+      },
+    ]}>
       <View style={styles.inspectionHeader}>
-        <MaterialIcons name="event" size={18} color="COLORS.gold" />
-        <Text style={styles.inspectionTitle}>Inspection Request</Text>
+        <MaterialIcons name="event" size={18} color={colors.buttonBackground} />
+        <Text style={[styles.inspectionTitle, { color: colors.text }]}>Inspection Request</Text>
       </View>
       <View style={styles.inspectionRow}>
-        <MaterialIcons name="calendar-today" size={14} color="#555" />
-        <Text style={styles.inspectionText}>
+        <MaterialIcons name="calendar-today" size={14} color={colors.mutedText} />
+        <Text style={[styles.inspectionText, { color: colors.mutedText }]}>
           {msg.inspection_date ? formatDate(msg.inspection_date) : '—'}
         </Text>
       </View>
       <View style={styles.inspectionRow}>
-        <MaterialIcons name="access-time" size={14} color="#555" />
-        <Text style={styles.inspectionText}>{msg.inspection_time ?? '—'}</Text>
+        <MaterialIcons name="access-time" size={14} color={colors.mutedText} />
+        <Text style={[styles.inspectionText, { color: colors.mutedText }]}>{msg.inspection_time ?? '—'}</Text>
       </View>
       {msg.inspection_note ? (
         <View style={styles.inspectionRow}>
-          <MaterialIcons name="notes" size={14} color="#555" />
-          <Text style={styles.inspectionText}>{msg.inspection_note}</Text>
+          <MaterialIcons name="notes" size={14} color={colors.mutedText} />
+          <Text style={[styles.inspectionText, { color: colors.mutedText }]}>{msg.inspection_note}</Text>
         </View>
       ) : null}
       <View style={[styles.inspectionStatus, { backgroundColor: statusColor + '20' }]}>
@@ -122,6 +132,7 @@ const InspectionModal = ({
   onClose: () => void;
   onSend: (date: string, time: string, note: string) => void;
 }) => {
+  const { colors } = useTheme();
   const [date, setDate] = useState(new Date());
   const [time, setTime] = useState(new Date());
   const [note, setNote] = useState('');
@@ -142,23 +153,23 @@ const InspectionModal = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalOverlay}
       >
-        <View style={styles.modalSheet}>
-          <View style={styles.modalHandle} />
+        <View style={[styles.modalSheet, { backgroundColor: colors.cardBackground }]}>
+          <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Book Inspection</Text>
-            <TouchableOpacity onPress={onClose} style={styles.modalClose}>
-              <Ionicons name="close" size={20} color="#555" />
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Book Inspection</Text>
+            <TouchableOpacity onPress={onClose} style={[styles.modalClose, { backgroundColor: colors.inputBackground }]}>
+              <Ionicons name="close" size={20} color={colors.mutedText} />
             </TouchableOpacity>
           </View>
 
           {/* Date picker */}
-          <Text style={styles.modalLabel}>Preferred date</Text>
+          <Text style={[styles.modalLabel, { color: colors.mutedText }]}>Preferred date</Text>
           <TouchableOpacity
-            style={styles.datePickerBtn}
+            style={[styles.datePickerBtn, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
             onPress={() => setShowDate(true)}
           >
-            <MaterialIcons name="calendar-today" size={18} color="COLORS.gold" />
-            <Text style={styles.datePickerText}>
+            <MaterialIcons name="calendar-today" size={18} color={colors.buttonBackground} />
+            <Text style={[styles.datePickerText, { color: colors.text }]}>
               {date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
             </Text>
           </TouchableOpacity>
@@ -172,13 +183,13 @@ const InspectionModal = ({
           )}
 
           {/* Time picker */}
-          <Text style={styles.modalLabel}>Preferred time</Text>
+          <Text style={[styles.modalLabel, { color: colors.mutedText }]}>Preferred time</Text>
           <TouchableOpacity
-            style={styles.datePickerBtn}
+            style={[styles.datePickerBtn, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
             onPress={() => setShowTime(true)}
           >
-            <MaterialIcons name="access-time" size={18} color="COLORS.gold" />
-            <Text style={styles.datePickerText}>
+            <MaterialIcons name="access-time" size={18} color={colors.buttonBackground} />
+            <Text style={[styles.datePickerText, { color: colors.text }]}>
               {time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </TouchableOpacity>
@@ -191,11 +202,11 @@ const InspectionModal = ({
           )}
 
           {/* Note */}
-          <Text style={styles.modalLabel}>Additional note (optional)</Text>
+          <Text style={[styles.modalLabel, { color: colors.mutedText }]}>Additional note (optional)</Text>
           <TextInput
-            style={styles.modalInput}
+            style={[styles.modalInput, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
             placeholder="e.g. I'll be coming with my partner..."
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.mutedText}
             multiline
             numberOfLines={3}
             value={note}
@@ -203,9 +214,9 @@ const InspectionModal = ({
             textAlignVertical="top"
           />
 
-          <TouchableOpacity style={styles.sendInspectionBtn} onPress={handleSend}>
-            <MaterialIcons name="send" size={18} color="#fff" />
-            <Text style={styles.sendInspectionText}>Send Request</Text>
+          <TouchableOpacity style={[styles.sendInspectionBtn, { backgroundColor: colors.buttonBackground }]} onPress={handleSend}>
+            <MaterialIcons name="send" size={18} color={colors.background} />
+            <Text style={[styles.sendInspectionText, { color: colors.background }]}>Send Request</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -216,6 +227,7 @@ const InspectionModal = ({
 // ── Main ChatRoom ─────────────────────────────────────────────────────────────
 export default function ChatRoom() {
   const { show } = useToast();
+  const { colors } = useTheme();
   const router = useRouter();
   const { conversation_id, property_name, property_id, company_id, CompanyName } = useLocalSearchParams() as {
     conversation_id: string;
@@ -307,8 +319,8 @@ export default function ChatRoom() {
     return (
       <>
         {showDate && (
-          <View style={styles.dateSeparator}>
-            <Text style={styles.dateSeparatorText}>
+          <View style={[styles.dateSeparator, { backgroundColor: colors.inputBackground }]}>
+            <Text style={[styles.dateSeparatorText, { color: colors.mutedText }]}>
               {new Date(item.created_at).toLocaleDateString('en-GB', {
                 weekday: 'short', day: '2-digit', month: 'short',
               })}
@@ -322,8 +334,8 @@ export default function ChatRoom() {
             item.sender_avatar ? (
               <Image source={{ uri: item.sender_avatar }} style={styles.msgAvatar} />
             ) : (
-              <View style={[styles.msgAvatar, styles.msgAvatarFallback]}>
-                <Text style={styles.msgAvatarInitial}>
+              <View style={[styles.msgAvatar, styles.msgAvatarFallback, { backgroundColor: colors.buttonBackground }]}>
+                <Text style={[styles.msgAvatarInitial, { color: colors.background }]}>
                   {(item.sender_name ?? '?')[0].toUpperCase()}
                 </Text>
               </View>
@@ -348,13 +360,19 @@ export default function ChatRoom() {
 
             {/* Image */}
             {item.type === 'image' && item.image_path && (
-              <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs, { padding: 4 }]}>
+              <View style={[
+                styles.bubble,
+                isMine
+                  ? { backgroundColor: colors.buttonBackground }
+                  : { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                { padding: 4 },
+              ]}>
                 <Image
                   source={{ uri: BASE_URL + item.image_path }}
                   style={styles.chatImage}
                   resizeMode="cover"
                 />
-                <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
+                <Text style={[styles.msgTime, { color: isMine ? colorWithAlpha(colors.background, 0.72) : colors.mutedText }]}>
                   {formatTime(item.created_at)}
                 </Text>
               </View>
@@ -362,19 +380,24 @@ export default function ChatRoom() {
 
             {/* Text */}
             {item.type === 'text' && (
-              <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                <Text style={[styles.msgText, isMine && styles.msgTextMine]}>
+              <View style={[
+                styles.bubble,
+                isMine
+                  ? { backgroundColor: colors.buttonBackground }
+                  : { backgroundColor: colors.cardBackground, borderColor: colors.border },
+              ]}>
+                <Text style={[styles.msgText, { color: isMine ? colors.background : colors.text }]}>
                   {item.message}
                 </Text>
                 <View style={styles.msgMeta}>
-                  <Text style={[styles.msgTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
+                  <Text style={[styles.msgTime, { color: isMine ? colorWithAlpha(colors.background, 0.72) : colors.mutedText }]}>
                     {formatTime(item.created_at)}
                   </Text>
                   {isMine && (
                     <Ionicons
                       name={item.is_read ? 'checkmark-done' : 'checkmark'}
                       size={13}
-                      color={item.is_read ? '#93C5FD' : 'rgba(255,255,255,0.6)'}
+                      color={item.is_read ? colors.icon : colorWithAlpha(colors.background, 0.65)}
                       style={{ marginLeft: 3 }}
                     />
                   )}
@@ -393,13 +416,13 @@ export default function ChatRoom() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.push({
+        <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
+          <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.inputBackground }]} onPress={() => router.push({
             pathname: "../Profile/Messages",
           })}>
-            <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
 
           {property_id ? (
@@ -412,10 +435,10 @@ export default function ChatRoom() {
                 })
               }
             >
-              <Text style={styles.headerTitle} numberOfLines={1}>
+              <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
                 {property_name ?? 'Chat'}
               </Text>
-              <Text style={styles.headerSub}>Tap to view property →</Text>
+              <Text style={[styles.headerSub, { color: colors.mutedText }]}>Tap to view property →</Text>
             </TouchableOpacity>
           ) : (
 
@@ -430,24 +453,24 @@ export default function ChatRoom() {
             >
 
 
-              <Text style={styles.headerTitle} numberOfLines={1}>
+              <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
                 {CompanyName ?? 'General Enquiry'}
               </Text>
-              <Text style={styles.headerSub}>General enquiry</Text>
+              <Text style={[styles.headerSub, { color: colors.mutedText }]}>General enquiry</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            style={styles.headerAction}
+            style={[styles.headerAction, { backgroundColor: colors.inputBackground }]}
             onPress={() => setInspModal(true)}
           >
-            <MaterialIcons name="event" size={20} color="COLORS.gold" />
+            <MaterialIcons name="event" size={20} color={colors.buttonBackground} />
           </TouchableOpacity>
         </View>
 
         {/* Messages */}
         {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color="#c9a84c" />
+          <View style={[styles.center, { backgroundColor: colors.background }]}>
+            <ActivityIndicator size="large" color={colors.buttonBackground} />
           </View>
         ) : (
           <FlatList
@@ -455,7 +478,7 @@ export default function ChatRoom() {
             data={messages}
             keyExtractor={item => item.id.toString()}
             renderItem={renderMessage}
-            contentContainerStyle={styles.messagesList}
+            contentContainerStyle={[styles.messagesList, { backgroundColor: colors.background }]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             onContentSizeChange={() =>
@@ -463,33 +486,33 @@ export default function ChatRoom() {
             }
             ListEmptyComponent={
               <View style={styles.emptyChat}>
-                <Ionicons name="chatbubble-outline" size={40} color="#ddd" />
-                <Text style={styles.emptyChatText}>Say hello to get started!</Text>
+                <Ionicons name="chatbubble-outline" size={40} color={colors.mutedText} />
+                <Text style={[styles.emptyChatText, { color: colors.mutedText }]}>Say hello to get started!</Text>
               </View>
             }
           />
         )}
 
-        <View style={styles.hintRow}>
-          <Text style={styles.hintText}>Hold a sent message to delete it.</Text>
+        <View style={[styles.hintRow, { backgroundColor: colors.background }]}>
+          <Text style={[styles.hintText, { color: colors.mutedText }]}>Hold a sent message to delete it.</Text>
         </View>
 
         {/* Input bar */}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
           {/* Camera / image button */}
-          <TouchableOpacity style={styles.inputAction} onPress={handlePickImage}>
-            <Ionicons name="image-outline" size={22} color="#888" />
+          <TouchableOpacity style={[styles.inputAction, { backgroundColor: colors.inputBackground }]} onPress={handlePickImage}>
+            <Ionicons name="image-outline" size={22} color={colors.mutedText} />
           </TouchableOpacity>
 
           {/* Calendar / inspection button */}
-          <TouchableOpacity style={styles.inputAction} onPress={() => setInspModal(true)}>
-            <MaterialIcons name="event" size={22} color="#888" />
+          <TouchableOpacity style={[styles.inputAction, { backgroundColor: colors.inputBackground }]} onPress={() => setInspModal(true)}>
+            <MaterialIcons name="event" size={22} color={colors.mutedText} />
           </TouchableOpacity>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.inputBackground, color: colors.text }]}
             placeholder="Type a message..."
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.mutedText}
             value={inputText}
             onChangeText={setInputText}
             multiline
@@ -498,13 +521,13 @@ export default function ChatRoom() {
           />
 
           <TouchableOpacity
-            style={[styles.sendBtn, (!inputText.trim() || sending) && styles.sendBtnDisabled]}
+            style={[styles.sendBtn, { backgroundColor: colors.buttonBackground }, (!inputText.trim() || sending) && styles.sendBtnDisabled]}
             onPress={handleSend}
             disabled={!inputText.trim() || sending}
           >
             {sending
-              ? <ActivityIndicator size="small" color="#c9a84c" />
-              : <Ionicons name="send" size={18} color="#fff" />
+              ? <ActivityIndicator size="small" color={colors.background} />
+              : <Ionicons name="send" size={18} color={colors.background} />
             }
           </TouchableOpacity>
         </View>

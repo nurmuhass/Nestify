@@ -14,14 +14,16 @@ import {
   View,
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { brandColors, colorWithAlpha } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
 /* ─── Palette ────────────────────────────────────────────────── */
-const NAVY2 = '#091530';
-const NAVY  = '#0f2044';
-const GOLD  = '#c9a84c';
-const GOLDT = '#f0d98a';
+const NAVY2 = brandColors.primaryNavy;
+const NAVY  = brandColors.secondaryText;
+const GOLD  = brandColors.goldCta;
+const GOLDT = brandColors.softGold;
 const WHITE = '#ffffff';
 const MUTED = 'rgba(255,255,255,0.50)';
 
@@ -52,6 +54,8 @@ const SLIDES = [
 
 /* ─── Dot indicator ──────────────────────────────────────────── */
 function Dots({ total, active }: { total: number; active: number }) {
+  const { colors } = useTheme();
+
   return (
     <View style={dot.row}>
       {Array.from({ length: total }).map((_, i) => (
@@ -59,7 +63,9 @@ function Dots({ total, active }: { total: number; active: number }) {
           key={i}
           style={[
             dot.base,
-            i === active ? dot.active : dot.inactive,
+            i === active
+              ? [dot.active, { backgroundColor: colors.buttonBackground }]
+              : [dot.inactive, { backgroundColor: colorWithAlpha(colors.text, 0.25) }],
           ]}
         />
       ))}
@@ -76,6 +82,7 @@ const dot = StyleSheet.create({
 /* ─── Main Screen ────────────────────────────────────────────── */
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
 
   const [current, setCurrent] = useState(0);
 
@@ -119,8 +126,8 @@ export default function WelcomeScreen() {
   const slide = SLIDES[current];
 
   return (
-    <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY2} />
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       {/* ── Background photo (fades on change) ── */}
       <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: imgAnim }]}>
@@ -134,10 +141,10 @@ export default function WelcomeScreen() {
       {/* ── Gradient overlay ── */}
       <LinearGradient
         colors={[
-          'rgba(9,21,48,0.20)',
-          'rgba(9,21,48,0.55)',
-          'rgba(9,21,48,0.88)',
-          NAVY2,
+          colorWithAlpha(brandColors.primaryNavy, 0.20),
+          colorWithAlpha(brandColors.primaryNavy, 0.55),
+          colorWithAlpha(colors.background, 0.88),
+          colors.background,
         ]}
         locations={[0, 0.35, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
@@ -147,19 +154,33 @@ export default function WelcomeScreen() {
       <View style={styles.topBar}>
         {/* Logo */}
         <View style={styles.logoRow}>
-          <View style={styles.logoRing}>
-            <Ionicons name="home" size={18} color={GOLD} />
+          <View
+            style={[
+              styles.logoRing,
+              {
+                backgroundColor: colorWithAlpha(colors.buttonBackground, 0.18),
+                borderColor: colorWithAlpha(colors.buttonBackground, 0.45),
+              },
+            ]}
+          >
+            <Ionicons name="home" size={18} color={colors.buttonBackground} />
           </View>
-          <Text style={styles.logoText}>Nestify</Text>
+          <Text style={[styles.logoText, { color: colors.text }]}>Nestify</Text>
         </View>
 
         {/* Skip */}
         <TouchableOpacity
-          style={styles.skipBtn}
+          style={[
+            styles.skipBtn,
+            {
+              backgroundColor: colorWithAlpha(colors.cardBackground, 0.35),
+              borderColor: colorWithAlpha(colors.border, 0.55),
+            },
+          ]}
           onPress={() => router.push('/Login')}
         >
-          <Text style={styles.skipText}>Skip</Text>
-          <Ionicons name="chevron-forward" size={14} color={MUTED} />
+          <Text style={[styles.skipText, { color: colors.mutedText }]}>Skip</Text>
+          <Ionicons name="chevron-forward" size={14} color={colors.mutedText} />
         </TouchableOpacity>
       </View>
 
@@ -170,9 +191,18 @@ export default function WelcomeScreen() {
           { val: '4.9★',  lbl: 'Rating'     },
           { val: '2k+',   lbl: 'Agents'     },
         ].map((s) => (
-          <View key={s.lbl} style={styles.statCard}>
-            <Text style={styles.statVal}>{s.val}</Text>
-            <Text style={styles.statLbl}>{s.lbl}</Text>
+          <View
+            key={s.lbl}
+            style={[
+              styles.statCard,
+              {
+                backgroundColor: colorWithAlpha(colors.cardBackground, 0.35),
+                borderColor: colorWithAlpha(colors.border, 0.55),
+              },
+            ]}
+          >
+            <Text style={[styles.statVal, { color: colors.text }]}>{s.val}</Text>
+            <Text style={[styles.statLbl, { color: colors.mutedText }]}>{s.lbl}</Text>
           </View>
         ))}
       </View>
@@ -184,6 +214,10 @@ export default function WelcomeScreen() {
           style={[
             styles.tagPill,
             {
+              backgroundColor: colorWithAlpha(colors.buttonBackground, 0.15),
+              borderColor: colorWithAlpha(colors.buttonBackground, 0.35),
+            },
+            {
               opacity: tagAnim,
               transform: [{
                 translateY: tagAnim.interpolate({
@@ -193,14 +227,15 @@ export default function WelcomeScreen() {
             },
           ]}
         >
-          <View style={styles.tagDot} />
-          <Text style={styles.tagText}>{slide.tag}</Text>
+          <View style={[styles.tagDot, { backgroundColor: colors.buttonBackground }]} />
+          <Text style={[styles.tagText, { color: colors.warning }]}>{slide.tag}</Text>
         </Animated.View>
 
         {/* Headline */}
         <Animated.Text
           style={[
             styles.headline,
+            { color: colors.text },
             {
               opacity: contentAnim,
               transform: [{
@@ -218,6 +253,7 @@ export default function WelcomeScreen() {
         <Animated.Text
           style={[
             styles.body,
+            { color: colors.mutedText },
             {
               opacity: contentAnim,
               transform: [{
@@ -237,10 +273,10 @@ export default function WelcomeScreen() {
 
           {/* Manual next */}
           <TouchableOpacity
-            style={styles.nextDot}
+            style={[styles.nextDot, { backgroundColor: colors.buttonBackground }]}
             onPress={() => setCurrent((p) => (p + 1) % SLIDES.length)}
           >
-            <Ionicons name="arrow-forward" size={16} color={NAVY2} />
+            <Ionicons name="arrow-forward" size={16} color={colors.background} />
           </TouchableOpacity>
         </View>
       </View>
@@ -261,23 +297,23 @@ export default function WelcomeScreen() {
       >
         {/* Primary — Get Started */}
         <TouchableOpacity
-          style={styles.primaryBtn}
+          style={[styles.primaryBtn, { backgroundColor: colors.buttonBackground, shadowColor: colors.buttonBackground }]}
           activeOpacity={0.85}
           onPress={() => router.push('/Register')}
         >
-          <Text style={styles.primaryText}>Get Started</Text>
-          <Ionicons name="arrow-forward" size={18} color={NAVY2} />
+          <Text style={[styles.primaryText, { color: colors.background }]}>Get Started</Text>
+          <Ionicons name="arrow-forward" size={18} color={colors.background} />
         </TouchableOpacity>
 
         {/* Secondary — Sign In */}
         <TouchableOpacity
-          style={styles.secondaryBtn}
+          style={[styles.secondaryBtn, { borderColor: colorWithAlpha(colors.border, 0.65) }]}
           activeOpacity={0.8}
           onPress={() => router.push('/Login')}
         >
-          <Text style={styles.secondaryText}>
+          <Text style={[styles.secondaryText, { color: colors.mutedText }]}>
             Already have an account?{' '}
-            <Text style={styles.secondaryTextGold}>Sign In</Text>
+            <Text style={[styles.secondaryTextGold, { color: colors.buttonBackground }]}>Sign In</Text>
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -356,7 +392,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
     minWidth: 72,
-    backdropFilter: 'blur(10px)',
   },
   statVal: {
     fontSize: 16, fontWeight: '700',

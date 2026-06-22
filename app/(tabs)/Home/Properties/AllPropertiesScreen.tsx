@@ -26,6 +26,7 @@ import { getStatusBarHeight } from "react-native-status-bar-height";
 import PremiumLoader from "@/components/PremiumLoader";
 import LikeButton from "@/components/LikeButton";
 import { useToast } from "@/components/Toast";
+import { useTheme } from "@/context/ThemeContext";
 
 /* =========================================================
    THEME
@@ -86,6 +87,7 @@ const FILTERS = [
 ========================================================= */
 
 export default function AllPropertiesScreen() {
+  const { colors } = useTheme();
   const { companyId } = useLocalSearchParams();
 
   const { show } = useToast();
@@ -140,7 +142,11 @@ export default function AllPropertiesScreen() {
       const result = await response.json();
 
       if (result.status === "success") {
-        const incoming = result.data || result.properties || [];
+        const incoming: Property[] = Array.isArray(result.data)
+          ? result.data
+          : Array.isArray(result.properties)
+            ? result.properties
+            : [];
 
         setProperties((prev) => {
           const combined =
@@ -279,7 +285,7 @@ export default function AllPropertiesScreen() {
   ========================================================= */
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredProperties}
         keyExtractor={(item) => item.id.toString()}
@@ -291,7 +297,7 @@ export default function AllPropertiesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#fff"
+            tintColor={colors.buttonBackground}
           />
         }
         contentContainerStyle={{
@@ -307,39 +313,39 @@ export default function AllPropertiesScreen() {
               <View style={styles.heroTop}>
                 <TouchableOpacity
                   onPress={() => router.back()}
-                  style={styles.backBtn}
+                  style={[styles.backBtn, { backgroundColor: colors.inputBackground }]}
                 >
                   <Ionicons
                     name="arrow-back"
                     size={22}
-                    color="#fff"
+                    color={colors.icon}
                   />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.filterBtn}>
+                <TouchableOpacity style={[styles.filterBtn, { backgroundColor: colors.inputBackground }]}>
                   <Feather
                     name="sliders"
                     size={18}
-                    color="#fff"
+                    color={colors.icon}
                   />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.heroTitle}>
+              <Text style={[styles.heroTitle, { color: colors.text }]}>
                 Discover Luxury Homes
               </Text>
 
-              <Text style={styles.heroSubtitle}>
+              <Text style={[styles.heroSubtitle, { color: colors.mutedText }]}>
                 Explore premium real estate opportunities
               </Text>
 
               {/* SEARCH */}
 
-              <View style={styles.searchWrap}>
+              <View style={[styles.searchWrap, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
                 <Ionicons
                   name="search"
                   size={18}
-                  color={COLORS.textSecondary}
+                  color={colors.icon}
                 />
 
                 <TextInput
@@ -347,9 +353,9 @@ export default function AllPropertiesScreen() {
                   onChangeText={setSearch}
                   placeholder="Search by property, city or state..."
                   placeholderTextColor={
-                    COLORS.textSecondary
+                    colors.mutedText
                   }
-                  style={styles.searchInput}
+                  style={[styles.searchInput, { color: colors.text }]}
                 />
 
                 {search.length > 0 && (
@@ -359,7 +365,7 @@ export default function AllPropertiesScreen() {
                     <Ionicons
                       name="close-circle"
                       size={18}
-                      color="#aaa"
+                      color={colors.mutedText}
                     />
                   </TouchableOpacity>
                 )}
@@ -368,18 +374,18 @@ export default function AllPropertiesScreen() {
               {/* STATS */}
 
               <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                  <Text style={styles.statNumber}>
+                <View style={[styles.statCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                  <Text style={[styles.statNumber, { color: colors.buttonBackground }]}>
                     {properties.length}
                   </Text>
 
-                  <Text style={styles.statLabel}>
+                  <Text style={[styles.statLabel, { color: colors.mutedText }]}>
                     Listings
                   </Text>
                 </View>
 
-                <View style={styles.statCard}>
-                  <Text style={styles.statNumber}>
+                <View style={[styles.statCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                  <Text style={[styles.statNumber, { color: colors.buttonBackground }]}>
                     {
                       properties.filter(
                         (p) => Number(p.owner_is_premium) === 1
@@ -387,13 +393,13 @@ export default function AllPropertiesScreen() {
                     }
                   </Text>
 
-                  <Text style={styles.statLabel}>
+                  <Text style={[styles.statLabel, { color: colors.mutedText }]}>
                     Premium
                   </Text>
                 </View>
 
-                <View style={styles.statCard}>
-                  <Text style={styles.statNumber}>
+                <View style={[styles.statCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                  <Text style={[styles.statNumber, { color: colors.buttonBackground }]}>
                     {
                       properties.filter(
                         (p) => p.featured_until
@@ -401,7 +407,7 @@ export default function AllPropertiesScreen() {
                     }
                   </Text>
 
-                  <Text style={styles.statLabel}>
+                  <Text style={[styles.statLabel, { color: colors.mutedText }]}>
                     Featured
                   </Text>
                 </View>
@@ -426,8 +432,10 @@ export default function AllPropertiesScreen() {
                     key={filter}
                     style={[
                       styles.filterChip,
-                      active &&
-                      styles.filterChipActive,
+                      {
+                        backgroundColor: active ? colors.buttonBackground : colors.cardBackground,
+                        borderColor: active ? colors.buttonBackground : colors.border,
+                      },
                     ]}
                     onPress={() =>
                       setActiveFilter(filter)
@@ -436,8 +444,7 @@ export default function AllPropertiesScreen() {
                     <Text
                       style={[
                         styles.filterChipText,
-                        active &&
-                        styles.filterChipTextActive,
+                        { color: active ? colors.background : colors.text },
                       ]}
                     >
                       {filter}
@@ -458,11 +465,11 @@ export default function AllPropertiesScreen() {
             ) && (
                 <>
                   <View style={styles.sectionHead}>
-                    <Text style={styles.sectionTitle}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>
                       Featured Properties
                     </Text>
 
-                    <Text style={styles.sectionSub}>
+                    <Text style={[styles.sectionSub, { color: colors.mutedText }]}>
                       Curated premium listings
                     </Text>
                   </View>
@@ -480,7 +487,7 @@ export default function AllPropertiesScreen() {
                   >
                     {properties
                       .filter(
-                        (p) =>
+                        (p: Property) =>
                           p.featured_until ||
                           p.owner_is_premium === 1
                       )
@@ -531,7 +538,7 @@ export default function AllPropertiesScreen() {
                                 <Ionicons
                                   name="diamond"
                                   size={12}
-                                  color="#fff"
+                                  color={colors.background}
                                 />
 
                                 <Text
@@ -578,11 +585,11 @@ export default function AllPropertiesScreen() {
             ===================================================== */}
 
             <View style={styles.feedHead}>
-              <Text style={styles.feedTitle}>
+              <Text style={[styles.feedTitle, { color: colors.text }]}>
                 Marketplace Feed
               </Text>
 
-              <Text style={styles.feedSub}>
+              <Text style={[styles.feedSub, { color: colors.mutedText }]}>
                 Smart personalized recommendations
               </Text>
             </View>
@@ -596,7 +603,7 @@ export default function AllPropertiesScreen() {
 
           return (
             <TouchableOpacity
-              style={styles.card}
+              style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
               onPress={() =>
                 router.push({
                   pathname:
@@ -607,10 +614,10 @@ export default function AllPropertiesScreen() {
                 })
               }
             >
-              <View style={styles.imageWrap}>
+              <View style={[styles.imageWrap, { backgroundColor: colors.inputBackground }]}>
                 <Image
                   source={{ uri: image }}
-                  style={styles.image}
+                  style={[styles.image, { backgroundColor: colors.inputBackground }]}
                 />
 
                 {/* PREMIUM BADGES */}
@@ -625,7 +632,7 @@ export default function AllPropertiesScreen() {
                       <Ionicons
                         name="diamond"
                         size={11}
-                        color="#fff"
+                        color={colors.background}
                       />
 
                       <Text
@@ -670,21 +677,21 @@ export default function AllPropertiesScreen() {
               <View style={styles.info}>
                 <Text
                   numberOfLines={1}
-                  style={styles.name}
+                  style={[styles.name, { color: colors.text }]}
                 >
                   {item.propertyName}
                 </Text>
 
-                <Text style={styles.location}>
+                <Text style={[styles.location, { color: colors.mutedText }]}>
                   <Ionicons
                     name="location-outline"
                     size={13}
-                    color="#aaa"
+                    color={colors.mutedText}
                   />{" "}
                   {item.city}, {item.state}
                 </Text>
 
-                <Text style={styles.price}>
+                <Text style={[styles.price, { color: colors.buttonBackground }]}>
                   ₦
                   {formatPrice(
                     item.sellPrice ||
@@ -699,10 +706,10 @@ export default function AllPropertiesScreen() {
                     <Ionicons
                       name="eye-outline"
                       size={13}
-                      color="#aaa"
+                      color={colors.mutedText}
                     />
 
-                    <Text style={styles.metaText}>
+                    <Text style={[styles.metaText, { color: colors.mutedText }]}>
                       {item.views_count || 0}
                     </Text>
                   </View>
@@ -711,10 +718,10 @@ export default function AllPropertiesScreen() {
                     <Ionicons
                       name="heart-outline"
                       size={13}
-                      color="#aaa"
+                      color={colors.mutedText}
                     />
 
-                    <Text style={styles.metaText}>
+                    <Text style={[styles.metaText, { color: colors.mutedText }]}>
                       {item.likes_count || 0}
                     </Text>
                   </View>
@@ -723,10 +730,10 @@ export default function AllPropertiesScreen() {
                     <MaterialIcons
                       name="verified"
                       size={13}
-                      color={COLORS.gold}
+                      color={colors.buttonBackground}
                     />
 
-                    <Text style={styles.metaText}>
+                    <Text style={[styles.metaText, { color: colors.mutedText }]}>
                       Verified
                     </Text>
                   </View>
@@ -739,7 +746,7 @@ export default function AllPropertiesScreen() {
           loadingMore ? (
             <ActivityIndicator
               size="small"
-              color="#fff"
+              color={colors.buttonBackground}
               style={{
                 marginTop: 20,
               }}
@@ -751,14 +758,14 @@ export default function AllPropertiesScreen() {
             <Ionicons
               name="home-outline"
               size={55}
-              color="#aaa"
+              color={colors.mutedText}
             />
 
-            <Text style={styles.emptyTitle}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
               No properties found
             </Text>
 
-            <Text style={styles.emptySub}>
+            <Text style={[styles.emptySub, { color: colors.mutedText }]}>
               Try changing your filters or search
             </Text>
           </View>

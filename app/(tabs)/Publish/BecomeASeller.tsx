@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { useToast } from '@/components/Toast';
+import { useTheme } from '@/context/ThemeContext';
 
 const PRIMARY = '#0F172A';
 const GOLD = '#C9A84C';
@@ -25,6 +26,7 @@ export default function BecomeASeller() {
 
   const router = useRouter();
   const { show } = useToast();
+  const { colors } = useTheme();
 
   const [sellerType, setSellerType] = useState<
     'company' | 'agent' | 'owner' | null
@@ -196,7 +198,7 @@ export default function BecomeASeller() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: BG,
+        backgroundColor: colors.background,
       }}
     >
 
@@ -205,7 +207,7 @@ export default function BecomeASeller() {
       />
 
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={{ flex: 1, backgroundColor: colors.background }}
         behavior={
           Platform.OS === 'ios'
             ? 'padding'
@@ -320,7 +322,7 @@ export default function BecomeASeller() {
               style={{
                 fontSize: 22,
                 fontWeight: '800',
-                color: PRIMARY,
+                color: colors.text,
                 marginBottom: 18,
               }}
             >
@@ -341,10 +343,10 @@ export default function BecomeASeller() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   marginBottom: 18,
-                  backgroundColor: '#fff',
+                  backgroundColor: colors.cardBackground,
                   padding: 18,
                   borderRadius: 18,
-                  shadowColor: '#000',
+                  shadowColor: colors.shadow,
                   shadowOpacity: 0.05,
                   shadowRadius: 10,
                   shadowOffset: {
@@ -360,7 +362,7 @@ export default function BecomeASeller() {
                     width: 38,
                     height: 38,
                     borderRadius: 20,
-                    backgroundColor: '#ECFDF5',
+                    backgroundColor: colors.inputBackground,
                     justifyContent: 'center',
                     alignItems: 'center',
                     marginRight: 14,
@@ -379,7 +381,7 @@ export default function BecomeASeller() {
                   style={{
                     flex: 1,
                     fontSize: 15,
-                    color: '#334155',
+                    color: colors.text,
                     fontWeight: '600',
                   }}
                 >
@@ -404,7 +406,7 @@ export default function BecomeASeller() {
               style={{
                 fontSize: 22,
                 fontWeight: '800',
-                color: PRIMARY,
+                color: colors.text,
                 marginBottom: 18,
               }}
             >
@@ -450,13 +452,13 @@ export default function BecomeASeller() {
                     style={{
                       width: '31%',
                       backgroundColor: active
-                        ? PRIMARY
-                        : '#fff',
+                        ? colors.buttonBackground
+                        : colors.cardBackground,
                       borderRadius: 22,
                       paddingVertical: 22,
                       alignItems: 'center',
                       borderWidth: active ? 0 : 1,
-                      borderColor: '#E2E8F0',
+                      borderColor: colors.border,
                     }}
                   >
 
@@ -465,8 +467,8 @@ export default function BecomeASeller() {
                       size={28}
                       color={
                         active
-                          ? GOLD
-                          : '#64748B'
+                          ? colors.background
+                          : colors.icon
                       }
                     />
 
@@ -474,8 +476,8 @@ export default function BecomeASeller() {
                       style={{
                         marginTop: 10,
                         color: active
-                          ? '#fff'
-                          : '#334155',
+                          ? colors.background
+                          : colors.text,
                         fontWeight: '700',
                       }}
                     >
@@ -503,7 +505,7 @@ export default function BecomeASeller() {
               style={{
                 fontSize: 22,
                 fontWeight: '800',
-                color: PRIMARY,
+                color: colors.text,
                 marginBottom: 20,
               }}
             >
@@ -523,7 +525,7 @@ export default function BecomeASeller() {
                   <Text
                     style={{
                       marginBottom: 10,
-                      color: '#334155',
+                      color: colors.text,
                       fontWeight: '700',
                     }}
                   >
@@ -534,13 +536,13 @@ export default function BecomeASeller() {
                     value={companyName}
                     onChangeText={setCompanyName}
                     placeholder="Enter company name"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={colors.mutedText}
                     style={{
-                      backgroundColor: '#fff',
+                      backgroundColor: colors.inputBackground,
                       height: 58,
                       borderRadius: 18,
                       paddingHorizontal: 18,
-                      color: PRIMARY,
+                      color: colors.text,
                       fontSize: 15,
                     }}
                   />
@@ -554,7 +556,7 @@ export default function BecomeASeller() {
                   <Text
                     style={{
                       marginBottom: 10,
-                      color: '#334155',
+                      color: colors.text,
                       fontWeight: '700',
                     }}
                   >
@@ -565,13 +567,13 @@ export default function BecomeASeller() {
                     value={rcNumber}
                     onChangeText={setRcNumber}
                     placeholder="Enter CAC RC Number"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={colors.mutedText}
                     style={{
-                      backgroundColor: '#fff',
+                      backgroundColor: colors.inputBackground,
                       height: 58,
                       borderRadius: 18,
                       paddingHorizontal: 18,
-                      color: PRIMARY,
+                      color: colors.text,
                       fontSize: 15,
                     }}
                   />
@@ -588,7 +590,7 @@ export default function BecomeASeller() {
                   <Text
                     style={{
                       marginBottom: 10,
-                      color: '#334155',
+                      color: colors.text,
                       fontWeight: '700',
                     }}
                   >
@@ -601,13 +603,13 @@ export default function BecomeASeller() {
                     keyboardType="number-pad"
                     maxLength={11}
                     placeholder="Enter your 11 digit NIN"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={colors.mutedText}
                     style={{
-                      backgroundColor: '#fff',
+                      backgroundColor: colors.inputBackground,
                       height: 58,
                       borderRadius: 18,
                       paddingHorizontal: 18,
-                      color: PRIMARY,
+                      color: colors.text,
                       fontSize: 15,
                     }}
                   />
@@ -623,7 +625,7 @@ export default function BecomeASeller() {
             style={{
               marginTop: 28,
               marginHorizontal: 20,
-              backgroundColor: '#FEFCE8',
+              backgroundColor: colors.cardBackground,
               borderRadius: 18,
               padding: 18,
             }}
@@ -631,7 +633,7 @@ export default function BecomeASeller() {
 
             <Text
               style={{
-                color: '#854D0E',
+                color: colors.mutedText,
                 lineHeight: 24,
                 fontSize: 14,
               }}
@@ -672,14 +674,14 @@ export default function BecomeASeller() {
               {loading ? (
 
                 <ActivityIndicator
-                  color={PRIMARY}
+                  color={colors.background}
                 />
 
               ) : (
                 <>
                   <Text
                     style={{
-                      color: PRIMARY,
+                      color: colors.background,
                       fontSize: 17,
                       fontWeight: '800',
                     }}
@@ -690,7 +692,7 @@ export default function BecomeASeller() {
                   <Ionicons
                     name="arrow-forward"
                     size={20}
-                    color={PRIMARY}
+                    color={colors.background}
                     style={{
                       marginLeft: 8,
                     }}

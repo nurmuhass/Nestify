@@ -9,6 +9,7 @@ import * as SplashScreen from "expo-splash-screen";
 
 import { AuthProvider } from "../store";
 import { ToastProvider } from "../components/Toast";
+import { ThemeProvider } from "../context/ThemeContext";
 
 import { NetworkProvider } from "../NetworkContext";
 import OfflineGate from "../components/OfflineGate";
@@ -65,15 +66,17 @@ export default function Layout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <NetworkProvider>
-          <ToastProvider>
-            <OfflineGate>
-              <Stack screenOptions={{ headerShown: false }} />
-            </OfflineGate>
-          </ToastProvider>
-        </NetworkProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <NetworkProvider>
+            <ToastProvider>
+              <OfflineGate>
+                <Stack screenOptions={{ headerShown: false }} />
+              </OfflineGate>
+            </ToastProvider>
+          </NetworkProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { useLike } from '../hooks/useLike';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Props {
   propertyId: number;
@@ -27,9 +28,11 @@ export default function LikeButton({
   initialCount = 0,
   variant = 'full',
   size = 22,
-  color = '#e11d48',
+  color,
   onToggle,
 }: Props) {
+  const { colors } = useTheme();
+  const actionColor = color ?? colors.error;
   const { liked, likesCount, toggleLike } = useLike(
     propertyId,
     initialLiked,
@@ -111,7 +114,7 @@ export default function LikeButton({
                 {
                   opacity: pulseOpacity,
                   transform: [{ scale: pulseScale }],
-                  backgroundColor: color,
+                  backgroundColor: actionColor,
                 },
               ]}
             />
@@ -126,7 +129,7 @@ export default function LikeButton({
             <Ionicons
               name={liked ? 'heart' : 'heart-outline'}
               size={size}
-              color={liked ? color : '#cbd5e1'}
+              color={liked ? actionColor : colors.mutedText}
             />
           </Animated.View>
         </View>
@@ -153,7 +156,7 @@ export default function LikeButton({
                 {
                   opacity: pulseOpacity,
                   transform: [{ scale: pulseScale }],
-                  backgroundColor: color,
+                  backgroundColor: actionColor,
                 },
               ]}
             />
@@ -167,7 +170,7 @@ export default function LikeButton({
             <Ionicons
               name={liked ? 'heart' : 'heart-outline'}
               size={size}
-              color={liked ? color : '#cbd5e1'}
+              color={liked ? actionColor : colors.mutedText}
             />
           </Animated.View>
         </View>
@@ -175,7 +178,8 @@ export default function LikeButton({
         <Text
           style={[
             styles.countSmall,
-            liked && { color },
+            { color: colors.mutedText },
+            liked && { color: actionColor },
           ]}
         >
           {likesCount}
@@ -193,7 +197,10 @@ export default function LikeButton({
       activeOpacity={0.9}
       style={[
         styles.fullBtn,
-        liked && styles.fullBtnActive,
+        {
+          backgroundColor: liked ? actionColor : colors.cardBackground,
+          borderColor: actionColor,
+        },
       ]}
     >
       <View style={styles.animWrap}>
@@ -205,7 +212,7 @@ export default function LikeButton({
               {
                 opacity: pulseOpacity,
                 transform: [{ scale: pulseScale }],
-                backgroundColor: '#fff',
+                backgroundColor: colors.cardBackground,
               },
             ]}
           />
@@ -219,7 +226,7 @@ export default function LikeButton({
           <Ionicons
             name={liked ? 'heart' : 'heart-outline'}
             size={size}
-            color={liked ? '#fff' : color}
+            color={liked ? colors.background : actionColor}
           />
         </Animated.View>
       </View>
@@ -227,7 +234,7 @@ export default function LikeButton({
       <Text
         style={[
           styles.fullText,
-          liked && styles.fullTextActive,
+          { color: liked ? colors.background : actionColor },
         ]}
       >
         {likesCount} {liked ? 'Saved' : 'Save'}
@@ -261,7 +268,6 @@ const styles = StyleSheet.create({
 
   countSmall: {
     fontSize: 11,
-    color: '#aaa',
     fontWeight: '600',
   },
 
@@ -273,22 +279,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e11d48',
-    backgroundColor: '#fff',
-  },
-
-  fullBtnActive: {
-    backgroundColor: '#e11d48',
-    borderColor: '#e11d48',
   },
 
   fullText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#e11d48',
-  },
-
-  fullTextActive: {
-    color: '#fff',
   },
 });

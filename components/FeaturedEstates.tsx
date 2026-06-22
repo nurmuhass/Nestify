@@ -1,15 +1,12 @@
 // ─────────────────────────────────────────────────────────────
-// FeaturedEstates.tsx 
+// FeaturedEstates.tsx
 // ─────────────────────────────────────────────────────────────
 
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-} from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import React, { memo } from 'react';
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { memo } from "react";
 
 import {
   Image,
@@ -18,13 +15,10 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
 const fmt = (v?: string | number) =>
-  v
-    ? '₦' +
-    Number(String(v).replace(/,/g, '')).toLocaleString('en-NG')
-    : '—';
+  v ? "₦" + Number(String(v).replace(/,/g, "")).toLocaleString("en-NG") : "—";
 
 type Estate = {
   id?: string | number;
@@ -47,34 +41,22 @@ type Props = {
   estates?: Estate[];
 };
 
-function FeaturedEstates({
-  estates = [],
-}: Props) {
+function FeaturedEstates({ estates = [] }: Props) {
   const router = useRouter();
 
-  const estateData = Array.isArray(estates)
-    ? estates
-    : [];
+  const estateData = Array.isArray(estates) ? estates : [];
 
   return (
     <View style={styles.container}>
       {/* ── Header ───────────────────────── */}
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionTitle}>
-          Featured Estates
-        </Text>
+        <Text style={styles.sectionTitle}>Featured Estates</Text>
 
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() =>
-            router.push(
-              '/Home/Estates/AllEstates'
-            )
-          }
+          onPress={() => router.push("/Home/Estates/AllEstates")}
         >
-          <Text style={styles.sectionLink}>
-            View all →
-          </Text>
+          <Text style={styles.sectionLink}>View all →</Text>
         </TouchableOpacity>
       </View>
 
@@ -87,13 +69,9 @@ function FeaturedEstates({
             color="rgba(255,255,255,0.18)"
           />
 
-          <Text style={styles.emptyTitle}>
-            No Estates Available
-          </Text>
+          <Text style={styles.emptyTitle}>No Estates Available</Text>
 
-          <Text style={styles.emptySub}>
-            Featured estates will appear here
-          </Text>
+          <Text style={styles.emptySub}>Featured estates will appear here</Text>
         </View>
       ) : (
         <ScrollView
@@ -105,29 +83,22 @@ function FeaturedEstates({
             const price = estate.sellPrice
               ? fmt(estate.sellPrice)
               : estate.rentPrice
-                ? `${fmt(
-                  estate.rentPrice
-                )}/yr`
+                ? `${fmt(estate.rentPrice)}/yr`
                 : null;
 
             const tag =
-              estate.listingType === 'Both'
-                ? 'Sell & Rent'
-                : estate.listingType ||
-                'Estate';
+              estate.listingType === "Both"
+                ? "Sell & Rent"
+                : estate.listingType || "Estate";
 
             return (
               <TouchableOpacity
-                key={
-                  estate.id?.toString() ||
-                  index.toString()
-                }
+                key={estate.id?.toString() || index.toString()}
                 activeOpacity={0.92}
                 style={styles.card}
                 onPress={() =>
                   router.push({
-                    pathname:
-                      '/Home/EstateCompanyDetails',
+                    pathname: "/Home/Estates/EstateDetails",
                     params: {
                       id: String(estate.id),
                     },
@@ -139,7 +110,7 @@ function FeaturedEstates({
                   source={{
                     uri:
                       estate.image_path ||
-                      'https://via.placeholder.com/400x300.png',
+                      "https://via.placeholder.com/400x300.png",
                   }}
                   style={styles.image}
                   resizeMode="cover"
@@ -148,9 +119,9 @@ function FeaturedEstates({
                 {/* ── Overlay ── */}
                 <LinearGradient
                   colors={[
-                    'rgba(0,0,0,0)',
-                    'rgba(0,0,0,0.25)',
-                    'rgba(5,10,25,0.96)',
+                    "rgba(0,0,0,0)",
+                    "rgba(0,0,0,0.25)",
+                    "rgba(5,10,25,0.96)",
                   ]}
                   locations={[0.25, 0.55, 1]}
                   style={StyleSheet.absoluteFill}
@@ -158,13 +129,11 @@ function FeaturedEstates({
 
                 {/* ── Badge ── */}
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {tag}
-                  </Text>
+                  <Text style={styles.badgeText}>{tag}</Text>
                 </View>
 
                 {/* ── Favorite Button ── */}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   activeOpacity={0.8}
                   style={styles.heart}
                 >
@@ -173,16 +142,12 @@ function FeaturedEstates({
                     size={15}
                     color="#fff"
                   />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 {/* ── Content ── */}
                 <View style={styles.body}>
-                  <Text
-                    numberOfLines={1}
-                    style={styles.name}
-                  >
-                    {estate.name ||
-                      'Luxury Estate'}
+                  <Text numberOfLines={1} style={styles.name}>
+                    {estate.name || "Luxury Estate"}
                   </Text>
 
                   {/* Location */}
@@ -193,13 +158,8 @@ function FeaturedEstates({
                       color="rgba(255,255,255,0.60)"
                     />
 
-                    <Text
-                      numberOfLines={1}
-                      style={styles.loc}
-                    >
-                      {estate.location ||
-                        estate.city ||
-                        'Nigeria'}
+                    <Text numberOfLines={1} style={styles.loc}>
+                      {estate.location || estate.city || "Nigeria"}
                     </Text>
                   </View>
 
@@ -220,11 +180,7 @@ function FeaturedEstates({
                             color="#fff"
                           />
 
-                          <Text
-                            style={
-                              styles.chipText
-                            }
-                          >
+                          <Text style={styles.chipText}>
                             {estate.bedrooms}bd
                           </Text>
                         </View>
@@ -238,14 +194,8 @@ function FeaturedEstates({
                             color="#fff"
                           />
 
-                          <Text
-                            style={
-                              styles.chipText
-                            }
-                          >
-                            {
-                              estate.total_properties
-                            }
+                          <Text style={styles.chipText}>
+                            {estate.total_properties}
                           </Text>
                         </View>
                       ) : null}
@@ -272,23 +222,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingBottom: 14,
 
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   sectionTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     letterSpacing: -0.4,
     marginVertical: 10,
   },
 
   sectionLink: {
     fontSize: 13,
-    color: '#c9a84c',
-    fontWeight: '600',
+    color: "#c9a84c",
+    fontWeight: "600",
   },
 
   scroll: {
@@ -304,23 +254,23 @@ const styles = StyleSheet.create({
     marginRight: 14,
 
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
 
-    backgroundColor: '#192338',
+    backgroundColor: "#192338",
   },
 
   image: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
+    width: "100%",
+    height: "100%",
+    position: "absolute",
   },
 
   badge: {
-    position: 'absolute',
+    position: "absolute",
     top: 14,
     left: 14,
 
-    backgroundColor: 'rgba(201,168,76,0.92)',
+    backgroundColor: "rgba(201,168,76,0.92)",
 
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -329,15 +279,15 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
 
   heart: {
-    position: 'absolute',
+    position: "absolute",
     top: 14,
     right: 14,
 
@@ -345,19 +295,17 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
-    backgroundColor:
-      'rgba(255,255,255,0.18)',
+    backgroundColor: "rgba(255,255,255,0.18)",
 
     borderWidth: 1,
-    borderColor:
-      'rgba(255,255,255,0.16)',
+    borderColor: "rgba(255,255,255,0.16)",
   },
 
   body: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
@@ -366,15 +314,15 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 6,
   },
 
   locRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     marginBottom: 12,
   },
@@ -382,35 +330,34 @@ const styles = StyleSheet.create({
   loc: {
     marginLeft: 4,
 
-    color: 'rgba(255,255,255,0.70)',
+    color: "rgba(255,255,255,0.70)",
     fontSize: 11,
-    fontWeight: '400',
+    fontWeight: "400",
 
     flex: 1,
   },
 
   bottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
   },
 
   price: {
-    color: '#f0d98a',
+    color: "#f0d98a",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 
   chips: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
 
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
-    backgroundColor:
-      'rgba(255,255,255,0.14)',
+    backgroundColor: "rgba(255,255,255,0.14)",
 
     borderRadius: 8,
 
@@ -423,16 +370,16 @@ const styles = StyleSheet.create({
   chipText: {
     marginLeft: 3,
 
-    color: '#fff',
+    color: "#fff",
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   emptyWrap: {
     height: 240,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     paddingHorizontal: 30,
   },
@@ -440,15 +387,15 @@ const styles = StyleSheet.create({
   emptyTitle: {
     marginTop: 12,
 
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 
   emptySub: {
     marginTop: 5,
 
-    color: 'rgba(255,255,255,0.45)',
+    color: "rgba(255,255,255,0.45)",
     fontSize: 12,
   },
 });

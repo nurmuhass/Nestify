@@ -15,17 +15,8 @@ import {
   View,
 } from 'react-native';
 import { useToast } from './Toast';
-
-const COLORS = {
-  bg: '#091530',
-  card: '#0f2044',
-  gold: '#c9a84c',
-  goldLight: '#f0d98a',
-  textPrimary: '#ffffff',
-  textSecondary: '#94a3b8',
-  border: 'rgba(255,255,255,0.06)',
-  danger: '#ef4444'
-};
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 interface ExistingReview {
   id: number;
@@ -55,6 +46,7 @@ export default function WriteReviewModal({
   entityLabel = 'agent',
 }: Props) {
   const { show } = useToast();
+  const { colors } = useTheme();
   const isEdit = !!existing;
   const [rating, setRating] = useState(existing?.rating ?? 0);
   const [comment, setComment] = useState(existing?.comment ?? '');
@@ -142,47 +134,79 @@ export default function WriteReviewModal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
+        style={[
+          styles.overlay,
+          { backgroundColor: colorWithAlpha(colors.shadow, 0.7) },
+        ]}
       >
-        <View style={styles.sheet}>
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
 
-          <View style={styles.handle} />
+          <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>
+            <Text style={[styles.title, { color: colors.text }]}>
               {isEdit ? 'Edit your review' : `Review this ${entityLabel}`}
             </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.closeBtn,
+                { backgroundColor: colorWithAlpha(colors.text, 0.08) },
+              ]}
+            >
+              <Ionicons name="close" size={20} color={colors.mutedText} />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false}>
 
             {/* Stars */}
-            <Text style={styles.label}>Your rating</Text>
+            <Text style={[styles.label, { color: colors.buttonBackground }]}>
+              Your rating
+            </Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(i => (
                 <TouchableOpacity key={i} onPress={() => setRating(i)} activeOpacity={0.7}>
                   <MaterialIcons
                     name={i <= rating ? 'star' : 'star-border'}
                     size={42}
-                    color={i <= rating ? COLORS.gold : COLORS.border}
+                    color={i <= rating ? colors.buttonBackground : colors.border}
                   />
                 </TouchableOpacity>
               ))}
             </View>
             {rating > 0 && (
-              <Text style={styles.ratingLabel}>{STAR_LABELS[rating]}</Text>
+              <Text
+                style={[styles.ratingLabel, { color: colors.buttonBackground }]}
+              >
+                {STAR_LABELS[rating]}
+              </Text>
             )}
 
             {/* Comment */}
-            <Text style={styles.label}>Your experience</Text>
+            <Text style={[styles.label, { color: colors.buttonBackground }]}>
+              Your experience
+            </Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                {
+                  color: colors.text,
+                  borderColor: colors.border,
+                  backgroundColor: colors.inputBackground,
+                },
+              ]}
               placeholder={`Share your experience with this ${entityLabel}...`}
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={colors.mutedText}
               multiline
               numberOfLines={5}
               value={comment}
@@ -190,29 +214,54 @@ export default function WriteReviewModal({
               maxLength={1000}
               textAlignVertical="top"
             />
-            <Text style={styles.charCount}>{comment.length}/1000</Text>
+            <Text style={[styles.charCount, { color: colors.mutedText }]}>
+              {comment.length}/1000
+            </Text>
 
             {/* Images — only on new review */}
             {!isEdit && (
               <>
-                <Text style={styles.label}>Add photos (optional, max 4)</Text>
+                <Text style={[styles.label, { color: colors.buttonBackground }]}>
+                  Add photos (optional, max 4)
+                </Text>
                 <View style={styles.imagesRow}>
                   {images.map((img, i) => (
                     <View key={i} style={styles.imgWrap}>
-                      <Image source={{ uri: img.uri }} style={styles.previewImg} />
+                      <Image
+                        source={{ uri: img.uri }}
+                        style={[
+                          styles.previewImg,
+                          { borderColor: colors.border },
+                        ]}
+                      />
                       <TouchableOpacity
                         style={styles.removeImg}
                         onPress={() => setImages(prev => prev.filter((_, j) => j !== i))}
                         hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                       >
-                        <Ionicons name="close-circle" size={20} color={COLORS.danger} />
+                        <Ionicons name="close-circle" size={20} color={colors.error} />
                       </TouchableOpacity>
                     </View>
                   ))}
                   {images.length < 4 && (
-                    <TouchableOpacity style={styles.addImgBtn} onPress={pickImages}>
-                      <Ionicons name="camera-outline" size={26} color={COLORS.gold} />
-                      <Text style={styles.addImgText}>Add photo</Text>
+                    <TouchableOpacity
+                      style={[
+                        styles.addImgBtn,
+                        {
+                          borderColor: colors.border,
+                          backgroundColor: colorWithAlpha(colors.text, 0.02),
+                        },
+                      ]}
+                      onPress={pickImages}
+                    >
+                      <Ionicons
+                        name="camera-outline"
+                        size={26}
+                        color={colors.buttonBackground}
+                      />
+                      <Text style={[styles.addImgText, { color: colors.mutedText }]}>
+                        Add photo
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -226,13 +275,17 @@ export default function WriteReviewModal({
             style={[
               styles.submitBtn,
               (submitting || rating === 0) && styles.submitBtnDisabled,
+              { backgroundColor: colors.buttonBackground },
+              (submitting || rating === 0) && {
+                backgroundColor: colors.mutedText,
+              },
             ]}
             onPress={handleSubmit}
             disabled={submitting || rating === 0}
           >
             {submitting
-              ? <ActivityIndicator color={COLORS.bg} />
-              : <Text style={styles.submitText}>
+              ? <ActivityIndicator color={colors.background} />
+              : <Text style={[styles.submitText, { color: colors.background }]}>
                 {isEdit ? 'Update review' : 'Submit review'}
               </Text>
             }
@@ -248,60 +301,53 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.7)',
   },
   sheet: {
-    backgroundColor: COLORS.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     paddingBottom: 36,
     maxHeight: '92%',
     borderTopWidth: 1,
-    borderColor: COLORS.border,
   },
   handle: {
     width: 40, height: 4, borderRadius: 2,
-    backgroundColor: COLORS.border,
     alignSelf: 'center', marginBottom: 16,
   },
   header: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', marginBottom: 20,
   },
-  title: { fontSize: 17, fontWeight: 'bold', color: COLORS.textPrimary },
+  title: { fontSize: 17, fontWeight: 'bold' },
   closeBtn: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: COLORS.border,
     alignItems: 'center', justifyContent: 'center',
   },
   label: {
-    fontSize: 14, fontWeight: '600', color: COLORS.gold,
+    fontSize: 14, fontWeight: '600',
     marginBottom: 8, marginTop: 14,
   },
   starsRow: { flexDirection: 'row', gap: 4, marginBottom: 4 },
-  ratingLabel: { fontSize: 13, color: COLORS.gold, fontWeight: '600', marginBottom: 4 },
+  ratingLabel: { fontSize: 13, fontWeight: '600', marginBottom: 4 },
   textInput: {
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
-    padding: 12, fontSize: 14, color: COLORS.textPrimary, minHeight: 110,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderRadius: 12,
+    padding: 12, fontSize: 14, minHeight: 110,
   },
-  charCount: { fontSize: 11, color: COLORS.textSecondary, textAlign: 'right', marginTop: 4 },
+  charCount: { fontSize: 11, textAlign: 'right', marginTop: 4 },
   imagesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   imgWrap: { position: 'relative' },
-  previewImg: { width: 74, height: 74, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border },
+  previewImg: { width: 74, height: 74, borderRadius: 10, borderWidth: 1 },
   removeImg: { position: 'absolute', top: -8, right: -8 },
   addImgBtn: {
     width: 74, height: 74, borderRadius: 10,
-    borderWidth: 1.5, borderColor: COLORS.border, borderStyle: 'dashed',
+    borderWidth: 1.5, borderStyle: 'dashed',
     alignItems: 'center', justifyContent: 'center', gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.02)',
   },
-  addImgText: { fontSize: 11, color: COLORS.textSecondary },
+  addImgText: { fontSize: 11 },
   submitBtn: {
-    backgroundColor: COLORS.gold, borderRadius: 12,
+    borderRadius: 12,
     paddingVertical: 14, alignItems: 'center', marginTop: 16,
   },
-  submitBtnDisabled: { backgroundColor: COLORS.textSecondary, opacity: 0.5 },
-  submitText: { color: COLORS.bg, fontSize: 15, fontWeight: '700' },
+  submitBtnDisabled: { opacity: 0.5 },
+  submitText: { fontSize: 15, fontWeight: '700' },
 });

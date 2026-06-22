@@ -17,6 +17,8 @@ import { Conversation, useInbox } from '@/hooks/useChat';
 import PricingModal from '@/components/PricingModal';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useToast } from '@/components/Toast';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const formatTime = (d: string | null) => {
   if (!d) return '';
@@ -41,6 +43,7 @@ const COLORS = {
 
 export default function MessagesScreen() {
   const { show } = useToast();
+  const { colors } = useTheme();
   const router = useRouter();
   const [userId, setUserId] = useState<number>(0);
   const { conversations, totalUnread, loading, deleteConversation, refresh } = useInbox();
@@ -122,9 +125,9 @@ export default function MessagesScreen() {
         style={styles.deleteAction}
         onPress={() => handleDeleteConversation(item.id, other.name ?? 'this person')}
       >
-        <Ionicons name="trash-outline" size={22} color="#fff" />
+        <Ionicons name="trash-outline" size={22} color={colors.background} />
 
-        <Text style={styles.deleteActionText}>Delete</Text>
+        <Text style={[styles.deleteActionText, { color: colors.background }]}>Delete</Text>
       </TouchableOpacity>
     );
 
@@ -151,7 +154,11 @@ export default function MessagesScreen() {
         }}
       >
         <TouchableOpacity
-          style={[styles.convItem, hasUnread && styles.convItemUnread]}
+          style={[
+            styles.convItem,
+            { backgroundColor: colors.cardBackground, borderColor: colors.border },
+            hasUnread && { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12) },
+          ]}
           activeOpacity={0.8}
           onPress={() =>
             router.push({
@@ -165,40 +172,40 @@ export default function MessagesScreen() {
             {other.avatar ? (
               <Image source={{ uri: other.avatar }} style={styles.avatar} />
             ) : (
-              <View style={styles.avatarFallback}>
-                <Text style={styles.avatarInitial}>
+              <View style={[styles.avatarFallback, { backgroundColor: colors.buttonBackground }]}>
+                <Text style={[styles.avatarInitial, { color: colors.background }]}>
                   {(other.name ?? '?')[0].toUpperCase()}
                 </Text>
               </View>
             )}
             {/* Online indicator placeholder */}
-            <View style={styles.onlineDot} />
+            <View style={[styles.onlineDot, { backgroundColor: colors.success, borderColor: colors.background }]} />
           </View>
 
           {/* Content */}
           <View style={styles.convContent}>
             <View style={styles.convTop}>
-              <Text style={[styles.convName, hasUnread && styles.convNameBold]} numberOfLines={1}>
+              <Text style={[styles.convName, { color: colors.text }, hasUnread && styles.convNameBold]} numberOfLines={1}>
                 {other.name}
               </Text>
-              <Text style={styles.convTime}>{formatTime(item.last_message_at)}</Text>
+              <Text style={[styles.convTime, { color: colors.mutedText }]}>{formatTime(item.last_message_at)}</Text>
             </View>
 
-            <Text style={styles.convProperty} numberOfLines={1}>
+            <Text style={[styles.convProperty, { color: colors.buttonBackground }]} numberOfLines={1}>
               {item.propertyName ? `🏠 ${item.propertyName}` : '💬 General enquiry'}
             </Text>
 
 
             <View style={styles.convBottom}>
               <Text
-                style={[styles.lastMessage, hasUnread && styles.lastMessageBold]}
+                style={[styles.lastMessage, { color: hasUnread ? colors.text : colors.mutedText }, hasUnread && styles.lastMessageBold]}
                 numberOfLines={1}
               >
                 {item.last_message ?? 'Start a conversation'}
               </Text>
               {hasUnread && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadText}>
+                <View style={[styles.unreadBadge, { backgroundColor: colors.buttonBackground }]}>
+                  <Text style={[styles.unreadText, { color: colors.background }]}>
                     {item.unread_count > 99 ? '99+' : item.unread_count}
                   </Text>
                 </View>
@@ -211,26 +218,26 @@ export default function MessagesScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() =>
+      <View style={[styles.header, { borderColor: colors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.inputBackground }]} onPress={() =>
           router.push({
             pathname: "../Profile",
           })
         }>
-          <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
+          <Ionicons name="chevron-back" size={22} color={colors.icon} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Messages</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
           {totalUnread > 0 && (
-            <Text style={styles.headerSub}>{totalUnread} unread</Text>
+            <Text style={[styles.headerSub, { color: colors.buttonBackground }]}>{totalUnread} unread</Text>
           )}
         </View>
       </View>
       {isPremium && conversations.length > 0 &&
         <View style={styles.swipeHintRow}>
-          <Text style={styles.swipeHintText}>Swipe left on a conversation to delete it.</Text>
+          <Text style={[styles.swipeHintText, { color: colors.mutedText }]}>Swipe left on a conversation to delete it.</Text>
         </View>
 
       }
@@ -238,7 +245,7 @@ export default function MessagesScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#c9a84c" />
+          <ActivityIndicator size="large" color={colors.buttonBackground} />
         </View>
       ) : (
         <FlatList
@@ -251,49 +258,49 @@ export default function MessagesScreen() {
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <View style={styles.emptyIcon}>
+              <View style={[styles.emptyIcon, { backgroundColor: colors.inputBackground }]}>
                 <Ionicons
                   name={!isPremium && totalUnread > 0 ? 'lock-closed-outline' : 'chatbubbles-outline'}
                   size={44}
-                  color="#ccc"
+                  color={colors.mutedText}
                 />
               </View>
 
               {!isPremium && pendingCount > 0 ? (
                 // Freemium user with pending messages
                 <>
-                  <Text style={styles.emptyTitle}>You have a message waiting</Text>
-                  <Text style={styles.emptySub}>
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>You have a message waiting</Text>
+                  <Text style={[styles.emptySub, { color: colors.mutedText }]}>
                     A potential client has reached out. Upgrade to Premium to read and
                     reply to messages.
                   </Text>
                   <TouchableOpacity
-                    style={styles.upgradeBtn}
+                    style={[styles.upgradeBtn, { backgroundColor: colors.buttonBackground }]}
                     onPress={() => setPricingVisible(true)}
                   >
-                    <Text style={styles.upgradeBtnText}>⭐ Upgrade to Premium</Text>
+                    <Text style={[styles.upgradeBtnText, { color: colors.background }]}>⭐ Upgrade to Premium</Text>
                   </TouchableOpacity>
                 </>
               ) : !isPremium ? (
                 // Freemium user, no messages yet
                 <>
-                  <Text style={styles.emptyTitle}>Messaging is a Premium feature</Text>
-                  <Text style={styles.emptySub}>
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>Messaging is a Premium feature</Text>
+                  <Text style={[styles.emptySub, { color: colors.mutedText }]}>
                     Upgrade to Premium to chat with sellers and receive messages from
                     potential buyers.
                   </Text>
                   <TouchableOpacity
-                    style={styles.upgradeBtn}
+                    style={[styles.upgradeBtn, { backgroundColor: colors.buttonBackground }]}
                     onPress={() => setPricingVisible(true)}
                   >
-                    <Text style={styles.upgradeBtnText}>⭐ Upgrade to Premium</Text>
+                    <Text style={[styles.upgradeBtnText, { color: colors.background }]}>⭐ Upgrade to Premium</Text>
                   </TouchableOpacity>
                 </>
               ) : (
                 // Premium user, no messages yet
                 <>
-                  <Text style={styles.emptyTitle}>No conversations yet</Text>
-                  <Text style={styles.emptySub}>
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>No conversations yet</Text>
+                  <Text style={[styles.emptySub, { color: colors.mutedText }]}>
                     Tap Chat With Seller on any property to start a conversation
                   </Text>
                 </>

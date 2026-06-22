@@ -17,10 +17,12 @@ import {
 import { useToast } from '../../../../components/Toast';
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function CompanyProperties() {
 
     const { show } = useToast();
+    const { colors } = useTheme();
     const router = useRouter();
 
     const { id, company_name } = useLocalSearchParams<{
@@ -150,11 +152,11 @@ export default function CompanyProperties() {
                     })
                 }
                 style={{
-                    backgroundColor: '#fff',
+                    backgroundColor: colors.cardBackground,
                     borderRadius: 24,
                     overflow: 'hidden',
                     marginBottom: 24,
-                    shadowColor: '#000',
+                    shadowColor: colors.shadow,
                     shadowOpacity: 0.08,
                     shadowRadius: 12,
                     shadowOffset: {
@@ -208,7 +210,7 @@ export default function CompanyProperties() {
                     >
                         <Text
                             style={{
-                                color: '#fff',
+                                color: colors.background,
                                 fontWeight: '700',
                                 fontSize: 11,
                             }}
@@ -302,7 +304,7 @@ export default function CompanyProperties() {
                         style={{
                             fontSize: 20,
                             fontWeight: '800',
-                            color: '#0f172a',
+                            color: colors.text,
                             lineHeight: 28,
                         }}
                     >
@@ -323,13 +325,13 @@ export default function CompanyProperties() {
                         <Ionicons
                             name='location-outline'
                             size={16}
-                            color='#64748b'
+                            color={colors.icon}
                         />
 
                         <Text
                             style={{
                                 marginLeft: 5,
-                                color: '#64748b',
+                                color: colors.mutedText,
                                 fontSize: 14,
                             }}
                         >
@@ -345,7 +347,7 @@ export default function CompanyProperties() {
                             justifyContent: 'space-between',
                             marginTop: 22,
                             borderTopWidth: 1,
-                            borderTopColor: '#f1f5f9',
+                            borderTopColor: colors.border,
                             paddingTop: 16,
                         }}
                     >
@@ -356,14 +358,14 @@ export default function CompanyProperties() {
                             <Ionicons
                                 name='bed-outline'
                                 size={20}
-                                color='#0f172a'
+                                color={colors.icon}
                             />
 
                             <Text
                                 style={{
                                     marginTop: 6,
                                     fontWeight: '800',
-                                    color: '#0f172a',
+                                    color: colors.text,
                                 }}
                             >
                                 {item.bedrooms || 0}
@@ -372,7 +374,7 @@ export default function CompanyProperties() {
                             <Text
                                 style={{
                                     marginTop: 2,
-                                    color: '#64748b',
+                                    color: colors.mutedText,
                                     fontSize: 12,
                                 }}
                             >
@@ -387,14 +389,14 @@ export default function CompanyProperties() {
                             <Ionicons
                                 name='water-outline'
                                 size={20}
-                                color='#0f172a'
+                                color={colors.icon}
                             />
 
                             <Text
                                 style={{
                                     marginTop: 6,
                                     fontWeight: '800',
-                                    color: '#0f172a',
+                                    color: colors.text,
                                 }}
                             >
                                 {item.Toilet || 0}
@@ -403,7 +405,7 @@ export default function CompanyProperties() {
                             <Text
                                 style={{
                                     marginTop: 2,
-                                    color: '#64748b',
+                                    color: colors.mutedText,
                                     fontSize: 12,
                                 }}
                             >
@@ -418,14 +420,14 @@ export default function CompanyProperties() {
                             <Ionicons
                                 name='eye-outline'
                                 size={20}
-                                color='#0f172a'
+                                color={colors.icon}
                             />
 
                             <Text
                                 style={{
                                     marginTop: 6,
                                     fontWeight: '800',
-                                    color: '#0f172a',
+                                    color: colors.text,
                                 }}
                             >
                                 {item.views_count || 0}
@@ -434,7 +436,7 @@ export default function CompanyProperties() {
                             <Text
                                 style={{
                                     marginTop: 2,
-                                    color: '#64748b',
+                                    color: colors.mutedText,
                                     fontSize: 12,
                                 }}
                             >
@@ -459,12 +461,12 @@ export default function CompanyProperties() {
                     flex: 1,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    backgroundColor: '#fff',
+                    backgroundColor: colors.background,
                 }}
             >
                 <ActivityIndicator
                     size='large'
-                    color='#c9a84c'
+                    color={colors.buttonBackground}
                 />
             </View>
         );
@@ -474,7 +476,7 @@ export default function CompanyProperties() {
         <View
             style={{
                 flex: 1,
-                backgroundColor: '#f8fafc',
+                backgroundColor: colors.background,
                 paddingTop: getStatusBarHeight(),
             }}
         >
@@ -485,7 +487,7 @@ export default function CompanyProperties() {
                     paddingTop: 18,
                     paddingBottom: 18,
                     paddingHorizontal: 20,
-                    backgroundColor: '#fff',
+                    backgroundColor: colors.cardBackground,
                 }}
             >
 
@@ -494,7 +496,7 @@ export default function CompanyProperties() {
                     <Ionicons
                         name='arrow-back'
                         size={24}
-                        color='#0f172a'
+                        color={colors.icon}
                         onPress={() => router.back()}
 
                     />
@@ -503,7 +505,7 @@ export default function CompanyProperties() {
                         style={{
                             fontSize: 28,
                             fontWeight: '800',
-                            color: '#0f172a',
+                            color: colors.text,
                             marginLeft: 16,
                         }}
                     >
@@ -518,7 +520,7 @@ export default function CompanyProperties() {
                 <Text
                     style={{
                         marginTop: 5,
-                        color: '#64748b',
+                        color: colors.mutedText,
                         fontSize: 14,
                     }}
                 >
@@ -529,7 +531,7 @@ export default function CompanyProperties() {
                 <View
                     style={{
                         marginTop: 18,
-                        backgroundColor: '#f1f5f9',
+                        backgroundColor: colors.inputBackground,
                         height: 54,
                         borderRadius: 18,
                         flexDirection: 'row',
@@ -541,18 +543,18 @@ export default function CompanyProperties() {
                     <Ionicons
                         name='search'
                         size={20}
-                        color='#64748b'
+                        color={colors.icon}
                     />
 
                     <TextInput
                         value={search}
                         onChangeText={setSearch}
                         placeholder='Search properties...'
-                        placeholderTextColor='#94a3b8'
+                        placeholderTextColor={colors.mutedText}
                         style={{
                             flex: 1,
                             marginLeft: 10,
-                            color: '#0f172a',
+                            color: colors.text,
                             fontSize: 15,
                         }}
                     />
@@ -582,15 +584,15 @@ export default function CompanyProperties() {
                                     paddingVertical: 10,
                                     borderRadius: 30,
                                     backgroundColor: active
-                                        ? '#0f172a'
-                                        : '#e2e8f0',
+                                        ? colors.buttonBackground
+                                        : colors.inputBackground,
                                 }}
                             >
                                 <Text
                                     style={{
                                         color: active
-                                            ? '#fff'
-                                            : '#334155',
+                                            ? colors.background
+                                            : colors.text,
                                         fontWeight: '700',
                                     }}
                                 >
@@ -618,6 +620,8 @@ export default function CompanyProperties() {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
+                        tintColor={colors.buttonBackground}
+                        colors={[colors.buttonBackground]}
                     />
                 }
                 ListEmptyComponent={() => (
@@ -631,7 +635,7 @@ export default function CompanyProperties() {
                         <Ionicons
                             name='home-outline'
                             size={60}
-                            color='#cbd5e1'
+                            color={colors.mutedText}
                         />
 
                         <Text
@@ -639,7 +643,7 @@ export default function CompanyProperties() {
                                 marginTop: 16,
                                 fontSize: 20,
                                 fontWeight: '800',
-                                color: '#334155',
+                                color: colors.text,
                             }}
                         >
                             No properties found
@@ -648,7 +652,7 @@ export default function CompanyProperties() {
                         <Text
                             style={{
                                 marginTop: 6,
-                                color: '#94a3b8',
+                                color: colors.mutedText,
                                 textAlign: 'center',
                             }}
                         >

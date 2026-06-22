@@ -12,6 +12,7 @@ import {
     View,
 } from 'react-native';
 import { useToast } from './Toast';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
     companyId: string | number;
@@ -22,6 +23,7 @@ export default function RelatedCompanies({
 }: Props) {
 
     const { show } = useToast();
+    const { colors } = useTheme();
     const router = useRouter();
 
     const [companies, setCompanies] = useState<any[]>([]);
@@ -98,7 +100,7 @@ export default function RelatedCompanies({
             >
                 <ActivityIndicator
                     size="large"
-                    color="#c9a84c"
+                    color={colors.buttonBackground}
                 />
             </View>
         );
@@ -141,7 +143,7 @@ export default function RelatedCompanies({
                         style={{
                             fontSize: 22,
                             fontWeight: '800',
-                            color: '#fff',
+                            color: colors.text,
                         }}
                     >
                         Similar Agencies
@@ -150,7 +152,7 @@ export default function RelatedCompanies({
                     <Text
                         style={{
                             marginTop: 4,
-                            color: '#94a3b8',
+                            color: colors.mutedText,
                             fontSize: 13,
                         }}
                     >
@@ -168,7 +170,7 @@ export default function RelatedCompanies({
 
                     <Text
                         style={{
-                            color: '#c9a84c',
+                            color: colors.buttonBackground,
                             fontWeight: '700',
                         }}
                     >
@@ -217,8 +219,8 @@ export default function RelatedCompanies({
                                 marginRight: 18,
                                 borderRadius: 24,
                                 overflow: 'hidden',
-                                backgroundColor: '#fff',
-                                shadowColor: '#000',
+                                backgroundColor: colors.cardBackground,
+                                shadowColor: colors.shadow,
                                 shadowOpacity: 0.12,
                                 shadowRadius: 12,
                                 shadowOffset: {
@@ -265,7 +267,7 @@ export default function RelatedCompanies({
                                         position: 'absolute',
                                         top: 14,
                                         left: 14,
-                                        backgroundColor: '#0f172a',
+                                        backgroundColor: colors.inputBackground,
                                         paddingHorizontal: 12,
                                         paddingVertical: 6,
                                         borderRadius: 20,
@@ -274,15 +276,15 @@ export default function RelatedCompanies({
                                     }}
                                 >
 
-                                    <Ionicons
-                                        name="sparkles"
-                                        size={12}
-                                        color="#fff"
+                                        <Ionicons
+                                            name="sparkles"
+                                            size={12}
+                                            color={colors.icon}
                                     />
 
                                     <Text
                                         style={{
-                                            color: '#fff',
+                                            color: colors.text,
                                             fontSize: 11,
                                             fontWeight: '700',
                                             marginLeft: 5,
@@ -301,7 +303,7 @@ export default function RelatedCompanies({
                                             position: 'absolute',
                                             top: 14,
                                             right: 14,
-                                            backgroundColor: '#22c55e',
+                                            backgroundColor: colors.success,
                                             paddingHorizontal: 10,
                                             paddingVertical: 5,
                                             borderRadius: 20,
@@ -315,14 +317,14 @@ export default function RelatedCompanies({
                                                 width: 8,
                                                 height: 8,
                                                 borderRadius: 4,
-                                                backgroundColor: '#fff',
+                                                backgroundColor: colors.background,
                                                 marginRight: 6,
                                             }}
                                         />
 
                                         <Text
                                             style={{
-                                                color: '#fff',
+                                                color: colors.background,
                                                 fontSize: 11,
                                                 fontWeight: '700',
                                             }}
@@ -339,7 +341,7 @@ export default function RelatedCompanies({
                                         position: 'absolute',
                                         bottom: -28,
                                         left: 18,
-                                        backgroundColor: '#fff',
+                                        backgroundColor: colors.cardBackground,
                                         borderRadius: 18,
                                         padding: 4,
                                     }}
@@ -381,7 +383,7 @@ export default function RelatedCompanies({
                                             flex: 1,
                                             fontSize: 18,
                                             fontWeight: '800',
-                                            color: '#0f172a',
+                                            color: colors.text,
                                         }}
                                     >
                                         {company?.company_name || company?.name}
@@ -391,7 +393,7 @@ export default function RelatedCompanies({
                                         <Ionicons
                                             name="checkmark-circle"
                                             size={18}
-                                            color="#22c55e"
+                                        color={colors.success}
                                         />
                                     )}
 
@@ -409,14 +411,14 @@ export default function RelatedCompanies({
                                     <Ionicons
                                         name="location-outline"
                                         size={14}
-                                        color="#64748b"
+                                    color={colors.icon}
                                     />
 
                                     <Text
                                         numberOfLines={1}
                                         style={{
                                             marginLeft: 5,
-                                            color: '#64748b',
+                                            color: colors.mutedText,
                                             fontSize: 13,
                                             flex: 1,
                                         }}
@@ -433,7 +435,7 @@ export default function RelatedCompanies({
                                         justifyContent: 'space-between',
                                         marginTop: 20,
                                         borderTopWidth: 1,
-                                        borderTopColor: '#f1f5f9',
+                                        borderTopColor: colors.border,
                                         paddingTop: 16,
                                     }}
                                 >
@@ -449,7 +451,7 @@ export default function RelatedCompanies({
                                             style={{
                                                 fontSize: 16,
                                                 fontWeight: '800',
-                                                color: '#0f172a',
+                                                color: colors.text,
                                             }}
                                         >
                                             {company.properties_count || 0}
@@ -458,7 +460,7 @@ export default function RelatedCompanies({
                                         <Text
                                             style={{
                                                 fontSize: 12,
-                                                color: '#64748b',
+                                                color: colors.mutedText,
                                                 marginTop: 3,
                                             }}
                                         >
@@ -478,7 +480,7 @@ export default function RelatedCompanies({
                                             style={{
                                                 fontSize: 16,
                                                 fontWeight: '800',
-                                                color: '#0f172a',
+                                                color: colors.text,
                                             }}
                                         >
                                             {company.average_rating || '0.0'}
@@ -487,7 +489,7 @@ export default function RelatedCompanies({
                                         <Text
                                             style={{
                                                 fontSize: 12,
-                                                color: '#64748b',
+                                                color: colors.mutedText,
                                                 marginTop: 3,
                                             }}
                                         >
@@ -507,7 +509,7 @@ export default function RelatedCompanies({
                                             style={{
                                                 fontSize: 16,
                                                 fontWeight: '800',
-                                                color: '#0f172a',
+                                                color: colors.text,
                                             }}
                                         >
                                             {company.company_views || 0}
@@ -516,7 +518,7 @@ export default function RelatedCompanies({
                                         <Text
                                             style={{
                                                 fontSize: 12,
-                                                color: '#64748b',
+                                                color: colors.mutedText,
                                                 marginTop: 3,
                                             }}
                                         >

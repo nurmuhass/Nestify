@@ -20,20 +20,17 @@ import {
   View,
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width: SW } = Dimensions.get('window');
 
 // ── Palette — matches BuyerProfile exactly ───────────────────
-const DARK   = '#1A1A2E';
-const DARK2  = '#16213E';
-const BASE   = '#1e2d4a';   // shimmer base
-const SHINE  = '#273d60';   // shimmer highlight
-const BORDER = '#555';
-
 // ─────────────────────────────────────────────────────────────
 //  useShimmer — pulsing backgroundColor
 // ─────────────────────────────────────────────────────────────
 function useShimmer(delay = 0) {
+  const { colors } = useTheme();
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -47,7 +44,13 @@ function useShimmer(delay = 0) {
     return () => loop.stop();
   }, [anim, delay]);
 
-  return anim.interpolate({ inputRange: [0, 1], outputRange: [BASE, SHINE] });
+  return anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      colorWithAlpha(colors.mutedText, 0.14),
+      colorWithAlpha(colors.mutedText, 0.26),
+    ],
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -219,8 +222,10 @@ function BecomeSellerSkeleton() {
 //  Root export — full BuyerProfile skeleton
 // ─────────────────────────────────────────────────────────────
 export default function BuyerProfileSkeleton() {
+  const { colors } = useTheme();
+
   return (
-    <View style={sk.container}>
+    <View style={[sk.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         scrollEnabled={false}
@@ -243,7 +248,7 @@ export default function BuyerProfileSkeleton() {
 const sk = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK,
+    backgroundColor: 'transparent',
     paddingTop: getStatusBarHeight(),
   },
 
@@ -264,7 +269,7 @@ const sk = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
-    borderColor: BORDER,
+    borderColor: 'transparent',
   },
 
   // ── Avatar block ─────────────────────────────────────────────
@@ -279,12 +284,12 @@ const sk = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: DARK,
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 14,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: 'rgba(201,168,76,0.2)',
+    borderColor: 'transparent',
   },
 
   // ── Stats grid ───────────────────────────────────────────────
@@ -298,11 +303,11 @@ const sk = StyleSheet.create({
   statCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: DARK2,
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 14,
     borderWidth: 0.5,
-    borderColor: BORDER,
+    borderColor: 'transparent',
   },
 
   // ── Saved section ────────────────────────────────────────────
@@ -315,12 +320,12 @@ const sk = StyleSheet.create({
   wishCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: DARK2,
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 12,
     marginBottom: 8,
     borderWidth: 0.5,
-    borderColor: BORDER,
+    borderColor: 'transparent',
   },
 
   // ── Become a seller ──────────────────────────────────────────
@@ -328,10 +333,10 @@ const sk = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: DARK,
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(201,168,76,0.27)',
+    borderColor: 'transparent',
   },
 });

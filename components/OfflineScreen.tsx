@@ -12,6 +12,8 @@ import {
 import { getStatusBarHeight } from "react-native-status-bar-height";
 
 import { useNetwork } from "@/NetworkContext";
+import { colorWithAlpha } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 type Props = {
   checking?: boolean;
@@ -19,6 +21,7 @@ type Props = {
 
 export default function OfflineScreen({ checking = false }: Props) {
   const { refreshConnection, isChecking } = useNetwork();
+  const { colors } = useTheme();
 
   const pulse1 = useRef(new Animated.Value(0)).current;
   const pulse2 = useRef(new Animated.Value(0)).current;
@@ -97,9 +100,9 @@ export default function OfflineScreen({ checking = false }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.decorTop} />
-      <View style={styles.decorBottom} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.decorTop, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12) }]} />
+      <View style={[styles.decorBottom, { backgroundColor: colorWithAlpha(colors.warning, 0.08) }]} />
 
       <View style={styles.content}>
         <View style={styles.animationBox}>
@@ -117,20 +120,29 @@ export default function OfflineScreen({ checking = false }: Props) {
             ]}
           />
 
-          <Animated.View style={[styles.iconCircle, floatStyle]}>
+          <Animated.View
+            style={[
+              styles.iconCircle,
+              floatStyle,
+              {
+                backgroundColor: colorWithAlpha(colors.cardBackground, 0.72),
+                borderColor: colorWithAlpha(colors.warning, 0.25),
+              },
+            ]}
+          >
             <Ionicons
               name="cloud-offline-outline"
               size={58}
-              color="#f0d98a"
+              color={colors.warning}
             />
           </Animated.View>
         </View>
 
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: colors.text }]}>
           {checking ? "Checking connection..." : "No Internet Connection"}
         </Text>
 
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.mutedText }]}>
           {checking
             ? "Please wait while Nestify checks your network."
             : "You appear to be offline. Please check your Wi-Fi or mobile data and try again."}
@@ -140,6 +152,7 @@ export default function OfflineScreen({ checking = false }: Props) {
           <Pressable
             style={({ pressed }) => [
               styles.retryButton,
+              { backgroundColor: colors.buttonBackground },
               pressed && styles.retryButtonPressed,
             ]}
             disabled={isChecking}
@@ -148,10 +161,10 @@ export default function OfflineScreen({ checking = false }: Props) {
             <Ionicons
               name="refresh"
               size={18}
-              color="#091530"
+              color={colors.text}
             />
 
-            <Text style={styles.retryText}>
+            <Text style={[styles.retryText, { color: colors.text }]}>
               {isChecking ? "Checking..." : "Try Again"}
             </Text>
           </Pressable>

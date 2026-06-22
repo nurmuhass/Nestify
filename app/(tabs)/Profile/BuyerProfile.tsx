@@ -12,6 +12,9 @@ import ConfirmModal from "@/components/ConfirmModal";
 import PricingModal from "@/components/PricingModal";
 import { AuthContext } from '@/store';
 import BuyerProfileSkeleton from '@/components/BuyerProfileSkeleton';
+import ThemeToggle from "@/components/ThemeToggle";
+import { colorWithAlpha } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -23,6 +26,7 @@ const DARK2 = "#16213E";
 // ═══════════════════════════════════════════════════════════════════════════════
 function BuyerProfile({ user, onSettings, onMessages }: any) {
     const { show } = useToast();
+    const { colors } = useTheme();
     const router = useRouter();
     const [saved, setSaved] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -52,18 +56,18 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
 
     // ── Premium Banner ────────────────────────────────────────────────────────────
     const PremiumBanner = ({ onUpgrade }: { onUpgrade: () => void }) => (
-        <TouchableOpacity style={styles.premiumBanner} onPress={onUpgrade}>
+        <TouchableOpacity style={[styles.premiumBanner, { backgroundColor: colors.cardBackground, borderColor: colorWithAlpha(colors.buttonBackground, 0.32) }]} onPress={onUpgrade}>
             <View style={styles.premiumBannerLeft}>
-                <MaterialIcons name="star" size={18} color={GOLD} />
+                <MaterialIcons name="star" size={18} color={colors.buttonBackground} />
                 <View>
-                    <Text style={styles.premiumBannerTitle}>Unlock Premium</Text>
-                    <Text style={styles.premiumBannerSub}>
+                    <Text style={[styles.premiumBannerTitle, { color: colors.text }]}>Unlock Premium</Text>
+                    <Text style={[styles.premiumBannerSub, { color: colors.mutedText }]}>
                         Chat, analytics & priority listing
                     </Text>
                 </View>
             </View>
-            <View style={styles.premiumBannerBtn}>
-                <Text style={styles.premiumBannerBtnText}>Upgrade</Text>
+            <View style={[styles.premiumBannerBtn, { backgroundColor: colors.buttonBackground }]}>
+                <Text style={[styles.premiumBannerBtnText, { color: colors.background }]}>Upgrade</Text>
             </View>
         </TouchableOpacity>
     );
@@ -146,48 +150,49 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
         onClose: () => void;
     };
     return (
-        <View style={[styles.container, { backgroundColor: DARK }]}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 {/* ── Header bar ── */}
-                <View style={styles.buyerHeaderBar}>
-                    <TouchableOpacity style={styles.buyerHeaderBtn} onPress={onMessages}>
-                        <AntDesign name="message1" size={18} color="#fff" />
+                <View style={[styles.buyerHeaderBar, { backgroundColor: colors.background }]}>
+                    <TouchableOpacity style={[styles.buyerHeaderBtn, { backgroundColor: colors.cardBackground }]} onPress={onMessages}>
+                        <AntDesign name="message1" size={18} color={colors.text} />
                     </TouchableOpacity>
-                    <Text style={styles.buyerHeaderTitle}>Profile</Text>
+                    <Text style={[styles.buyerHeaderTitle, { color: colors.text }]}>Profile</Text>
                     <View style={styles.buyerHeaderRight}>
-                        <TouchableOpacity style={styles.buyerHeaderBtn} onPress={() => setLogoutConfirmVisible(true)}>
-                            <Ionicons name="log-out-outline" size={18} color="#fff" />
+                        <ThemeToggle style={[styles.buyerHeaderBtn, { backgroundColor: colors.cardBackground }]} iconColor={colors.text} />
+                        <TouchableOpacity style={[styles.buyerHeaderBtn, { backgroundColor: colors.cardBackground }]} onPress={() => setLogoutConfirmVisible(true)}>
+                            <Ionicons name="log-out-outline" size={18} color={colors.text} />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.buyerHeaderBtn} onPress={onSettings}>
-                            <Ionicons name="settings-outline" size={18} color="#fff" />
+                        <TouchableOpacity style={[styles.buyerHeaderBtn, { backgroundColor: colors.cardBackground }]} onPress={onSettings}>
+                            <Ionicons name="settings-outline" size={18} color={colors.text} />
                         </TouchableOpacity>
                     </View>
                 </View>
 
                 {/* ── Avatar block ── */}
                 <View style={styles.buyerAvatarBlock}>
-                    <View style={styles.buyerAvatarRing}>
+                    <View style={[styles.buyerAvatarRing, { borderColor: colors.buttonBackground }]}>
                         {user?.profile_image ? (
                             <Image source={{ uri: user.profile_image }} style={styles.buyerAvatarImg} />
                         ) : (
-                            <View style={styles.buyerAvatarFallback}>
-                                <Text style={styles.buyerAvatarInitial}>
+                            <View style={[styles.buyerAvatarFallback, { backgroundColor: colors.cardBackground }]}>
+                                <Text style={[styles.buyerAvatarInitial, { color: colors.buttonBackground }]}>
                                     {(user?.name ?? "?")[0].toUpperCase()}
                                 </Text>
                             </View>
                         )}
                     </View>
-                    <Text style={styles.buyerName}>{user?.name ?? "User"}</Text>
-                    <Text style={styles.buyerSince}>
+                    <Text style={[styles.buyerName, { color: colors.text }]}>{user?.name ?? "User"}</Text>
+                    <Text style={[styles.buyerSince, { color: colors.mutedText }]}>
                         Member since {user?.created_at ? new Date(user.created_at).getFullYear() : "—"}
                     </Text>
 
                     {/* Rating pill */}
                     {Number(user?.average_rating) > 0 && (
-                        <View style={styles.buyerRatingPill}>
-                            <MaterialIcons name="star" size={13} color="#f59e0b" />
-                            <Text style={styles.buyerRatingText}>
+                        <View style={[styles.buyerRatingPill, { backgroundColor: colorWithAlpha(colors.warning, 0.14), borderColor: colorWithAlpha(colors.warning, 0.25) }]}>
+                            <MaterialIcons name="star" size={13} color={colors.warning} />
+                            <Text style={[styles.buyerRatingText, { color: colors.warning }]}>
                                 {Number(user.average_rating).toFixed(1)} rating
                             </Text>
                         </View>
@@ -204,9 +209,9 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
                 {/* ── Premium User Badge ── */}
                 {isPremium && (
                     <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-                        <View style={styles.premiumUserBadge}>
-                            <MaterialIcons name="star" size={20} color={GOLD} />
-                            <Text style={styles.premiumUserText}>Premium User</Text>
+                        <View style={[styles.premiumUserBadge, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12), borderColor: colorWithAlpha(colors.buttonBackground, 0.32) }]}>
+                            <MaterialIcons name="star" size={20} color={colors.buttonBackground} />
+                            <Text style={[styles.premiumUserText, { color: colors.buttonBackground }]}>Premium User</Text>
                         </View>
                     </View>
                 )}
@@ -216,7 +221,7 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
                     {QUICK_STATS.map((s) => (
                         <TouchableOpacity
                             key={s.label}
-                            style={styles.buyerStatCard}
+                            style={[styles.buyerStatCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                             onPress={() => router.push(s.route as any)}
                         >
                             <View style={[styles.buyerStatIcon, { backgroundColor: s.bg }]}>
@@ -224,35 +229,35 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
                             </View>
                             <View>
                                 {s.value !== "" && (
-                                    <Text style={styles.buyerStatNum}>{s.value}</Text>
+                                    <Text style={[styles.buyerStatNum, { color: colors.text }]}>{s.value}</Text>
                                 )}
-                                <Text style={styles.buyerStatLbl}>{s.label}</Text>
+                                <Text style={[styles.buyerStatLbl, { color: colors.mutedText }]}>{s.label}</Text>
                             </View>
                         </TouchableOpacity>
                     ))}
                 </View>
 
                 {/* ── Saved properties ── */}
-                <View style={styles.buyerSection}>
+                <View style={[styles.buyerSection, { backgroundColor: colors.background }]}>
                     <View style={styles.buyerSectionHeader}>
-                        <Text style={styles.buyerSectionTitle}>Saved properties</Text>
+                        <Text style={[styles.buyerSectionTitle, { color: colors.text }]}>Saved properties</Text>
                         <TouchableOpacity onPress={() => router.push("../Profile/Wishlist")}>
-                            <Text style={styles.buyerSeeAll}>See all</Text>
+                            <Text style={[styles.buyerSeeAll, { color: colors.buttonBackground }]}>See all</Text>
                         </TouchableOpacity>
                     </View>
 
                     {loading ? (
-                        <ActivityIndicator color="#c9a84c" style={{ marginTop: 20 }} />
+                        <ActivityIndicator color={colors.buttonBackground} style={{ marginTop: 20 }} />
                     ) : saved.length === 0 ? (
-                        <View style={styles.buyerEmpty}>
-                            <Ionicons name="heart-outline" size={32} color="#ddd" />
-                            <Text style={styles.buyerEmptyText}>No saved properties yet</Text>
+                        <View style={[styles.buyerEmpty, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                            <Ionicons name="heart-outline" size={32} color={colors.mutedText} />
+                            <Text style={[styles.buyerEmptyText, { color: colors.mutedText }]}>No saved properties yet</Text>
                         </View>
                     ) : (
                         saved.slice(0, 3).map((item) => (
                             <TouchableOpacity
                                 key={item.id}
-                                style={styles.buyerWishCard}
+                                style={[styles.buyerWishCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                                 onPress={() =>
                                     router.push({ pathname: "../Home/Properties/Details", params: { id: item.id } })
                                 }
@@ -263,23 +268,23 @@ function BuyerProfile({ user, onSettings, onMessages }: any) {
                                     resizeMode="cover"
                                 />
                                 <View style={styles.buyerWishInfo}>
-                                    <Text style={styles.buyerWishName} numberOfLines={1}>
+                                    <Text style={[styles.buyerWishName, { color: colors.text }]} numberOfLines={1}>
                                         {item.propertyName}
                                     </Text>
                                     <View style={styles.buyerWishLocRow}>
-                                        <Ionicons name="location-outline" size={11} color="#888" />
-                                        <Text style={styles.buyerWishLoc} numberOfLines={1}>
+                                        <Ionicons name="location-outline" size={11} color={colors.mutedText} />
+                                        <Text style={[styles.buyerWishLoc, { color: colors.mutedText }]} numberOfLines={1}>
                                             {[item.city, item.state].filter(Boolean).join(", ")}
                                         </Text>
                                     </View>
-                                    <Text style={styles.buyerWishPrice}>
+                                    <Text style={[styles.buyerWishPrice, { color: colors.buttonBackground }]}>
                                         ₦
                                         {item.listingType === "Rent"
                                             ? formatPrice(item.rentPrice)
                                             : formatPrice(item.sellPrice)}
                                     </Text>
                                 </View>
-                                <Ionicons name="heart" size={18} color="#e11d48" />
+                                <Ionicons name="heart" size={18} color={colors.error} />
                             </TouchableOpacity>
                         ))
                     )}

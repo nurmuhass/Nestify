@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 const BASE_URL = 'https://insighthub.com.ng/';
 
@@ -21,6 +22,7 @@ export default function FeaturedCompanies({
   onCountChange,
 }: Props) {
   const router = useRouter();
+  const { colors } = useTheme();
 
   // notify parent count
   if (companies.length > 0 && onCountChange) {
@@ -31,7 +33,7 @@ export default function FeaturedCompanies({
     <View>
       {/* ── Header ───────────────────── */}
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Featured Companies
         </Text>
 
@@ -40,7 +42,7 @@ export default function FeaturedCompanies({
             router.push('/Home/Company/AllCompanies')
           }
         >
-          <Text style={styles.sectionLink}>
+          <Text style={[styles.sectionLink, { color: colors.buttonBackground }]}>
             Explore →
           </Text>
         </TouchableOpacity>
@@ -49,7 +51,7 @@ export default function FeaturedCompanies({
       {/* ── Empty State ───────────────── */}
       {companies.length === 0 ? (
         <View style={styles.loader}>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.mutedText }]}>
             No companies available
           </Text>
         </View>
@@ -75,7 +77,7 @@ export default function FeaturedCompanies({
             return (
               <TouchableOpacity
                 key={company.id ?? index}
-                style={styles.card}
+                style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 activeOpacity={0.85}
                 onPress={() =>
                   router.push({
@@ -88,7 +90,7 @@ export default function FeaturedCompanies({
                 }
               >
                 {/* Logo */}
-                <View style={styles.logoWrap}>
+                <View style={[styles.logoWrap, { borderColor: colors.border }]}>
                   {imageUri ? (
                     <Image
                       source={{ uri: imageUri }}
@@ -100,9 +102,10 @@ export default function FeaturedCompanies({
                       style={[
                         styles.logo,
                         styles.logoFallback,
+                        { backgroundColor: colors.inputBackground },
                       ]}
                     >
-                      <Text style={styles.logoInitial}>
+                      <Text style={[styles.logoInitial, { color: colors.warning }]}>
                         {initial}
                       </Text>
                     </View>
@@ -111,7 +114,7 @@ export default function FeaturedCompanies({
 
                 {/* Name */}
                 <Text
-                  style={styles.name}
+                  style={[styles.name, { color: colors.text }]}
                   numberOfLines={2}
                 >
                   {company.name ??
@@ -121,7 +124,7 @@ export default function FeaturedCompanies({
 
                 {/* Count */}
                 {company.property_count ? (
-                  <Text style={styles.count}>
+                  <Text style={[styles.count, { color: colors.mutedText }]}>
                     {company.property_count} props
                   </Text>
                 ) : null}

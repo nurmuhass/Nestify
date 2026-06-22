@@ -15,6 +15,8 @@ import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { Notification, useNotifications } from '../../../hooks/useNotifications';
 import { useToast } from '@/components/Toast';
 import ConfirmModal from '@/components/ConfirmModal';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const COLORS = {
   bg: '#091530',
@@ -69,6 +71,7 @@ const isToday = (dateString: string): boolean => {
 
 export default function NotificationsScreen() {
   const { show } = useToast();
+  const { colors } = useTheme();
 
   const router = useRouter();
   const {
@@ -175,7 +178,14 @@ export default function NotificationsScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.item, unread && styles.itemUnread]}
+        style={[
+          styles.item,
+          { backgroundColor: colors.cardBackground, borderColor: colors.border },
+          unread && {
+            backgroundColor: colorWithAlpha(colors.buttonBackground, 0.08),
+            borderColor: colors.buttonBackground,
+          },
+        ]}
         activeOpacity={0.8}
         onPress={() => handleTap(item)}
       >
@@ -190,7 +200,7 @@ export default function NotificationsScreen() {
           )}
           {/* type badge overlay when avatar present */}
           {item.actor_image && (
-            <View style={[styles.typeBadge, { backgroundColor: cfg.bg }]}>
+            <View style={[styles.typeBadge, { backgroundColor: cfg.bg, borderColor: colors.cardBackground }]}>
               <Ionicons name={cfg.icon as any} size={10} color={cfg.color} />
             </View>
           )}
@@ -198,26 +208,26 @@ export default function NotificationsScreen() {
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={[styles.title, unread && styles.titleUnread]}>
+          <Text style={[styles.title, { color: colors.mutedText }, unread && { color: colors.text }]}>
             {item.title}
           </Text>
-          <Text style={styles.message} numberOfLines={2}>
+          <Text style={[styles.message, { color: colors.mutedText }]} numberOfLines={2}>
             {item.message}
           </Text>
-          <Text style={styles.time}>{formatTime(item.created_at)}</Text>
+          <Text style={[styles.time, { color: colors.mutedText }]}>{formatTime(item.created_at)}</Text>
         </View>
 
         {/* Right: unread dot + delete */}
         <View style={styles.right}>
-          {unread && <View style={styles.unreadDot} />}
+          {unread && <View style={[styles.unreadDot, { backgroundColor: colors.buttonBackground }]} />}
           <TouchableOpacity
             style={styles.deleteBtn}
             onPress={() => handleDelete(item.id)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {deleting === item.id
-              ? <ActivityIndicator size="small" color={COLORS.gold} />
-              : <Ionicons name="trash-outline" size={16} color={COLORS.textSecondary} />
+              ? <ActivityIndicator size="small" color={colors.buttonBackground} />
+              : <Ionicons name="trash-outline" size={16} color={colors.mutedText} />
             }
           </TouchableOpacity>
         </View>
@@ -226,14 +236,14 @@ export default function NotificationsScreen() {
   };
 
   const renderSectionHeader = (label: string) => (
-    <Text style={styles.sectionLabel}>{label}</Text>
+    <Text style={[styles.sectionLabel, { color: colors.mutedText }]}>{label}</Text>
   );
 
   const renderList = () => {
     if (loading) {
       return (
         <View style={[styles.center]}>
-          <ActivityIndicator size="large" color={COLORS.gold} />
+          <ActivityIndicator size="large" color={colors.buttonBackground} />
         </View>
       );
     }
@@ -241,11 +251,11 @@ export default function NotificationsScreen() {
     if (notifications.length === 0) {
       return (
         <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="notifications-outline" size={36} color={COLORS.gold} />
+          <View style={[styles.emptyIcon, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+            <Ionicons name="notifications-outline" size={36} color={colors.buttonBackground} />
           </View>
-          <Text style={styles.emptyTitle}>No notifications yet</Text>
-          <Text style={styles.emptySub}>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No notifications yet</Text>
+          <Text style={[styles.emptySub, { color: colors.mutedText }]}>
             You will see updates releated to your account here
           </Text>
         </View>
@@ -263,7 +273,7 @@ export default function NotificationsScreen() {
         onEndReached={hasMore ? loadMore : undefined}
         onEndReachedThreshold={0.3}
         ListFooterComponent={
-          hasMore ? <ActivityIndicator style={{ marginVertical: 16 }} color={COLORS.gold} /> : null
+          hasMore ? <ActivityIndicator style={{ marginVertical: 16 }} color={colors.buttonBackground} /> : null
         }
         ListHeaderComponent={
           <>
@@ -294,29 +304,29 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.inputBackground }]} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
 
         <View>
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
           {unreadCount > 0 && (
-            <Text style={styles.headerSub}>{unreadCount} unread</Text>
+            <Text style={[styles.headerSub, { color: colors.buttonBackground }]}>{unreadCount} unread</Text>
           )}
         </View>
 
         <View style={styles.headerActions}>
           {unreadCount > 0 && (
-            <TouchableOpacity style={styles.headerBtn} onPress={markAllRead}>
-              <MaterialIcons name="done-all" size={20} color={COLORS.gold} />
+            <TouchableOpacity style={[styles.headerBtn, { backgroundColor: colors.inputBackground }]} onPress={markAllRead}>
+              <MaterialIcons name="done-all" size={20} color={colors.buttonBackground} />
             </TouchableOpacity>
           )}
           {notifications.length > 0 && (
-            <TouchableOpacity style={styles.headerBtn} onPress={handleClearAll}>
-              <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+            <TouchableOpacity style={[styles.headerBtn, { backgroundColor: colors.inputBackground }]} onPress={handleClearAll}>
+              <Ionicons name="trash-outline" size={18} color={colors.error} />
             </TouchableOpacity>
           )}
         </View>

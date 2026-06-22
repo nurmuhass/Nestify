@@ -20,6 +20,7 @@ import { useToast } from '@/components/Toast';
 import { Animated } from 'react-native';
 import { useRef } from 'react';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { useTheme } from '@/context/ThemeContext';
 
 const BASE_URL = 'https://insighthub.com.ng';
 const GOLD = '#C9A84C';
@@ -29,6 +30,7 @@ const CARD = '#1A1A2A';
 const normalize = (v: string) => v.trim().toLowerCase();
 
 const EditEstate = () => {
+  const { colors } = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams();
   const estateId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -323,31 +325,31 @@ const EditEstate = () => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={GOLD} />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.buttonBackground} />
       </View>
     );
   }
 
   return (
      <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          style={{ flex: 1, backgroundColor: colors.background }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
       <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-        <Ionicons name="arrow-back" size={24} color={GOLD} />
+        <Ionicons name="arrow-back" size={24} color={colors.icon} />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Edit Estate</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Edit Estate</Text>
 
       <TouchableOpacity onPress={pickImage} style={styles.imageWrap}>
         {image ? (
-          <Image source={{ uri: image }} style={styles.image} />
+          <Image source={{ uri: image }} style={[styles.image, { backgroundColor: colors.inputBackground, borderColor: colors.border }]} />
         ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="image-outline" size={34} color="#777" />
-            <Text style={styles.imagePlaceholderText}>Tap to add image</Text>
+          <View style={[styles.imagePlaceholder, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
+            <Ionicons name="image-outline" size={34} color={colors.icon} />
+            <Text style={[styles.imagePlaceholderText, { color: colors.mutedText }]}>Tap to add image</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -356,28 +358,28 @@ const EditEstate = () => {
         value={name}
         onChangeText={setName}
         placeholder="Estate Name"
-        placeholderTextColor="#777"
-        style={styles.input}
+        placeholderTextColor={colors.mutedText}
+        style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
       />
 
       <TextInput
         value={location}
         onChangeText={setLocation}
         placeholder="Location"
-        placeholderTextColor="#777"
-        style={styles.input}
+        placeholderTextColor={colors.mutedText}
+        style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
       />
 
       <TextInput
         value={about}
         onChangeText={setAbout}
         placeholder="About"
-        placeholderTextColor="#777"
+        placeholderTextColor={colors.mutedText}
         multiline
-        style={[styles.input, styles.textArea]}
+        style={[styles.input, styles.textArea, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
       />
 
-      <Text style={styles.section}>Facilities</Text>
+      <Text style={[styles.section, { color: colors.buttonBackground }]}>Facilities</Text>
 
       <View style={styles.facilityList}>
         {facilities.length > 0 ? (
@@ -386,19 +388,20 @@ const EditEstate = () => {
               key={`${f}-${idx}`}
               style={[
                 styles.facility,
+                { backgroundColor: colors.cardBackground, borderColor: colors.border },
                 {
                   transform: [{ scale: new Animated.Value(1) }],
                 },
               ]}
             >
-              <Text style={styles.facilityText}>{f}</Text>
+              <Text style={[styles.facilityText, { color: colors.text }]}>{f}</Text>
               <TouchableOpacity onPress={() => removeFacility(f)}>
-                <Ionicons name="close-circle" color="#ff6b6b" size={20} />
+                <Ionicons name="close-circle" color={colors.error} size={20} />
               </TouchableOpacity>
             </Animated.View>
           ))
         ) : (
-          <Text style={styles.emptyText}>No facilities added yet.</Text>
+          <Text style={[styles.emptyText, { color: colors.mutedText }]}>No facilities added yet.</Text>
         )}
       </View>
 
@@ -407,22 +410,22 @@ const EditEstate = () => {
           value={newFacility}
           onChangeText={setNewFacility}
           placeholder="Add facility"
-          placeholderTextColor="#777"
-          style={[styles.input, { flex: 1, marginBottom: 0 }]}
+          placeholderTextColor={colors.mutedText}
+          style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
           onSubmitEditing={addFacility}
           returnKeyType="done"
         />
-        <TouchableOpacity onPress={addFacility} style={styles.addBtn}>
-          <Ionicons name="add" size={22} color={DARK} />
+        <TouchableOpacity onPress={addFacility} style={[styles.addBtn, { backgroundColor: colors.buttonBackground }]}>
+          <Ionicons name="add" size={22} color={colors.background} />
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
-        style={[styles.button, updating && { opacity: 0.7 }]}
+        style={[styles.button, { backgroundColor: colors.buttonBackground }, updating && { opacity: 0.7 }]}
         onPress={handleUpdate}
         disabled={updating}
       >
-        <Text style={styles.buttonText}>
+        <Text style={[styles.buttonText, { color: colors.background }]}>
           {updating ? 'Updating...' : 'Update Estate'}
         </Text>
       </TouchableOpacity>

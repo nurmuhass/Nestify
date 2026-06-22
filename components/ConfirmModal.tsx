@@ -1,15 +1,15 @@
-
 import React from 'react';
 
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const ConfirmModal = ({
   visible,
@@ -20,24 +20,56 @@ const ConfirmModal = ({
   loading,
   confirmText = 'Delete',
 }: any) => {
+  const { colors } = useTheme();
+
   if (!visible) return null;
 
   return (
-    <View style={modalStyles.overlay}>
-      <View style={modalStyles.modal}>
-        <Text style={modalStyles.title}>{title}</Text>
-        <Text style={modalStyles.message}>{message}</Text>
+    <View
+      style={[
+        modalStyles.overlay,
+        { backgroundColor: colorWithAlpha(colors.shadow, 0.6) },
+      ]}
+    >
+      <View
+        style={[
+          modalStyles.modal,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <Text style={[modalStyles.title, { color: colors.text }]}>{title}</Text>
+        <Text style={[modalStyles.message, { color: colors.mutedText }]}>
+          {message}
+        </Text>
 
         <View style={modalStyles.actions}>
           <TouchableOpacity style={modalStyles.cancelBtn} onPress={onCancel}>
-            <Text style={modalStyles.cancelText}>Cancel</Text>
+            <Text style={[modalStyles.cancelText, { color: colors.mutedText }]}>
+              Cancel
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={modalStyles.confirmBtn} onPress={onConfirm}>
+          <TouchableOpacity
+            style={[
+              modalStyles.confirmBtn,
+              { backgroundColor: colors.buttonBackground },
+            ]}
+            onPress={onConfirm}
+          >
             {loading ? (
-              <ActivityIndicator color="#0f2044" />
+              <ActivityIndicator color={colors.background} />
             ) : (
-              <Text style={modalStyles.confirmText}>{confirmText}</Text>
+              <Text
+                style={[
+                  modalStyles.confirmText,
+                  { color: colors.background },
+                ]}
+              >
+                {confirmText}
+              </Text>
             )}
           </TouchableOpacity>
         </View>
@@ -47,6 +79,7 @@ const ConfirmModal = ({
 };
 
 export default ConfirmModal;
+
 const modalStyles = StyleSheet.create({
   overlay: {
     position: 'absolute',
@@ -54,27 +87,22 @@ const modalStyles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
   },
   modal: {
     width: '85%',
-    backgroundColor: '#0f2044',
     borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
   },
   title: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 8,
   },
   message: {
-    color: '#94a3b8',
     fontSize: 13,
     marginBottom: 18,
   },
@@ -88,17 +116,14 @@ const modalStyles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   cancelText: {
-    color: '#94a3b8',
     fontWeight: '600',
   },
   confirmBtn: {
-    backgroundColor: '#c9a84c',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 10,
   },
   confirmText: {
-    color: '#0f2044',
     fontWeight: '700',
   },
 });

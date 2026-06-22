@@ -22,18 +22,20 @@ import { MaterialIcons as Icon, Ionicons } from "@expo/vector-icons";
 import { useToast } from "../../../components/Toast";
 import PricingModal from "../../../components/PricingModal";
 import PremiumLoader from "@/components/PremiumLoader";
-import { Video } from 'expo-av';
-
+import { Video } from "expo-av";
+import { colorWithAlpha } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 // Add these constants above the component
 const GOLD = "#C9A84C";
 const NAVY = "#1C2B4A";
 const LIGHT = "#F8F9FB";
-const BLUE = "#2563EB";  // keep your existing blue for highlights
+const BLUE = "#2563EB"; // keep your existing blue for highlights
 
 // Multi-step form component
 const PublishProperty = () => {
   const { show } = useToast();
+  const { colors } = useTheme();
   // State to track the current step
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -109,7 +111,9 @@ const PublishProperty = () => {
   const [estates, setEstates] = useState<any[]>([]);
   const [openEstate, setOpenEstate] = useState(false);
   const [estateValue, setEstateValue] = useState(null);
-  const [estateItems, setEstateItems] = useState<{ label: string; value: string | number }[]>([]);
+  const [estateItems, setEstateItems] = useState<
+    { label: string; value: string | number }[]
+  >([]);
 
   useEffect(() => {
     fetchCategories();
@@ -155,7 +159,8 @@ const PublishProperty = () => {
         });
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
+      const errorMsg =
+        err instanceof Error ? err.message : "Unknown error occurred";
       show({
         type: "error",
         title: "Error",
@@ -176,14 +181,13 @@ const PublishProperty = () => {
       const user = JSON.parse(userJson);
       const userId = user.id;
 
-
       const res = await fetch(
         `https://insighthub.com.ng/NestifyAPI/get_Company_Estate.php?companyId=${userId}`,
         {
           headers: {
             Authorization: `Token ${token}`,
           },
-        }
+        },
       );
 
       const result = await res.json();
@@ -203,16 +207,24 @@ const PublishProperty = () => {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const [countryItems, setCountryItems] = useState<{ label: string, value: string }[]>([]);
-  const [stateItems, setStateItems] = useState<{ label: string, value: string }[]>([]);
-  const [cityItems, setCityItems] = useState<{ label: string, value: string }[]>([]);
+  const [countryItems, setCountryItems] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [stateItems, setStateItems] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [cityItems, setCityItems] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   const [openState, setOpenState] = useState(false);
   const [openCity, setOpenCity] = useState(false);
 
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [condition, setCondition] = useState<string | null>(null);
-  const [selectedSalesType, setSelectedSalesType] = useState<string | null>(null);
+  const [selectedSalesType, setSelectedSalesType] = useState<string | null>(
+    null,
+  );
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   const handleStatusChange = (value: string | null) => {
@@ -224,22 +236,32 @@ const PublishProperty = () => {
 
   const [openCategory, setOpenCategory] = useState(false);
   const [categoryValue, setCategoryValue] = useState(null);
-  const [categoryItems, setCategoryItems] = useState<{ label: string, value: string | number }[]>([]);
+  const [categoryItems, setCategoryItems] = useState<
+    { label: string; value: string | number }[]
+  >([]);
 
   const [openSub, setOpenSub] = useState(false);
   const [subValue, setSubValue] = useState(null);
-  const [subItems, setSubItems] = useState<{ label: string, value: string | number }[]>([]);
+  const [subItems, setSubItems] = useState<
+    { label: string; value: string | number }[]
+  >([]);
 
   const [authLoaded, setAuthLoaded] = useState(false);
 
-
   // Validation errors state
-  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
 
   // Validation functions
   const validateStep = (step: number): boolean => {
     const errors: { [key: string]: string } = {};
-    const effectiveStep = user?.plan_type?.toLowerCase() === "premium" ? step : step === 3 ? 4 : step;
+    const effectiveStep =
+      user?.plan_type?.toLowerCase() === "premium"
+        ? step
+        : step === 3
+          ? 4
+          : step;
 
     switch (effectiveStep) {
       case 0: // Property Details
@@ -265,10 +287,16 @@ const PublishProperty = () => {
           errors.description = "Description must be at least 30 characters";
         }
 
-        if (formData.listingType === "Sell" || formData.listingType === "Both") {
+        if (
+          formData.listingType === "Sell" ||
+          formData.listingType === "Both"
+        ) {
           if (!formData.sellPrice.trim()) {
             errors.sellPrice = "Sell price is required";
-          } else if (isNaN(Number(formData.sellPrice)) || Number(formData.sellPrice) <= 0) {
+          } else if (
+            isNaN(Number(formData.sellPrice)) ||
+            Number(formData.sellPrice) <= 0
+          ) {
             errors.sellPrice = "Sell price must be a valid positive number";
           } else if (Number(formData.sellPrice) < 100000) {
             errors.sellPrice = "Sell price seems very low, please verify";
@@ -277,10 +305,16 @@ const PublishProperty = () => {
           }
         }
 
-        if (formData.listingType === "Rent" || formData.listingType === "Both") {
+        if (
+          formData.listingType === "Rent" ||
+          formData.listingType === "Both"
+        ) {
           if (!formData.rentPrice.trim()) {
             errors.rentPrice = "Rent price is required";
-          } else if (isNaN(Number(formData.rentPrice)) || Number(formData.rentPrice) <= 0) {
+          } else if (
+            isNaN(Number(formData.rentPrice)) ||
+            Number(formData.rentPrice) <= 0
+          ) {
             errors.rentPrice = "Rent price must be a valid positive number";
           } else if (Number(formData.rentPrice) < 5000) {
             errors.rentPrice = "Rent price seems very low, please verify";
@@ -289,8 +323,6 @@ const PublishProperty = () => {
           }
         }
         break;
-
-
 
       case 1: // Location
         if (!state) {
@@ -317,7 +349,10 @@ const PublishProperty = () => {
         break;
 
       case 4: // Complete Listing
-        if (formData.size.trim() && (isNaN(Number(formData.size)) || Number(formData.size) <= 0)) {
+        if (
+          formData.size.trim() &&
+          (isNaN(Number(formData.size)) || Number(formData.size) <= 0)
+        ) {
           errors.size = "Size must be a valid positive number";
         }
 
@@ -394,11 +429,17 @@ const PublishProperty = () => {
   const [openDoc, setOpenDoc] = useState(false);
   const [docValue, setDocValue] = useState(null);
   const [docItems, setDocItems] = useState([
-    { label: "Certificate of Occupancy (C of O)", value: "CofO" },
-    { label: "Right of Occupancy (R of O)", value: "RofO" },
-    { label: "Deed of Assignment", value: "DeedOfAssignment" },
-    { label: "Governor’s Consent", value: "GovernorsConsent" },
-    { label: "Registered Survey", value: "RegisteredSurvey" },
+    {
+      label: "Certificate of Occupancy (C of O)",
+      value: "Certificate of Occupancy (C of O)",
+    },
+    {
+      label: "Right of Occupancy (R of O)",
+      value: "Right of Occupancy (R of O)",
+    },
+    { label: "Deed of Assignment", value: "Deed of Assignment" },
+    { label: "Governor’s Consent", value: "Governor’s Consent" },
+    { label: "Registered Survey", value: "Registered Survey" },
     { label: "Excision", value: "Excision" },
     { label: "Gazette", value: "Gazette" },
     { label: "Others", value: "Others" },
@@ -408,32 +449,27 @@ const PublishProperty = () => {
   const [openCondition, setOpenCondition] = useState(false);
   const [conditionValue, setConditionValue] = useState(null);
   const [conditionItems, setConditionItems] = useState([
-    { label: "Newly Built", value: "newly_built" },
+    { label: "Newly Built", value: "Newly Built" },
     { label: "Renovated", value: "renovated" },
-    { label: "Needs Renovation", value: "needs_renovation" },
+    { label: "Needs Renovation", value: "Needs Renovation" },
     { label: "Old Building", value: "Old Building" },
     { label: "Fair Condition", value: "Fair Condition" },
     { label: "Under Construction", value: "Under Construction" },
-
   ]);
-
-
-
 
   // Sales type
   const [openSales, setOpenSales] = useState(false);
   const [salesValue, setSalesValue] = useState(null);
   const [salesItems, setSalesItems] = useState([
-    { label: "Bonanza", value: "bonanza" },
-    { label: "Cash Back Sales", value: "cashback" },
-    { label: "Limited Offer", value: "limited_offer" },
-    { label: "Discount Promo", value: "discount_promo" },
+    { label: "Bonanza", value: "Bonanza" },
+    { label: "Cash Back Sales", value: "Cash Back Sales" },
+    { label: "Limited Offer", value: "Limited Offer" },
+    { label: "Discount Promo", value: "Discount Promo" },
     { label: "Diaspora", value: "Diaspora" },
     { label: "Distress", value: "Distress" },
     { label: "Investment", value: "Investment" },
     { label: "Off-Plan", value: "Off-Plan" },
   ]);
-
 
   // Status
   const [openStatus, setOpenStatus] = useState(false);
@@ -479,6 +515,22 @@ const PublishProperty = () => {
   // State for errors/success messages
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+
+  const themedInput = {
+    backgroundColor: colors.inputBackground,
+    borderColor: colors.border,
+    color: colors.text,
+  };
+  const themedDropdown = {
+    backgroundColor: colors.inputBackground,
+    borderColor: colors.border,
+  };
+  const themedDropdownContainer = {
+    backgroundColor: colors.cardBackground,
+    borderColor: colors.border,
+  };
+  const themedDropdownText = { color: colors.text };
+  const themedDropdownPlaceholder = { color: colors.mutedText };
 
   // Function to handle form field changes
   const handleChange = (field: string, value: any) => {
@@ -578,7 +630,8 @@ const PublishProperty = () => {
         data.append("thumbnailIndex", String(thumbnailIndex));
       }
       if (formData.video) {
-        const videoName = formData.video.split("/").pop() || "property_video.mp4";
+        const videoName =
+          formData.video.split("/").pop() || "property_video.mp4";
 
         data.append("video", {
           uri: formData.video,
@@ -618,7 +671,11 @@ const PublishProperty = () => {
         setUploadProgress(100);
         try {
           const result = JSON.parse(xhr.responseText || "{}");
-          if (xhr.status >= 200 && xhr.status < 300 && result.status === "success") {
+          if (
+            xhr.status >= 200 &&
+            xhr.status < 300 &&
+            result.status === "success"
+          ) {
             setSuccess(true);
             setError(null);
           } else {
@@ -648,18 +705,25 @@ const PublishProperty = () => {
 
       xhr.send(data);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
+      const errorMsg =
+        err instanceof Error ? err.message : "Unknown error occurred";
       setError(errorMsg);
       setSuccess(false);
       setLoading(false);
     }
   };
 
-  const [user, setUser] = useState<{ id: string; name: string; plan_type: string; is_seller?: number; seller_type: string; } | null>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    name: string;
+    plan_type: string;
+    is_seller?: number;
+    seller_type: string;
+  } | null>(null);
 
   const checkAuth = async () => {
-    const token = await AsyncStorage.getItem('authToken');
-    const userJson = await AsyncStorage.getItem('authUser');
+    const token = await AsyncStorage.getItem("authToken");
+    const userJson = await AsyncStorage.getItem("authUser");
 
     if (!token || !userJson) {
       console.log("Error", "Not authenticated");
@@ -683,7 +747,7 @@ const PublishProperty = () => {
   useFocusEffect(
     useCallback(() => {
       checkAuth();
-    }, [])
+    }, []),
   );
 
   const pickVideo = async () => {
@@ -777,63 +841,71 @@ const PublishProperty = () => {
             style={{ marginBottom: 100 }}
           >
             <View style={styles.stepContainer}>
-
-              <Text style={styles.stepTitle}>
+              <Text style={[styles.stepTitle, { color: colors.text }]}>
                 Hi {user ? user.name : ""}, Fill detail of your{" "}
-
-                <Text style={styles.highlight}>real estate</Text>
-                {" "}
+                <Text style={styles.highlight}>real estate</Text>{" "}
               </Text>
-
 
               <View style={styles.inputContainer}>
                 <View style={styles.formField}>
                   <TextInput
                     style={[
                       styles.input,
-                      validationErrors.propertyName && { borderColor: "#dc2626", borderWidth: 2 },
+                      themedInput,
+                      validationErrors.propertyName && {
+                        borderColor: colors.error,
+                        borderWidth: 2,
+                      },
                     ]}
                     value={formData.propertyName}
                     onChangeText={(text) => handleChange("propertyName", text)}
                     placeholder="Property title with short description"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.mutedText}
                   />
                   <Icon
                     name="home"
                     size={24}
-                    color="#6B7280"
+                    color={colors.icon}
                     style={styles.inputIcon}
                   />
                 </View>
                 {validationErrors.propertyName && (
-                  <Text style={styles.errorText}>{validationErrors.propertyName}</Text>
+                  <Text style={[styles.errorText, { color: colors.error }]}>
+                    {validationErrors.propertyName}
+                  </Text>
                 )}
-                <Text style={styles.charCount}>
+                <Text style={[styles.charCount, { color: colors.mutedText }]}>
                   {formData.propertyName.length}/100 characters
                 </Text>
 
                 {/* Estate Dropdown - only show if user is company and has estates */}
-                {user && user.seller_type === "company" && estates.length > 0 && (
-                  <>
-                    <Text style={styles.label}>Estate</Text>
-                    <DropDownPicker
-                      listMode="SCROLLVIEW"
-                      open={openEstate}
-                      value={estateValue}
-                      items={estateItems}
-                      setOpen={setOpenEstate}
-                      setValue={setEstateValue}
-                      setItems={setEstateItems}
-                      placeholder="Select Estate (Optional)"
-                      zIndex={3100}
-                      onChangeValue={(val) => {
-                        handleChange("estateId", val);
-                      }}
-                    />
-                  </>
-                )}
+                {user &&
+                  user.seller_type === "company" &&
+                  estates.length > 0 && (
+                    <>
+                      <Text style={[styles.label, { color: colors.text }]}>Estate</Text>
+                      <DropDownPicker
+                        listMode="SCROLLVIEW"
+                        open={openEstate}
+                        value={estateValue}
+                        items={estateItems}
+                        setOpen={setOpenEstate}
+                        setValue={setEstateValue}
+                        setItems={setEstateItems}
+                        placeholder="Select Estate (Optional)"
+                        style={themedDropdown}
+                        dropDownContainerStyle={themedDropdownContainer}
+                        textStyle={themedDropdownText}
+                        placeholderStyle={themedDropdownPlaceholder}
+                        zIndex={3100}
+                        onChangeValue={(val) => {
+                          handleChange("estateId", val);
+                        }}
+                      />
+                    </>
+                  )}
 
-                <Text style={styles.label}>Property Category</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Property Category</Text>
 
                 <DropDownPicker
                   listMode="SCROLLVIEW"
@@ -845,19 +917,30 @@ const PublishProperty = () => {
                   setItems={setCategoryItems}
                   placeholder="Select Property Type"
                   zIndex={3000}
-                  style={validationErrors.category && { borderColor: "#dc2626", borderWidth: 2 }}
+                  style={[
+                    themedDropdown,
+                    validationErrors.category && {
+                      borderColor: colors.error,
+                      borderWidth: 2,
+                    },
+                  ]}
+                  dropDownContainerStyle={themedDropdownContainer}
+                  textStyle={themedDropdownText}
+                  placeholderStyle={themedDropdownPlaceholder}
                   onChangeValue={(val) => {
                     handleChange("propertyCategory", val);
                   }}
                 />
                 {validationErrors.category && (
-                  <Text style={styles.errorText}>{validationErrors.category}</Text>
+                  <Text style={[styles.errorText, { color: colors.error }]}>
+                    {validationErrors.category}
+                  </Text>
                 )}
 
                 {/* Subcategory */}
                 {subItems.length > 0 && (
                   <>
-                    <Text style={styles.label}>Subcategory</Text>
+                    <Text style={[styles.label, { color: colors.text }]}>Subcategory</Text>
 
                     <DropDownPicker
                       listMode="SCROLLVIEW"
@@ -869,34 +952,47 @@ const PublishProperty = () => {
                       setItems={setSubItems}
                       placeholder="Select Subcategory"
                       zIndex={2000}
-                      style={validationErrors.subcategory && { borderColor: "#dc2626", borderWidth: 2 }}
+                      style={[
+                        themedDropdown,
+                        validationErrors.subcategory && {
+                          borderColor: colors.error,
+                          borderWidth: 2,
+                        },
+                      ]}
+                      dropDownContainerStyle={themedDropdownContainer}
+                      textStyle={themedDropdownText}
+                      placeholderStyle={themedDropdownPlaceholder}
                       onChangeValue={(val) => {
                         handleChange("propertySubCategory", val);
                       }}
                     />
                     {validationErrors.subcategory && (
-                      <Text style={styles.errorText}>{validationErrors.subcategory}</Text>
+                      <Text style={[styles.errorText, { color: colors.error }]}>
+                        {validationErrors.subcategory}
+                      </Text>
                     )}
                   </>
                 )}
 
-                <Text style={styles.sectionTitle}>Listing type</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Listing type</Text>
                 <View style={styles.toggleContainer}>
                   {["Rent", "Sell", "Both"].map((type) => (
                     <TouchableOpacity
                       key={type}
                       style={[
                         styles.toggleButton,
+                        { backgroundColor: colors.inputBackground, borderColor: colors.border },
                         formData.listingType === type &&
-                        styles.toggleButtonActive,
+                          { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground },
                       ]}
                       onPress={() => handleChange("listingType", type)}
                     >
                       <Text
                         style={
-                          formData.listingType === type
-                            ? styles.toggleTextActive
-                            : styles.toggleText
+                          [
+                            styles.toggleText,
+                            { color: formData.listingType === type ? colors.background : colors.mutedText },
+                          ]
                         }
                       >
                         {type}
@@ -907,92 +1003,109 @@ const PublishProperty = () => {
 
                 {(formData.listingType === "Sell" ||
                   formData.listingType === "Both") && (
-                    <>
-                      <Text style={styles.sectionTitle}>Sell Price</Text>
-                      <View style={styles.priceInputContainer}>
-                        <TextInput
-                          style={[
-                            styles.priceInput,
-                            validationErrors.sellPrice && { borderColor: "#dc2626", borderWidth: 2 },
-                          ]}
-                          value={formData.sellPrice}
-                          onChangeText={(text) => handleChange("sellPrice", text)}
-                          keyboardType="numeric"
-                          placeholder="Enter Sell Price (eg. 5000000)"
-                          placeholderTextColor="#9ca3af"
-                        />
-                        <Text style={styles.currencyLabel}>N</Text>
-                      </View>
-                      {validationErrors.sellPrice && (
-                        <Text style={styles.errorText}>{validationErrors.sellPrice}</Text>
-                      )}
-                    </>
-                  )}
+                  <>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Sell Price</Text>
+                    <View style={styles.priceInputContainer}>
+                      <TextInput
+                        style={[
+                          styles.priceInput,
+                          themedInput,
+                          validationErrors.sellPrice && {
+                            borderColor: colors.error,
+                            borderWidth: 2,
+                          },
+                        ]}
+                        value={formData.sellPrice}
+                        onChangeText={(text) => handleChange("sellPrice", text)}
+                        keyboardType="numeric"
+                        placeholder="Enter Sell Price (eg. 5000000)"
+                        placeholderTextColor={colors.mutedText}
+                      />
+                      <Text style={styles.currencyLabel}>N</Text>
+                    </View>
+                    {validationErrors.sellPrice && (
+                      <Text style={[styles.errorText, { color: colors.error }]}>
+                        {validationErrors.sellPrice}
+                      </Text>
+                    )}
+                  </>
+                )}
 
                 {(formData.listingType === "Rent" ||
                   formData.listingType === "Both") && (
-                    <>
-                      <Text
-                        style={{
-                          marginTop: 2,
-                          marginBottom: 8,
-                          fontSize: 16,
-                          color: "#4B5563",
-                          fontWeight: "500",
-                        }}
-                      >
-                        Rent Price
+                  <>
+                    <Text
+                      style={{
+                        marginTop: 2,
+                        marginBottom: 8,
+                        fontSize: 16,
+                        color: colors.text,
+                        fontWeight: "500",
+                      }}
+                    >
+                      Rent Price
+                    </Text>
+                    <View style={styles.priceInputContainer}>
+                      <TextInput
+                        style={[
+                          styles.priceInput,
+                          themedInput,
+                          validationErrors.rentPrice && {
+                            borderColor: colors.error,
+                            borderWidth: 2,
+                          },
+                        ]}
+                        value={formData.rentPrice}
+                        onChangeText={(text) => handleChange("rentPrice", text)}
+                        keyboardType="numeric"
+                        placeholder="Enter Rent Price (eg. 1000000)"
+                        placeholderTextColor={colors.mutedText}
+                      />
+                      <Text style={styles.currencyLabel}>N</Text>
+                    </View>
+                    {validationErrors.rentPrice && (
+                      <Text style={[styles.errorText, { color: colors.error }]}>
+                        {validationErrors.rentPrice}
                       </Text>
-                      <View style={styles.priceInputContainer}>
-                        <TextInput
-                          style={[
-                            styles.priceInput,
-                            validationErrors.rentPrice && { borderColor: "#dc2626", borderWidth: 2 },
-                          ]}
-                          value={formData.rentPrice}
-                          onChangeText={(text) => handleChange("rentPrice", text)}
-                          keyboardType="numeric"
-                          placeholder="Enter Rent Price (eg. 1000000)"
-
-                          placeholderTextColor="#9ca3af"
-                        />
-                        <Text style={styles.currencyLabel}>N</Text>
-                      </View>
-                      {validationErrors.rentPrice && (
-                        <Text style={styles.errorText}>{validationErrors.rentPrice}</Text>
-                      )}
-                    </>
-                  )}
+                    )}
+                  </>
+                )}
               </View>
 
               <View style={styles.formField}>
-                <Text style={styles.label}>Description</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Description</Text>
                 <View
                   style={[
                     styles.textAreaWrapper,
-                    validationErrors.description && { borderColor: "#dc2626", borderWidth: 2 },
+                    { backgroundColor: colors.inputBackground, borderColor: colors.border, shadowColor: colors.shadow },
+                    validationErrors.description && {
+                      borderColor: colors.error,
+                      borderWidth: 2,
+                    },
                   ]}
                 >
                   <Ionicons
                     name="document-text-outline"
                     size={18}
-                    color="#9ca3af"
+                    color={colors.icon}
                     style={styles.textAreaIcon}
                   />
                   <TextInput
                     value={formData.description}
                     onChangeText={(text) => handleChange("description", text)}
                     placeholder="Enter full description..."
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.mutedText}
                     multiline
                     textAlignVertical="top"
-                    style={styles.textArea}
+                    style={[styles.textArea, { color: colors.text }]}
                   />
                 </View>
                 {validationErrors.description && (
-                  <Text style={styles.errorText}>{validationErrors.description}</Text>
+                  <Text style={[styles.errorText, { color: colors.error }]}>
+                    {validationErrors.description}
+                  </Text>
                 )}
-                <Text style={styles.charCount}>
+                <Text style={[styles.charCount, { color: colors.mutedText }]}>
                   {formData.description.length}/500 characters (min 30)
                 </Text>
               </View>
@@ -1004,18 +1117,19 @@ const PublishProperty = () => {
     {
       title: "Where is the location?",
       render: () => (
-
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <SafeAreaProvider style={{
-            flex: 1,
-            padding: 10,
-          }}>
-            <Text style={styles.stepTitle}>
+          <SafeAreaProvider
+            style={{
+              flex: 1,
+              padding: 10,
+            }}
+          >
+            <Text style={[styles.stepTitle, { color: colors.text }]}>
               Where is the <Text style={styles.highlight}>location</Text>?
             </Text>
 
             <View style={{ padding: 6 }}>
-              <Text style={{ marginBottom: 8 }}>Select State</Text>
+              <Text style={{ marginBottom: 8, color: colors.text }}>Select State</Text>
               <DropDownPicker
                 open={openState}
                 value={state}
@@ -1024,9 +1138,7 @@ const PublishProperty = () => {
                 listMode="MODAL"
                 setValue={(callback) => {
                   const value =
-                    typeof callback === "function"
-                      ? callback(state)
-                      : callback;
+                    typeof callback === "function" ? callback(state) : callback;
                   setState(value);
                   const selected = stateItems.find(
                     (item) => item.value === value,
@@ -1037,16 +1149,25 @@ const PublishProperty = () => {
                 placeholder="Select a state"
                 searchable={true}
                 zIndex={2000}
-                style={validationErrors.state && { borderColor: "#dc2626", borderWidth: 2 }}
+                style={[
+                  themedDropdown,
+                  validationErrors.state && {
+                    borderColor: colors.error,
+                    borderWidth: 2,
+                  },
+                ]}
                 dropDownContainerStyle={{
                   maxHeight: 500,
+                  ...themedDropdownContainer,
                 }}
+                textStyle={themedDropdownText}
+                placeholderStyle={themedDropdownPlaceholder}
               />
               {validationErrors.state && (
-                <Text style={styles.errorText}>{validationErrors.state}</Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>{validationErrors.state}</Text>
               )}
 
-              <Text style={{ marginTop: 20, marginBottom: 1 }}>
+              <Text style={{ marginTop: 20, marginBottom: 1, color: colors.text }}>
                 Select City{" "}
               </Text>
               <DropDownPicker
@@ -1057,9 +1178,7 @@ const PublishProperty = () => {
                 listMode="MODAL"
                 setValue={(callback) => {
                   const value =
-                    typeof callback === "function"
-                      ? callback(city)
-                      : callback;
+                    typeof callback === "function" ? callback(city) : callback;
                   setCity(value);
                   const selected = cityItems.find(
                     (item) => item.value === value,
@@ -1070,52 +1189,65 @@ const PublishProperty = () => {
                 placeholder="Select City"
                 searchable={true}
                 zIndex={1800}
-                style={validationErrors.city && { borderColor: "#dc2626", borderWidth: 2 }}
+                style={[
+                  themedDropdown,
+                  validationErrors.city && {
+                    borderColor: colors.error,
+                    borderWidth: 2,
+                  },
+                ]}
                 dropDownContainerStyle={{
                   maxHeight: 900,
+                  ...themedDropdownContainer,
                 }}
+                textStyle={themedDropdownText}
+                placeholderStyle={themedDropdownPlaceholder}
               />
               {validationErrors.city && (
-                <Text style={styles.errorText}>{validationErrors.city}</Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>{validationErrors.city}</Text>
               )}
             </View>
 
             <View style={styles.formField}>
-              <Text style={{ marginTop: 5, marginBottom: 5, marginLeft: 12 }}>
+              <Text style={{ marginTop: 5, marginBottom: 5, marginLeft: 12, color: colors.text }}>
                 Enter Landmark / Area
               </Text>
               <TextInput
                 style={[
                   {
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: colors.inputBackground,
                     padding: 14,
                     borderRadius: 4,
                     paddingLeft: 5,
                     marginHorizontal: 10,
-                    borderColor: "#555",
+                    borderColor: colors.border,
                     borderWidth: 1,
                   },
-                  validationErrors.location && { borderColor: "#dc2626", borderWidth: 2 },
+                  validationErrors.location && {
+                    borderColor: colors.error,
+                    borderWidth: 2,
+                  },
                 ]}
                 value={formData.location}
                 onChangeText={(text) => handleChange("location", text)}
                 placeholder="Landmark / Area"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedText}
               />
               {validationErrors.location && (
-                <Text style={styles.errorText}>{validationErrors.location}</Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>
+                  {validationErrors.location}
+                </Text>
               )}
             </View>
           </SafeAreaProvider>
         </ScrollView>
-
       ),
     },
     {
       title: "Add photos to your listing",
       render: () => (
         <View style={styles.stepContainer}>
-          <Text style={styles.stepTitle}>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>
             Add <Text style={styles.highlight}>photos</Text> to your listing
           </Text>
 
@@ -1123,7 +1255,7 @@ const PublishProperty = () => {
             style={{
               marginTop: 4,
               marginBottom: 8,
-              color: "#6B7280",
+              color: colors.mutedText,
               fontSize: 14,
             }}
           >
@@ -1139,7 +1271,7 @@ const PublishProperty = () => {
               marginTop: 4,
             }}
           >
-            <Text style={{ color: "blue", fontSize: 14 }}>
+            <Text style={{ color: colors.buttonBackground, fontSize: 14 }}>
               {user
                 ? user.plan_type === "freemium"
                   ? "Upgrade to Premium to upload more images "
@@ -1148,19 +1280,19 @@ const PublishProperty = () => {
             </Text>
 
             <TouchableOpacity style={{ marginLeft: 4 }}>
-              <Icon name="info" size={22} color="#2563EB" />
+              <Icon name="info" size={22} color={colors.buttonBackground} />
             </TouchableOpacity>
           </View>
 
           {validationErrors.images && (
-            <Text style={styles.errorText}>{validationErrors.images}</Text>
+            <Text style={[styles.errorText, { color: colors.error }]}>{validationErrors.images}</Text>
           )}
           {validationErrors.thumbnail && (
-            <Text style={styles.errorText}>{validationErrors.thumbnail}</Text>
+            <Text style={[styles.errorText, { color: colors.error }]}>{validationErrors.thumbnail}</Text>
           )}
 
           {formData.images.length > 1 && (
-            <Text style={{ marginTop: 4, color: "orange", fontSize: 14 }}>
+            <Text style={{ marginTop: 4, color: colors.warning, fontSize: 14 }}>
               Click on an image to set as main thumbnail
             </Text>
           )}
@@ -1176,8 +1308,8 @@ const PublishProperty = () => {
                   >
                     <Image source={{ uri: image }} style={styles.image} />
                     {formData.thumbnail === image && (
-                      <View style={styles.thumbnailBadge}>
-                        <Text style={styles.thumbnailText}>Main</Text>
+                      <View style={[styles.thumbnailBadge, { backgroundColor: colors.buttonBackground }]}>
+                        <Text style={[styles.thumbnailText, { color: colors.background }]}>Main</Text>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -1193,10 +1325,10 @@ const PublishProperty = () => {
 
               {formData.images.length < 10 && (
                 <TouchableOpacity
-                  style={styles.addImageBtn}
+                  style={[styles.addImageBtn, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                   onPress={pickImage}
                 >
-                  <Text style={styles.addImageText}>+</Text>
+                  <Text style={[styles.addImageText, { color: colors.buttonBackground }]}>+</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1209,7 +1341,7 @@ const PublishProperty = () => {
       title: "Add a video to your listing",
       render: () => (
         <View style={styles.stepContainer}>
-          <Text style={styles.stepTitle}>
+          <Text style={[styles.stepTitle, { color: colors.text }]}>
             Add a <Text style={styles.highlight}>video</Text> to your listing
           </Text>
 
@@ -1217,7 +1349,7 @@ const PublishProperty = () => {
             style={{
               marginTop: 4,
               marginBottom: 8,
-              color: "#6B7280",
+              color: colors.mutedText,
               fontSize: 14,
             }}
           >
@@ -1240,13 +1372,12 @@ const PublishProperty = () => {
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.pickVideoBtn} onPress={pickVideo}>
-              <Text style={styles.pickVideoText}>Pick a Video</Text>
+            <TouchableOpacity style={[styles.pickVideoBtn, { backgroundColor: colors.buttonBackground }]} onPress={pickVideo}>
+              <Text style={[styles.pickVideoText, { color: colors.background }]}>Pick a Video</Text>
             </TouchableOpacity>
           )}
         </View>
       ),
-
     },
 
     {
@@ -1254,41 +1385,46 @@ const PublishProperty = () => {
       render: () => (
         <ScrollView style={styles.scrollContainer}>
           <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>
+            <Text style={[styles.stepTitle, { color: colors.text }]}>
               Almost <Text style={styles.highlight}>finish</Text>, complete the
               listing
             </Text>
 
-            <Text style={{ ...styles.label, marginTop: 16 }}>
+            <Text style={{ ...styles.label, marginTop: 16, color: colors.text }}>
               Property Size
             </Text>
 
             <TextInput
               style={[
                 {
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: colors.inputBackground,
                   padding: 15,
                   borderRadius: 5,
                   paddingLeft: 5,
                   marginHorizontal: 3,
                   borderWidth: 1,
+                  borderColor: colors.border,
+                  color: colors.text,
                 },
-                validationErrors.size && { borderColor: "#dc2626", borderWidth: 2 },
+                validationErrors.size && {
+                  borderColor: colors.error,
+                  borderWidth: 2,
+                },
               ]}
               value={formData.size}
               onChangeText={(text) => handleChange("size", text)}
               keyboardType="numeric"
               placeholder="Optional, e.g. 120 sqm"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.mutedText}
             />
             {validationErrors.size && (
-              <Text style={styles.errorText}>{validationErrors.size}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{validationErrors.size}</Text>
             )}
 
             {!isLandCategory && (
               <>
                 {/* Furnishing */}
-                <Text style={styles.sectionTitle}>Furnishing</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Furnishing</Text>
 
                 <View style={styles.categoryContainer}>
                   {[
@@ -1301,16 +1437,18 @@ const PublishProperty = () => {
                       key={category}
                       style={[
                         styles.categoryButton,
+                        { backgroundColor: colors.inputBackground, borderColor: colors.border },
                         formData.Furnishing === category &&
-                        styles.categoryButtonActive,
+                          { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground },
                       ]}
                       onPress={() => handleChange("Furnishing", category)}
                     >
                       <Text
                         style={
-                          formData.Furnishing === category
-                            ? styles.categoryTextActive
-                            : styles.categoryText
+                          [
+                            styles.categoryText,
+                            { color: formData.Furnishing === category ? colors.background : colors.mutedText },
+                          ]
                         }
                       >
                         {category}
@@ -1320,7 +1458,7 @@ const PublishProperty = () => {
                 </View>
 
                 {/* Condition */}
-                <Text style={{ ...styles.label, marginTop: 16 }}>
+                <Text style={{ ...styles.label, marginTop: 16, color: colors.text }}>
                   Property Condition
                 </Text>
 
@@ -1334,18 +1472,29 @@ const PublishProperty = () => {
                   setItems={setConditionItems}
                   placeholder="Select Condition"
                   zIndex={3500}
-                  style={validationErrors.condition && { borderColor: "#dc2626", borderWidth: 2 }}
+                  style={[
+                    themedDropdown,
+                    validationErrors.condition && {
+                      borderColor: colors.error,
+                      borderWidth: 2,
+                    },
+                  ]}
+                  dropDownContainerStyle={themedDropdownContainer}
+                  textStyle={themedDropdownText}
+                  placeholderStyle={themedDropdownPlaceholder}
                   onChangeValue={(val) => {
                     handleConditionChange(val);
                   }}
                 />
                 {validationErrors.condition && (
-                  <Text style={styles.errorText}>{validationErrors.condition}</Text>
+                  <Text style={[styles.errorText, { color: colors.error }]}>
+                    {validationErrors.condition}
+                  </Text>
                 )}
               </>
             )}
 
-            <Text style={styles.label}>Document Type</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Document Type</Text>
 
             <DropDownPicker
               listMode="SCROLLVIEW"
@@ -1357,16 +1506,27 @@ const PublishProperty = () => {
               setItems={setDocItems}
               placeholder="Select Document Type"
               zIndex={3000}
-              style={validationErrors.documentType && { borderColor: "#dc2626", borderWidth: 2 }}
+              style={[
+                themedDropdown,
+                validationErrors.documentType && {
+                  borderColor: colors.error,
+                  borderWidth: 2,
+                },
+              ]}
+              dropDownContainerStyle={themedDropdownContainer}
+              textStyle={themedDropdownText}
+              placeholderStyle={themedDropdownPlaceholder}
               onChangeValue={(val) => {
                 onValueChange(val);
               }}
             />
             {validationErrors.documentType && (
-              <Text style={styles.errorText}>{validationErrors.documentType}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {validationErrors.documentType}
+              </Text>
             )}
 
-            <Text style={{ ...styles.label, marginTop: 16 }}>Sales Type</Text>
+            <Text style={{ ...styles.label, marginTop: 16, color: colors.text }}>Sales Type</Text>
 
             <DropDownPicker
               listMode="SCROLLVIEW"
@@ -1377,13 +1537,17 @@ const PublishProperty = () => {
               setValue={setSalesValue}
               setItems={setSalesItems}
               placeholder="Select Sales Type"
+              style={themedDropdown}
+              dropDownContainerStyle={themedDropdownContainer}
+              textStyle={themedDropdownText}
+              placeholderStyle={themedDropdownPlaceholder}
               zIndex={2500}
               onChangeValue={(val) => {
                 handleSalesTypeChange(val);
               }}
             />
 
-            <Text style={{ ...styles.label, marginTop: 16 }}>Status</Text>
+            <Text style={{ ...styles.label, marginTop: 16, color: colors.text }}>Status</Text>
 
             <DropDownPicker
               listMode="SCROLLVIEW"
@@ -1395,41 +1559,50 @@ const PublishProperty = () => {
               setItems={setStatusItems}
               placeholder="Select Status"
               zIndex={2000}
-              style={validationErrors.status && { borderColor: "#dc2626", borderWidth: 2 }}
+              style={[
+                themedDropdown,
+                validationErrors.status && {
+                  borderColor: colors.error,
+                  borderWidth: 2,
+                },
+              ]}
+              dropDownContainerStyle={themedDropdownContainer}
+              textStyle={themedDropdownText}
+              placeholderStyle={themedDropdownPlaceholder}
               onChangeValue={(val) => {
                 handleStatusChange(val);
               }}
             />
             {validationErrors.status && (
-              <Text style={styles.errorText}>{validationErrors.status}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{validationErrors.status}</Text>
             )}
 
-            <Text style={styles.sectionTitle}>Property Features</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Features</Text>
 
             {["bedrooms", "Toilet", "balconies", "parkingspace", "BQ"].map(
               (feature) => {
                 const label =
                   feature.charAt(0).toUpperCase() + feature.slice(1);
                 return (
-                  <View key={feature} style={styles.counterContainer}>
-                    <Text style={styles.counterLabel}>{label}</Text>
+                  <View key={feature} style={[styles.counterContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                    <Text style={[styles.counterLabel, { color: colors.text }]}>{label}</Text>
                     <View style={styles.counterControls}>
                       <TouchableOpacity
-                        style={styles.counterButton}
+                        style={[styles.counterButton, { backgroundColor: colors.buttonBackground }]}
                         onPress={() => updateFeatureCount(feature, false)}
                       >
                         <Text style={styles.counterButtonText}>−</Text>
                       </TouchableOpacity>
 
-                      <Text style={styles.counterValue}>
+                      <Text style={[styles.counterValue, { color: colors.text }]}>
                         {formData[feature]}
                       </Text>
 
                       <TouchableOpacity
-                        style={styles.counterButton}
+                        style={[styles.counterButton, { backgroundColor: colors.buttonBackground }]}
                         onPress={() => updateFeatureCount(feature, true)}
                       >
-                        <Text style={styles.counterButtonText}>+</Text>
+                        <Text style={[styles.counterButtonText, { color: colors.background }]}>+</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1453,18 +1626,18 @@ const PublishProperty = () => {
                   width: 24,
                   height: 24,
                   borderWidth: 2,
-                  borderColor: "#374151",
+                  borderColor: colors.border,
                   borderRadius: 4,
-                  backgroundColor: formData.managedByUs ? "#374151" : "#FFF",
+                  backgroundColor: formData.managedByUs ? colors.buttonBackground : colors.inputBackground,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
                 {formData.managedByUs && (
-                  <Text style={{ color: "#FFF", fontWeight: "bold" }}>✓</Text>
+                  <Text style={{ color: colors.background, fontWeight: "bold" }}>✓</Text>
                 )}
               </TouchableOpacity>
-              <Text style={{ marginLeft: 8 }}>
+              <Text style={{ marginLeft: 8, color: colors.text }}>
                 Let Nestify handle this sale for 5% commission
               </Text>
             </View>
@@ -1474,9 +1647,10 @@ const PublishProperty = () => {
     },
   ];
 
-  const visibleSteps = user?.plan_type?.toLowerCase() === "premium"
-    ? steps
-    : steps.filter((step) => step.title !== "Add a video to your listing");
+  const visibleSteps =
+    user?.plan_type?.toLowerCase() === "premium"
+      ? steps
+      : steps.filter((step) => step.title !== "Add a video to your listing");
 
   useEffect(() => {
     if (currentStep >= visibleSteps.length) {
@@ -1499,7 +1673,9 @@ const PublishProperty = () => {
             onPress={() => setError(null)}
             disabled={loading}
           >
-            <Text style={[styles.closeButtonText, loading && { opacity: 0.5 }]}>Close</Text>
+            <Text style={[styles.closeButtonText, loading && { opacity: 0.5 }]}>
+              Close
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.retryButton, loading && { opacity: 0.5 }]}
@@ -1521,7 +1697,8 @@ const PublishProperty = () => {
         </View>
         <Text style={styles.modalTitle}>Your listing is now published</Text>
         <Text style={styles.modalText}>
-          Your Property has now been submitted for review.you can find it in your profile. We will review and publish it within 24 hours.
+          Your Property has now been submitted for review.you can find it in
+          your profile. We will review and publish it within 24 hours.
         </Text>
         <View style={styles.modalButtons}>
           <TouchableOpacity
@@ -1548,20 +1725,21 @@ const PublishProperty = () => {
   );
 
   const BecomeSellerUI = () => (
-    <SafeAreaView style={[styles.container, { backgroundColor: "#1A1A2E" }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.becomeSellerContainer}>
         <View style={styles.becomeSellerContent}>
-          <Icon name="business" size={80} color={GOLD} />
-          <Text style={styles.becomeSellerTitle}>Become a Seller</Text>
-          <Text style={styles.becomeSellerSubtitle}>
-            List properties and grow your business. Connect with buyers and manage your real estate portfolio.
+          <Icon name="business" size={80} color={colors.buttonBackground} />
+          <Text style={[styles.becomeSellerTitle, { color: colors.text }]}>Become a Seller</Text>
+          <Text style={[styles.becomeSellerSubtitle, { color: colors.mutedText }]}>
+            List properties and grow your business. Connect with buyers and
+            manage your real estate portfolio.
           </Text>
           <TouchableOpacity
-            style={styles.becomeSellerButton}
+            style={[styles.becomeSellerButton, { backgroundColor: colors.buttonBackground }]}
             onPress={() => router.push("../Publish/BecomeASeller")}
           >
-            <Text style={styles.becomeSellerButtonText}>Get Started</Text>
-            <Ionicons name="arrow-forward" size={20} color="#1A1A2E" />
+            <Text style={[styles.becomeSellerButtonText, { color: colors.background }]}>Get Started</Text>
+            <Ionicons name="arrow-forward" size={20} color={colors.background} />
           </TouchableOpacity>
         </View>
       </View>
@@ -1570,9 +1748,7 @@ const PublishProperty = () => {
 
   // Show loading while checking auth
   if (!authLoaded) {
-    return (
-      <PremiumLoader />
-    );
+    return <PremiumLoader />;
   }
 
   if (!user || user.is_seller != 1) {
@@ -1580,37 +1756,38 @@ const PublishProperty = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#333" />
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.inputBackground }]}>
+          <Icon name="arrow-back" size={24} color={colors.icon} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Listing</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Add Listing</Text>
       </View>
 
       {/* Current Step Content */}
       {visibleSteps[currentStep].render()}
 
       {/* Navigation Buttons */}
-      <View style={styles.navigation}>
-        <TouchableOpacity style={styles.backButtonCircle} onPress={handleBack} disabled={loading}>
-          <Icon name="arrow-back" size={24} color={loading ? "#ccc" : "#333"} />
+      <View style={[styles.navigation, { backgroundColor: colors.cardBackground, borderTopColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.backButtonCircle, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
+          onPress={handleBack}
+          disabled={loading}
+        >
+          <Icon name="arrow-back" size={24} color={loading ? colors.mutedText : colors.icon} />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.nextButton,
-            loading && styles.nextButtonDisabled
-          ]}
+          style={[styles.nextButton, { backgroundColor: colors.buttonBackground }, loading && styles.nextButtonDisabled]}
           onPress={handleNext}
           disabled={loading}
           activeOpacity={loading ? 1 : 0.7}
         >
           {loading && currentStep === visibleSteps.length - 1 ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={colors.background} />
           ) : (
-            <Text style={styles.nextButtonText}>
+            <Text style={[styles.nextButtonText, { color: colors.background }]}>
               {currentStep === visibleSteps.length - 1 ? "Finish" : "Next"}
             </Text>
           )}
@@ -1618,12 +1795,16 @@ const PublishProperty = () => {
       </View>
 
       {loading && currentStep === visibleSteps.length - 1 && (
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressLabel}>
-            {uploadProgress === 100 ? "Upload complete" : `Uploading ${uploadProgress}%`}
+        <View style={[styles.progressContainer, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.progressLabel, { color: colors.text }]}>
+            {uploadProgress === 100
+              ? "Upload complete"
+              : `Uploading ${uploadProgress}%`}
           </Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${uploadProgress}%` }]} />
+          <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+            <View
+              style={[styles.progressFill, { backgroundColor: colors.buttonBackground, width: `${uploadProgress}%` }]}
+            />
           </View>
         </View>
       )}
@@ -1633,9 +1814,7 @@ const PublishProperty = () => {
         mode="seller"
         onClose={() => setPricingVisible(false)}
         onSelectPlan={(planKey) => {
-
           switch (planKey) {
-
             case "seller_monthly":
               router.push("../../../upgrade/payment?plan=seller_monthly");
               break;
@@ -1663,7 +1842,7 @@ const PublishProperty = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F0F0F0",   // was #FFFFFF
+    backgroundColor: "#F0F0F0", // was #FFFFFF
     paddingTop: getStatusBarHeight(),
     paddingBottom: 50,
   },
@@ -1909,16 +2088,16 @@ const styles = StyleSheet.create({
   },
 
   textAreaWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',       // icon sits at top
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "flex-start", // icon sits at top
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     paddingHorizontal: 12,
     paddingTop: 12,
     paddingBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -1926,16 +2105,16 @@ const styles = StyleSheet.create({
   },
   textAreaIcon: {
     marginRight: 10,
-    marginTop: 2,                   // aligns icon with first line of text
+    marginTop: 2, // aligns icon with first line of text
   },
   textArea: {
     flex: 1,
     minHeight: 110,
     fontSize: 14,
-    color: '#111827',
+    color: "#111827",
     lineHeight: 22,
-    textAlignVertical: 'top',       // Android: text starts at top
-    paddingTop: 0,                  // remove default Android padding
+    textAlignVertical: "top", // Android: text starts at top
+    paddingTop: 0, // remove default Android padding
   },
   inputIcon: {
     position: "absolute",
@@ -2003,7 +2182,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   priceInputContainer: {
-
     marginBottom: 16,
   },
   priceInput: {
@@ -2328,7 +2506,6 @@ const pickerStyles = {
     top: 14,
     right: 10,
   },
-
 };
 
 export default PublishProperty;

@@ -25,7 +25,9 @@ import PricingModal from '@/components/PricingModal';
 import PremiumLoader from '@/components/PremiumLoader';
 import { useToast } from '@/components/Toast';
 import GetRelatedProperties from '@/components/GetRelatedProperties';
-import { Video } from 'expo-av';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+import { ResizeMode, Video } from 'expo-av';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { Alert, ActionSheetIOS, Platform } from 'react-native';
@@ -71,6 +73,7 @@ const formatDate = (dateString: string) => {
 
 export default function PropertyDetails() {
   const { show } = useToast();
+  const { colors } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams() as { id: string };
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
@@ -373,8 +376,8 @@ export default function PropertyDetails() {
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={{ color: 'red' }}>{error}</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.error }}>{error}</Text>
       </View>
     );
   }
@@ -389,10 +392,10 @@ export default function PropertyDetails() {
 
   const statusColor =
     property.status === "available"
-      ? "#28a745"
+      ? colors.success
       : property.status === "sold"
-        ? "#dc3545"
-        : "#6c757d";
+        ? colors.error
+        : colors.mutedText;
 
   const statusLabel =
     property.status === "available"
@@ -447,7 +450,7 @@ export default function PropertyDetails() {
       renderItem={() => null}
       keyExtractor={(_, i) => i.toString()}
       showsVerticalScrollIndicator={false}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={{ flexGrow: 1 }}
       ListHeaderComponent={
         <>
@@ -486,24 +489,24 @@ export default function PropertyDetails() {
                   style={{
                     width: CAROUSEL_WIDTH,
                     height: 450,
-                    backgroundColor: "#d0e8f0",
+                    backgroundColor: colors.inputBackground,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <MaterialIcons name="home" size={60} color="#aaa" />
+                  <MaterialIcons name="home" size={60} color={colors.mutedText} />
                 </View>
               )}
             </ScrollView>
 
             {/* Top icons */}
             <View style={styles.heroTop}>
-              <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <TouchableOpacity style={[styles.backBtn, { backgroundColor: colorWithAlpha(colors.background, 0.72), borderColor: colors.border }]} onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={20} color="#fff" />
               </TouchableOpacity>
               <View style={styles.heroActions}>
                 <TouchableOpacity
-                  style={styles.actBtn}
+                  style={[styles.actBtn, { backgroundColor: colorWithAlpha(colors.background, 0.72), borderColor: colors.border }]}
                   onPress={() => {
                     if (Platform.OS === 'ios') {
                       ActionSheetIOS.showActionSheetWithOptions(
@@ -538,14 +541,14 @@ export default function PropertyDetails() {
                   <AntDesign name="upload" size={17} color="#fff" />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.actBtn}
+                  style={[styles.actBtn, { backgroundColor: colorWithAlpha(colors.background, 0.72), borderColor: colors.border }]}
                   onPress={() => { }} // handled internally by LikeButton
                 >
                   <LikeButton
                     propertyId={Number(id)}
                     variant="minimal"
                     size={17}
-                    color="red"
+                    color={colors.error}
                   />
                 </TouchableOpacity>
               </View>
@@ -557,7 +560,7 @@ export default function PropertyDetails() {
                 <Text style={[styles.badge, { backgroundColor: statusColor }]}>
                   {statusLabel}
                 </Text>
-                <Text style={[styles.badge, { backgroundColor: "#25B4F8" }]}>
+                <Text style={[styles.badge, { backgroundColor: colors.icon }]}>
                   {listingLabel}
                 </Text>
               </View>
@@ -583,7 +586,11 @@ export default function PropertyDetails() {
                 {images.map((_, i) => (
                   <View
                     key={i}
-                    style={[styles.dot, i === activeIndex && styles.dotActive]}
+                    style={[
+                      styles.dot,
+                      { backgroundColor: colorWithAlpha(colors.text, 0.35) },
+                      i === activeIndex && { backgroundColor: colors.buttonBackground },
+                    ]}
                   />
                 ))}
               </View>
@@ -591,23 +598,23 @@ export default function PropertyDetails() {
           </View>
 
           {/* ── Body ── */}
-          <View style={styles.body}>
+          <View style={[styles.body, { backgroundColor: colors.background }]}>
 
             {/* Title + Price */}
             <View style={styles.titleRow}>
-              <Text style={styles.propTitle} numberOfLines={2}>
+              <Text style={[styles.propTitle, { color: colors.text }]} numberOfLines={2}>
                 {property.propertyName}
               </Text>
               <View style={styles.priceCol}>
-                <Text style={styles.price}>{priceDisplay}</Text>
-                <Text style={styles.priceSub}>{priceSub}</Text>
+                <Text style={[styles.price, { color: colors.buttonBackground }]}>{priceDisplay}</Text>
+                <Text style={[styles.priceSub, { color: colors.mutedText }]}>{priceSub}</Text>
               </View>
             </View>
 
             {/* Location */}
             <View style={styles.locRow}>
-              <Ionicons name="location-outline" size={14} color="#888" />
-              <Text style={styles.locText}>
+              <Ionicons name="location-outline" size={14} color={colors.mutedText} />
+              <Text style={[styles.locText, { color: colors.mutedText }]}>
                 📍 {[property.city, property.state, property.country]
                   .filter(Boolean)
                   .join(", ")}
@@ -617,25 +624,25 @@ export default function PropertyDetails() {
             {/* CTA Buttons */}
             <View style={styles.btnRow}>
               <TouchableOpacity
-                style={styles.btnChat}
+                style={[styles.btnChat, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 onPress={() => handleChatAction('chat')}
                 disabled={chatLoading}
               >
                 {chatLoading
-                  ? <ActivityIndicator size="small" color="#C9A84C" />
-                  : <Text style={styles.btnChatText}>💬 Chat With Seller</Text>
+                  ? <ActivityIndicator size="small" color={colors.buttonBackground} />
+                  : <Text style={[styles.btnChatText, { color: colors.text }]}>💬 Chat With Seller</Text>
                 }
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.btnBook}
+                style={[styles.btnBook, { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground }]}
                 onPress={() => handleChatAction('inspection')}
                 disabled={chatLoading}
               >
 
                 {chatLoading
-                  ? <ActivityIndicator size="small" color="#C9A84C" />
-                  : <Text style={styles.btnBookText}>📅 Book Inspection</Text>
+                  ? <ActivityIndicator size="small" color={colors.background} />
+                  : <Text style={[styles.btnBookText, { color: colors.background }]}>📅 Book Inspection</Text>
                 }
               </TouchableOpacity>
             </View>
@@ -643,7 +650,7 @@ export default function PropertyDetails() {
             {/* Agent Card */}
 
             <TouchableOpacity
-              style={styles.agentCard}
+              style={[styles.agentCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
               onPress={() => router.push(`/Home/Company/CompanyScreen?id=${companyData?.id}`)}
             >
               {companyData?.profile_image ? (
@@ -652,23 +659,23 @@ export default function PropertyDetails() {
                   style={styles.agentImg}
                 />
               ) : (
-                <View style={styles.agentAvatar}>
-                  <Text style={styles.agentInitials}>
+                <View style={[styles.agentAvatar, { backgroundColor: colors.buttonBackground }]}>
+                  <Text style={[styles.agentInitials, { color: colors.background }]}>
                     {(companyData?.company_name ?? "?")[0].toUpperCase()}
                   </Text>
                 </View>
               )}
               <View style={{ flex: 1 }}>
-                <Text style={styles.agentName} numberOfLines={1}>
+                <Text style={[styles.agentName, { color: colors.text }]} numberOfLines={1}>
                   {companyData?.company_name ?? "Company Name"}
                 </Text>
-                <Text style={styles.agentLoc} numberOfLines={1}>
+                <Text style={[styles.agentLoc, { color: colors.mutedText }]} numberOfLines={1}>
                   {[companyData?.city, companyData?.state]
                     .filter(Boolean)
                     .join(", ")}
                 </Text>
               </View>
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#007bff" />
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.icon} />
             </TouchableOpacity>
 
 
@@ -683,7 +690,7 @@ export default function PropertyDetails() {
                   ref={videoRef}
                   source={{ uri: `https://insighthub.com.ng/NestifyAPI/${property.video}` }}
                   style={styles.videoThumbnail}
-                  resizeMode="cover"
+                  resizeMode={ResizeMode.COVER}
                   shouldPlay={false}
                   isMuted
                 />
@@ -703,74 +710,74 @@ export default function PropertyDetails() {
               </TouchableOpacity>
             )}
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             {/* Specs */}
             {specs.length > 0 && (
               <>
-                <Text style={styles.secTitle}>Property specs</Text>
+                <Text style={[styles.secTitle, { color: colors.text }]}>Property specs</Text>
                 <View style={styles.specsWrap}>
                   {specs.map((s, i) => (
-                    <View key={i} style={styles.specChip}>
+                    <View key={i} style={[styles.specChip, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
                       <MaterialIcons
                         name={s.icon as any}
                         size={15}
-                        color="#888"
+                        color={colors.mutedText}
                       />
-                      <Text style={styles.specVal}>{s.val}</Text>
-                      <Text style={styles.specLbl}>{s.label}</Text>
+                      <Text style={[styles.specVal, { color: colors.text }]}>{s.val}</Text>
+                      <Text style={[styles.specLbl, { color: colors.mutedText }]}>{s.label}</Text>
                     </View>
                   ))}
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
               </>
             )}
 
             {/* Details grid */}
             {details.length > 0 && (
               <>
-                <Text style={styles.secTitle}>Property details</Text>
+                <Text style={[styles.secTitle, { color: colors.text }]}>Property details</Text>
                 <View style={styles.infoGrid}>
                   {details.map((d, i) => (
-                    <View key={i} style={styles.infoItem}>
-                      <Text style={styles.infoLbl}>{d.label}</Text>
-                      <Text style={styles.infoVal} numberOfLines={1}>
+                    <View key={i} style={[styles.infoItem, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                      <Text style={[styles.infoLbl, { color: colors.mutedText }]}>{d.label}</Text>
+                      <Text style={[styles.infoVal, { color: colors.text }]} numberOfLines={1}>
                         {d.val}
                       </Text>
                     </View>
                   ))}
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
               </>
             )}
 
             {/* Description */}
             {property.description ? (
               <>
-                <Text style={styles.secTitle}>Description</Text>
-                <Text style={styles.desc}>{property.description}</Text>
-                <View style={styles.divider} />
+                <Text style={[styles.secTitle, { color: colors.text }]}>Description</Text>
+                <Text style={[styles.desc, { color: colors.mutedText }]}>{property.description}</Text>
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
               </>
             ) : null}
 
             {/* Location detail */}
-            <Text style={styles.secTitle}>Location</Text>
+            <Text style={[styles.secTitle, { color: colors.text }]}>Location</Text>
             {property.location ? (
-              <View style={styles.locBox}>
-                <Ionicons name="location-outline" size={14} color="#888" />
-                <Text style={styles.locBoxText}>{property.location}</Text>
+              <View style={[styles.locBox, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                <Ionicons name="location-outline" size={14} color={colors.mutedText} />
+                <Text style={[styles.locBoxText, { color: colors.mutedText }]}>{property.location}</Text>
               </View>
             ) : null}
-            <View style={styles.locBox}>
-              <Ionicons name="map-outline" size={14} color="#888" />
-              <Text style={styles.locBoxText}>
+            <View style={[styles.locBox, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+              <Ionicons name="map-outline" size={14} color={colors.mutedText} />
+              <Text style={[styles.locBoxText, { color: colors.mutedText }]}>
                 {[property.city, property.state, property.country]
                   .filter(Boolean)
                   .join(" · ")}
               </Text>
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
 
 
@@ -778,28 +785,28 @@ export default function PropertyDetails() {
 
 
             {/* ── Reviews ── */}
-            <Text style={styles.secTitle}>Company Reviews</Text>
+            <Text style={[styles.secTitle, { color: colors.text }]}>Company Reviews</Text>
 
             {/* Summary row */}
             {summary && summary.total > 0 && (
-              <View style={styles.reviewSummary}>
-                <Text style={styles.reviewRating}>⭐ {summary.average.toFixed(1)}</Text>
-                <Text style={styles.reviewSub}>From {summary.total} reviewer{summary.total !== 1 ? 's' : ''}</Text>
+              <View style={[styles.reviewSummary, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.12), borderColor: colorWithAlpha(colors.buttonBackground, 0.25) }]}>
+                <Text style={[styles.reviewRating, { color: colors.warning }]}>⭐ {summary.average.toFixed(1)}</Text>
+                <Text style={[styles.reviewSub, { color: colors.mutedText }]}>From {summary.total} reviewer{summary.total !== 1 ? 's' : ''}</Text>
               </View>
             )}
 
             {/* Preview cards — max 2 */}
             {reviewsLoading ? (
-              <ActivityIndicator style={{ marginVertical: 10 }} color="#C9A84C" />
+              <ActivityIndicator style={{ marginVertical: 10 }} color={colors.buttonBackground} />
             ) : reviews.length === 0 ? (
-              <View style={styles.reviewCard}>
-                <Text style={{ color: '#aaa', fontSize: 13, textAlign: 'center', paddingVertical: 10 }}>
+              <View style={[styles.reviewCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                <Text style={{ color: colors.mutedText, fontSize: 13, textAlign: 'center', paddingVertical: 10 }}>
                   No reviews yet for this company
                 </Text>
               </View>
             ) : (
               reviews.slice(0, 2).map(item => (
-                <View key={item.id} style={styles.reviewCard}>
+                <View key={item.id} style={[styles.reviewCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
                   <View style={styles.rvUserRow}>
                     {item.reviewer_avatar ? (
                       <Image
@@ -808,30 +815,30 @@ export default function PropertyDetails() {
                       />
                     ) : (
                       <View style={[styles.rvAvatar, {
-                        backgroundColor: '#B5D4F4',
+                        backgroundColor: colorWithAlpha(colors.buttonBackground, 0.25),
                         alignItems: 'center',
                         justifyContent: 'center',
                       }]}>
-                        <Text style={[styles.rvInitials, { color: '#0C447C' }]}>
+                        <Text style={[styles.rvInitials, { color: colors.text }]}>
                           {(item.reviewer_name ?? '?')[0].toUpperCase()}
                         </Text>
                       </View>
                     )}
                     <View>
-                      <Text style={styles.rvName}>{item.reviewer_name}</Text>
+                      <Text style={[styles.rvName, { color: colors.text }]}>{item.reviewer_name}</Text>
                       <View style={{ flexDirection: 'row', gap: 2, marginTop: 2 }}>
                         {[1, 2, 3, 4, 5].map((_, i) => (
                           <MaterialIcons
                             key={i}
                             name="star"
                             size={12}
-                            color={i < item.rating ? '#ffc107' : '#ddd'}
+                            color={i < item.rating ? colors.warning : colors.border}
                           />
                         ))}
                       </View>
                     </View>
                   </View>
-                  <Text style={styles.rvText} numberOfLines={2}>
+                  <Text style={[styles.rvText, { color: colors.mutedText }]} numberOfLines={2}>
                     {item.comment}
                   </Text>
                 </View>
@@ -840,7 +847,7 @@ export default function PropertyDetails() {
 
             {/* View all button */}
             <TouchableOpacity
-              style={styles.viewAllBtn}
+              style={[styles.viewAllBtn, { borderColor: colors.buttonBackground }]}
               onPress={() =>
                 router.push({
                   pathname: '../Company/CompanyReviews',
@@ -852,7 +859,7 @@ export default function PropertyDetails() {
                 })
               }
             >
-              <Text style={styles.viewAllText}>
+              <Text style={[styles.viewAllText, { color: colors.buttonBackground }]}>
                 {summary && summary.total > 2
                   ? `View all ${summary.total} reviews`
                   : 'View all reviews'}
@@ -945,8 +952,7 @@ export default function PropertyDetails() {
               <Video
                 source={{ uri: `https://insighthub.com.ng/NestifyAPI/${property.video}` }}
                 useNativeControls
-                resizeMode="contain"
-                isBuffering
+                resizeMode={ResizeMode.CONTAIN}
                 progressUpdateIntervalMillis={500}
                 shouldPlay
                 ref={videoRef}
@@ -1481,4 +1487,3 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 });
-

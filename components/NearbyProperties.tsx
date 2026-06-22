@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import PropertyGrid from './PropertyGrid';
+import { useTheme } from '@/context/ThemeContext';
 
 type Property = {
   id: number | string;
@@ -41,6 +42,7 @@ export default function NearbyProperties({
   categories = [],
 }: Props) {
   const router = useRouter();
+  const { colors } = useTheme();
 
   const [activeTab, setActiveTab] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -92,7 +94,7 @@ export default function NearbyProperties({
       {/* SECTION HEADER */}
 
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Nearby Properties
         </Text>
 
@@ -104,7 +106,7 @@ export default function NearbyProperties({
             })
           }
         >
-          <Text style={styles.sectionLink}>
+          <Text style={[styles.sectionLink, { color: colors.buttonBackground }]}>
             View all →
           </Text>
         </TouchableOpacity>
@@ -122,16 +124,17 @@ export default function NearbyProperties({
             key={tab}
             style={[
               styles.tab,
-              activeTab === tab &&
-              styles.tabActive,
+              {
+                backgroundColor: activeTab === tab ? colors.cardBackground : colors.inputBackground,
+                borderColor: activeTab === tab ? colors.buttonBackground : colors.border,
+              },
             ]}
             onPress={() => setActiveTab(tab)}
           >
             <Text
               style={[
                 styles.tabText,
-                activeTab === tab &&
-                styles.tabTextActive,
+                { color: activeTab === tab ? colors.text : colors.mutedText },
               ]}
             >
               {tab}
@@ -145,7 +148,7 @@ export default function NearbyProperties({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.catScroll}
+        style={[styles.catScroll, { borderBottomColor: colors.border }]}
         contentContainerStyle={styles.catContent}
       >
         {[{ id: 'All', name: 'All' }, ...categories].map(
@@ -158,8 +161,7 @@ export default function NearbyProperties({
                 key={String(cat.id)}
                 style={[
                   styles.catBtn,
-                  isActive &&
-                  styles.catBtnActive,
+                  isActive && { borderBottomColor: colors.buttonBackground },
                 ]}
                 onPress={() =>
                   setActiveCategory(
@@ -170,8 +172,8 @@ export default function NearbyProperties({
                 <Text
                   style={[
                     styles.catText,
-                    isActive &&
-                    styles.catTextActive,
+                    { color: isActive ? colors.text : colors.mutedText },
+                    isActive && styles.catTextActive,
                   ]}
                 >
                   {cat.name}
@@ -189,27 +191,27 @@ export default function NearbyProperties({
           <Ionicons
             name="home-outline"
             size={38}
-            color="#b8b8c8"
+            color={colors.mutedText}
           />
 
-          <Text style={styles.emptyTitle}>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>
             No properties found
           </Text>
 
-          <Text style={styles.emptySub}>
+          <Text style={[styles.emptySub, { color: colors.mutedText }]}>
             No properties under this category yet
           </Text>
 
           {(activeCategory !== 'All' ||
             activeTab !== 'All') && (
               <TouchableOpacity
-                style={styles.clearBtn}
+                style={[styles.clearBtn, { backgroundColor: colors.buttonBackground }]}
                 onPress={() => {
                   setActiveTab('All');
                   setActiveCategory('All');
                 }}
               >
-                <Text style={styles.clearText}>
+                <Text style={[styles.clearText, { color: colors.background }]}>
                   Clear filters
                 </Text>
               </TouchableOpacity>

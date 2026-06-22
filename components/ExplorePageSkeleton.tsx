@@ -9,18 +9,14 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width: SW } = Dimensions.get('window');
 
 // ─────────────────────────────────────────────────────────────
 // COLORS
 // ─────────────────────────────────────────────────────────────
-const BG = '#091530';
-const CARD = '#0f2044';
-const BASE = '#162650';
-const SHINE = '#29467f';
-const BORDER = 'rgba(255,255,255,0.06)';
-
 // ─────────────────────────────────────────────────────────────
 // SHIMMER BLOCK
 // ─────────────────────────────────────────────────────────────
@@ -31,6 +27,7 @@ function ShimmerBlock({
   style,
   delay = 0,
 }: any) {
+  const { colors } = useTheme();
   const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -57,7 +54,10 @@ function ShimmerBlock({
 
   const bg = shimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [BASE, SHINE],
+    outputRange: [
+      colorWithAlpha(colors.mutedText, 0.14),
+      colorWithAlpha(colors.mutedText, 0.26),
+    ],
   });
 
   return (
@@ -79,9 +79,11 @@ function ShimmerBlock({
 // HERO SECTION
 // ─────────────────────────────────────────────────────────────
 function HeroSkeleton() {
+  const { colors } = useTheme();
+
   return (
     <LinearGradient
-      colors={['#0b1733', '#091530', '#091530']}
+      colors={[colors.cardBackground, colors.background, colors.background]}
       style={styles.hero}
     >
       {/* Header */}
@@ -396,8 +398,10 @@ function FeedCardSkeleton({ delay = 0 }: any) {
 // ROOT
 // ─────────────────────────────────────────────────────────────
 export default function ExplorePageSkeleton() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
@@ -428,7 +432,7 @@ export default function ExplorePageSkeleton() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
+    backgroundColor: 'transparent',
   },
 
   hero: {
@@ -438,7 +442,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    borderBottomColor: 'transparent',
   },
 
   headerRow: {
@@ -486,10 +490,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: CARD,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
 
-    shadowColor: '#000',
+    shadowColor: 'transparent',
     shadowOffset: {
       width: 0,
       height: 10,
@@ -524,10 +528,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: CARD,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
 
-    shadowColor: '#000',
+    shadowColor: 'transparent',
     shadowOffset: {
       width: 0,
       height: 10,

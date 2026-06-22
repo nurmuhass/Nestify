@@ -12,11 +12,13 @@ import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useToast } from '../../components/Toast';
+import { brandColors } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const BASE_URL = 'https://insighthub.com.ng';
 
-const GOLD = '#C9A84C';
-const DARK = '#0F0F1A';
+const GOLD = brandColors.goldCta;
+const DARK = brandColors.primaryNavy;
 
 const PLAN_DETAILS: Record<string, any> = {
 
@@ -63,6 +65,7 @@ export default function PaymentScreen() {
 
   const router = useRouter();
   const { show } = useToast();
+  const { colors } = useTheme();
 
   const params = useLocalSearchParams();
 
@@ -284,19 +287,19 @@ export default function PaymentScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
 
-      <Text style={styles.title}>
+      <Text style={[styles.title, { color: colors.text }]}>
         Complete Upgrade
       </Text>
 
-      <Text style={styles.planLabel}>
+      <Text style={[styles.planLabel, { color: colors.buttonBackground }]}>
         {plan?.label}
       </Text>
 
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
 
-        <Text style={styles.cardTitle}>
+        <Text style={[styles.cardTitle, { color: colors.text }]}>
           {plan?.type === 'seller'
             ? 'Seller Premium Access'
             : plan?.type === 'boost'
@@ -304,7 +307,7 @@ export default function PaymentScreen() {
               : 'Buyer Premium Access'}
         </Text>
 
-        <Text style={styles.cardSub}>
+        <Text style={[styles.cardSub, { color: colors.mutedText }]}>
           {plan?.type === 'seller'
             ? 'Boost listings and increase visibility'
             : plan?.type === 'boost'
@@ -314,28 +317,28 @@ export default function PaymentScreen() {
 
       </View>
 
-      <View style={styles.featuresCard}>
+      <View style={[styles.featuresCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
 
         {plan?.type === 'seller' ? (
           <>
-            <Text style={styles.feature}>✓ More property uploads</Text>
-            <Text style={styles.feature}>✓ Featured listings</Text>
-            <Text style={styles.feature}>✓ Better visibility</Text>
-            <Text style={styles.feature}>✓ Analytics dashboard</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ More property uploads</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Featured listings</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Better visibility</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Analytics dashboard</Text>
           </>
         ) : plan?.type === 'boost' ? (
           <>
-            <Text style={styles.feature}>✓ Increased property visibility</Text>
-            <Text style={styles.feature}>✓ Higher search rankings</Text>
-            <Text style={styles.feature}>✓ Featured placement</Text>
-            <Text style={styles.feature}>✓ 30-day boost duration</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Increased property visibility</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Higher search rankings</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Featured placement</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ 30-day boost duration</Text>
           </>
         ) : (
           <>
-            <Text style={styles.feature}>✓ Chat companies directly</Text>
-            <Text style={styles.feature}>✓ View company contacts</Text>
-            <Text style={styles.feature}>✓ Access premium listings</Text>
-            <Text style={styles.feature}>✓ Priority buyer access</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Chat companies directly</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ View company contacts</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Access premium listings</Text>
+            <Text style={[styles.feature, { color: colors.text }]}>✓ Priority buyer access</Text>
           </>
         )}
 
@@ -343,14 +346,14 @@ export default function PaymentScreen() {
 
       {/* BOOST PLAN INFO */}
       {plan?.type === 'boost' && (
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>💡 Why Consider Premium Plans?</Text>
-          <Text style={styles.infoText}>
-            <Text style={{ fontWeight: '700', color: GOLD }}>Seller Premium: </Text>
+        <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.border, borderLeftColor: colors.buttonBackground }]}>
+          <Text style={[styles.infoTitle, { color: colors.buttonBackground }]}>💡 Why Consider Premium Plans?</Text>
+          <Text style={[styles.infoText, { color: colors.mutedText }]}>
+            <Text style={{ fontWeight: '700', color: colors.buttonBackground }}>Seller Premium: </Text>
             Unlock unlimited property uploads, featured listings, and detailed analytics to maximize your reach and close deals faster.
           </Text>
-          <Text style={styles.infoText}>
-            <Text style={{ fontWeight: '700', color: GOLD }}>Buyer Premium: </Text>
+          <Text style={[styles.infoText, { color: colors.mutedText }]}>
+            <Text style={{ fontWeight: '700', color: colors.buttonBackground }}>Buyer Premium: </Text>
             Chat directly with sellers and companies, access contact information, and get priority access to new premium listings.
           </Text>
         </View>
@@ -359,15 +362,15 @@ export default function PaymentScreen() {
       {/* ONLY SELLER PLANS CAN AUTO RENEW */}
       {plan?.type === 'seller' && plan?.type !== 'boost' && (
 
-        <View style={styles.row}>
+        <View style={[styles.row, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
 
           <View>
 
-            <Text style={styles.rowLabel}>
+            <Text style={[styles.rowLabel, { color: colors.text }]}>
               Auto Renew
             </Text>
 
-            <Text style={styles.rowSub}>
+            <Text style={[styles.rowSub, { color: colors.mutedText }]}>
               Automatically renew subscription
             </Text>
 
@@ -376,23 +379,23 @@ export default function PaymentScreen() {
           <Switch
             value={autoRenew}
             onValueChange={setAutoRenew}
-            trackColor={{ true: GOLD }}
-            thumbColor="#fff"
+            trackColor={{ false: colors.border, true: colors.buttonBackground }}
+            thumbColor={colors.cardBackground}
           />
 
         </View>
       )}
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { backgroundColor: colors.buttonBackground }]}
         onPress={initializePayment}
         disabled={loading}
       >
 
         {loading ? (
-          <ActivityIndicator color={DARK} />
+          <ActivityIndicator color={colors.background} />
         ) : (
-          <Text style={styles.buttonText}>
+          <Text style={[styles.buttonText, { color: colors.background }]}>
             Proceed to Payment
           </Text>
         )}

@@ -6,10 +6,7 @@ export default function Layout() {
       <Stack.Screen name="index" options={{ title: "Home" }} />
       <Stack.Screen name="Reviews" options={{ title: "Reviews" }} />
       <Stack.Screen name="Notifications" options={{ title: "Notifications" }} />
-      <Stack.Screen
-        name="EstateCompanyDetails"
-        options={{ title: "EstateCompanyDetails" }}
-      />
+      <Stack.Screen name="EstateDetails" options={{ title: "EstateDetails" }} />
       <Stack.Screen name="CompanyScreen" options={{ title: "CompanyScreen" }} />
     </Stack>
   );

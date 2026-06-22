@@ -11,6 +11,9 @@ import {
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+
 const { width: SW } = Dimensions.get('window');
 
 /* ─── Types ──────────────────────────────────────────────────── */
@@ -37,38 +40,18 @@ const ToastContext = createContext<ToastContextValue>({ show: () => { } });
 
 /* ─── Theme per type ─────────────────────────────────────────── */
 const THEME: Record<ToastType, {
-  bg: string;
-  border: string;
-  icon: string;
-  iconBg: string;
   iconName: React.ComponentProps<typeof Ionicons>['name'];
 }> = {
   success: {
-    bg: '#0a1f0f',
-    border: 'rgba(34,197,94,0.25)',
-    icon: '#22c55e',
-    iconBg: 'rgba(34,197,94,0.12)',
     iconName: 'checkmark-circle',
   },
   error: {
-    bg: '#1a0a0a',
-    border: 'rgba(239,68,68,0.25)',
-    icon: '#ef4444',
-    iconBg: 'rgba(239,68,68,0.12)',
     iconName: 'close-circle',
   },
   warning: {
-    bg: '#1a1200',
-    border: 'rgba(201,168,76,0.30)',
-    icon: '#c9a84c',
-    iconBg: 'rgba(201,168,76,0.12)',
     iconName: 'warning',
   },
   info: {
-    bg: '#091530',
-    border: 'rgba(59,130,246,0.25)',
-    icon: '#3b82f6',
-    iconBg: 'rgba(59,130,246,0.12)',
     iconName: 'information-circle',
   },
 };
@@ -83,15 +66,24 @@ function Toast({
   item: ToastItem;
   onDismiss: (id: number) => void;
 }) {
-  const theme = THEME[item.type];
+  const { colors } = useTheme();
+  const semantic = THEME[item.type];
+  const semanticColor =
+    item.type === 'success'
+      ? colors.success
+      : item.type === 'error'
+        ? colors.error
+        : item.type === 'warning'
+          ? colors.warning
+          : colors.tint;
   const translateY = useRef(new Animated.Value(-120)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.92)).current;
   const progress = useRef(new Animated.Value(1)).current;
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dismiss = useCallback(() => {
-    clearTimeout(timer.current);
+    if (timer.current) clearTimeout(timer.current);
     Animated.parallel([
       Animated.timing(translateY, { toValue: -120, duration: 280, useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 0, duration: 280, useNativeDriver: true }),
@@ -121,7 +113,9 @@ function Toast({
       // Auto dismiss
       timer.current = setTimeout(dismiss, dur);
     }
-    return () => clearTimeout(timer.current);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
   }, []);
 
   const progressWidth = progress.interpolate({
@@ -134,36 +128,37 @@ function Toast({
       style={[
         styles.toast,
         {
-          backgroundColor: theme.bg,
-          borderColor: theme.border,
+          backgroundColor: colors.cardBackground,
+          borderColor: colorWithAlpha(semanticColor, 0.28),
+          shadowColor: colors.shadow,
           transform: [{ translateY }, { scale }],
           opacity,
         },
       ]}
     >
       {/* Left accent line */}
-      <View style={[styles.accentLine, { backgroundColor: theme.icon }]} />
+      <View style={[styles.accentLine, { backgroundColor: semanticColor }]} />
 
       {/* Icon */}
-      <View style={[styles.iconWrap, { backgroundColor: theme.iconBg }]}>
-        <Ionicons name={theme.iconName} size={20} color={theme.icon} />
+      <View style={[styles.iconWrap, { backgroundColor: colorWithAlpha(semanticColor, 0.12) }]}>
+        <Ionicons name={semantic.iconName} size={20} color={semanticColor} />
       </View>
 
       {/* Text */}
       <View style={styles.textWrap}>
-        <Text style={styles.toastTitle}>{item.title}</Text>
+        <Text style={[styles.toastTitle, { color: colors.text }]}>{item.title}</Text>
         {item.message ? (
-          <Text style={styles.toastMsg} numberOfLines={2}>{item.message}</Text>
+          <Text style={[styles.toastMsg, { color: colors.mutedText }]} numberOfLines={2}>{item.message}</Text>
         ) : null}
 
         {/* Action button */}
         {item.action ? (
           <TouchableOpacity
-            style={[styles.actionBtn, { borderColor: theme.icon }]}
+            style={[styles.actionBtn, { borderColor: semanticColor }]}
             onPress={() => { item.action!.onPress(); dismiss(); }}
             activeOpacity={0.75}
           >
-            <Text style={[styles.actionText, { color: theme.icon }]}>
+            <Text style={[styles.actionText, { color: semanticColor }]}>
               {item.action.label}
             </Text>
           </TouchableOpacity>
@@ -172,18 +167,18 @@ function Toast({
 
       {/* Close */}
       <TouchableOpacity style={styles.closeBtn} onPress={dismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Ionicons name="close" size={16} color="rgba(255,255,255,0.35)" />
+        <Ionicons name="close" size={16} color={colorWithAlpha(colors.icon, 0.45)} />
       </TouchableOpacity>
 
       {/* Progress bar */}
       {!item.persistent && (
-        <View style={styles.progressTrack}>
+        <View style={[styles.progressTrack, { backgroundColor: colorWithAlpha(colors.border, 0.45) }]}>
           <Animated.View
             style={[
               styles.progressBar,
               {
                 width: progressWidth,
-                backgroundColor: theme.icon,
+                backgroundColor: semanticColor,
               },
             ]}
           />

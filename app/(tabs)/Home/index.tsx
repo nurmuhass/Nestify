@@ -19,9 +19,11 @@ import { HomeScreenSkeleton } from '../../../components/SkeletonLoaders';
 
 // NETWORK
 import { useNetwork } from '@/NetworkContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function HomeScreen() {
   const { isOnline } = useNetwork();
+  const { colors } = useTheme();
 
   const [loading, setLoading] = useState(true);
 
@@ -188,7 +190,7 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.root}>
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
         <FlatList
           data={[]}
           renderItem={null}
@@ -201,7 +203,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <FlatList
         data={[]}
         renderItem={null}
@@ -251,7 +253,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0f2044',
     paddingTop: getStatusBarHeight(),
   },
 });

@@ -23,22 +23,17 @@ import {
   View,
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width: SW } = Dimensions.get('window');
 
 // ── Palette — matches SellerProfile exactly ──────────────────
-const BG     = '#0F0F1A';
-const DARK   = '#1A1A2E';
-const DARK2  = '#16213E';
-const BASE   = '#1b2a45';   // shimmer base
-const SHINE  = '#243860';   // shimmer highlight
-const BORDER = 'rgba(255,255,255,0.06)';
-const GOLD_BORDER = 'rgba(201,168,76,0.2)';
-
 // ─────────────────────────────────────────────────────────────
 //  useShimmer — pulsing backgroundColor with optional delay
 // ─────────────────────────────────────────────────────────────
 function useShimmer(delay = 0) {
+  const { colors } = useTheme();
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -52,7 +47,13 @@ function useShimmer(delay = 0) {
     return () => loop.stop();
   }, [anim, delay]);
 
-  return anim.interpolate({ inputRange: [0, 1], outputRange: [BASE, SHINE] });
+  return anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      colorWithAlpha(colors.mutedText, 0.14),
+      colorWithAlpha(colors.mutedText, 0.26),
+    ],
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -257,8 +258,10 @@ function PropGridSkeleton() {
 //  Root export — full SellerProfile skeleton
 // ─────────────────────────────────────────────────────────────
 export default function SellerProfileSkeleton() {
+  const { colors } = useTheme();
+
   return (
-    <View style={sk.container}>
+    <View style={[sk.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         scrollEnabled={false}
@@ -286,7 +289,7 @@ export default function SellerProfileSkeleton() {
 const sk = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
+    backgroundColor: 'transparent',
     paddingTop: getStatusBarHeight(),
   },
 
@@ -300,7 +303,7 @@ const sk = StyleSheet.create({
   hero: {
     height: 220,
     position: 'relative',
-    backgroundColor: DARK2,
+    backgroundColor: 'transparent',
     overflow: 'visible',           // avatar floats below hero boundary
   },
   heroTopBar: {
@@ -322,7 +325,7 @@ const sk = StyleSheet.create({
     position: 'absolute',
     bottom: -4,
     right: -4,
-    backgroundColor: DARK,
+    backgroundColor: 'transparent',
     borderRadius: 10,
     padding: 1,
     zIndex: 2000,
@@ -340,11 +343,11 @@ const sk = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 20,
-    backgroundColor: DARK2,
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: 'transparent',
   },
   statItem: {
     flex: 1,
@@ -353,7 +356,7 @@ const sk = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 28,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'transparent',
   },
 
   // ── CTA row ───────────────────────────────────────────────
@@ -368,12 +371,12 @@ const sk = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: DARK,
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 14,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: GOLD_BORDER,
+    borderColor: 'transparent',
   },
 
   // ── Tabs ──────────────────────────────────────────────────
@@ -393,11 +396,11 @@ const sk = StyleSheet.create({
     paddingTop: 14,
   },
   propCard: {
-    backgroundColor: DARK2,
+    backgroundColor: 'transparent',
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: 'transparent',
   },
   propStatusWrap: {
     position: 'absolute',

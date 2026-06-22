@@ -10,6 +10,9 @@ import {
   View,
 } from 'react-native';
 
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+
 type Props = {
   user?: any;
   unreadCount?: number;
@@ -43,7 +46,7 @@ export default function HomeHeader({
 }: Props) {
   const router = useRouter();
   const navigatingRef = useRef(false);
-
+  const { colors } = useTheme();
 
   const hour = new Date().getHours();
 
@@ -55,16 +58,6 @@ export default function HomeHeader({
         : 'Good evening,';
 
   const userDisplayName = useMemo(() => {
-    /**
-     * Important:
-     * Do NOT use ?? here because empty string "" is still accepted by ??.
-     *
-     * Some users have:
-     * company_name: ""
-     * name: "Abubakar Abuwar"
-     *
-     * So we must skip empty strings manually.
-     */
     return firstNonEmpty(
       user?.company_name,
       user?.companyName,
@@ -74,7 +67,7 @@ export default function HomeHeader({
       `${cleanText(user?.first_name)} ${cleanText(user?.last_name)}`,
       `${cleanText(user?.firstName)} ${cleanText(user?.lastName)}`,
       user?.email ? String(user.email).split('@')[0] : '',
-      'Welcome back'
+      'Welcome back',
     );
   }, [user]);
 
@@ -109,7 +102,7 @@ export default function HomeHeader({
       user?.profile_image,
       user?.profileImage,
       user?.avatar,
-      user?.image
+      user?.image,
     );
   }, [user]);
 
@@ -120,10 +113,6 @@ export default function HomeHeader({
   }, [userDisplayName, user]);
 
   const goToNotifications = useCallback(() => {
-    /**
-     * Prevent accidental double navigation,
-     * but still make the first tap navigate immediately.
-     */
     if (navigatingRef.current) return;
 
     navigatingRef.current = true;
@@ -140,19 +129,37 @@ export default function HomeHeader({
   }, [router]);
 
   return (
-    <View style={styles.hero}>
-      {/* Decorative blobs */}
-      <View style={styles.deco1} />
-      <View style={styles.deco2} />
+    <View style={[styles.hero, { backgroundColor: colors.cardBackground }]}>
+      <View
+        style={[
+          styles.deco1,
+          { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.1) },
+        ]}
+      />
+      <View
+        style={[
+          styles.deco2,
+          { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.06) },
+        ]}
+      />
 
-      {/* Top row */}
       <View style={styles.topRow}>
         <View style={styles.locContainer}>
-          <View style={styles.locPill}>
-            <View style={styles.locDot} />
+          <View
+            style={[
+              styles.locPill,
+              {
+                backgroundColor: colorWithAlpha(colors.text, 0.1),
+                borderColor: colorWithAlpha(colors.text, 0.14),
+              },
+            ]}
+          >
+            <View
+              style={[styles.locDot, { backgroundColor: colors.buttonBackground }]}
+            />
 
             <Text
-              style={styles.locText}
+              style={[styles.locText, { color: colors.text }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -162,32 +169,54 @@ export default function HomeHeader({
         </View>
 
         <View style={styles.actions}>
-          {/* Notifications */}
           <Pressable
-            style={styles.bellButton}
+            style={[
+              styles.bellButton,
+              {
+                backgroundColor: colorWithAlpha(colors.text, 0.08),
+                borderColor: colorWithAlpha(colors.text, 0.12),
+              },
+            ]}
             onPress={goToNotifications}
             hitSlop={12}
           >
             <Ionicons
               name="notifications-outline"
               size={20}
-              color="rgba(255,255,255,0.78)"
+              color={colors.icon}
             />
 
-            <View pointerEvents="none" style={styles.bellDot} />
+            <View
+              pointerEvents="none"
+              style={[
+                styles.bellDot,
+                {
+                  backgroundColor: colors.buttonBackground,
+                  borderColor: colors.cardBackground,
+                },
+              ]}
+            />
 
             {unreadCount > 0 && (
-              <View pointerEvents="none" style={styles.badge}>
-                <Text style={styles.badgeText}>
+              <View
+                pointerEvents="none"
+                style={[styles.badge, { backgroundColor: colors.error }]}
+              >
+                <Text style={[styles.badgeText, { color: colors.background }]}>
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </Text>
               </View>
             )}
           </Pressable>
 
-          {/* Avatar */}
           <TouchableOpacity
-            style={styles.avatar}
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: colorWithAlpha(colors.buttonBackground, 0.28),
+                borderColor: colorWithAlpha(colors.buttonBackground, 0.4),
+              },
+            ]}
             onPress={goToProfile}
             activeOpacity={0.75}
             hitSlop={10}
@@ -200,7 +229,12 @@ export default function HomeHeader({
                 style={styles.avatarImg}
               />
             ) : (
-              <Text style={styles.avatarInitial}>
+              <Text
+                style={[
+                  styles.avatarInitial,
+                  { color: colors.warning },
+                ]}
+              >
                 {avatarInitial}
               </Text>
             )}
@@ -208,68 +242,56 @@ export default function HomeHeader({
         </View>
       </View>
 
-      {/* Greeting */}
       <View style={styles.greeting}>
-        <Text style={styles.hey}>
-          {greeting}
-        </Text>
+        <Text style={[styles.hey, { color: colors.mutedText }]}>{greeting}</Text>
 
-        <Text style={styles.name}>
+        <Text style={[styles.name, { color: colors.text }]}>
           {firstName}
 
           {lastName ? (
             <>
               {'\n'}
 
-              <Text style={styles.nameGold}>
-                {lastName}!
-              </Text>
+              <Text style={{ color: colors.warning }}>{lastName}!</Text>
             </>
           ) : (
             '!'
           )}
         </Text>
 
-        <Text style={styles.tagline}>
+        <Text style={[styles.tagline, { color: colors.mutedText }]}>
           Your dream property awaits
         </Text>
       </View>
 
-      {/* Stats */}
       <View style={styles.stats}>
         {[
           {
-            val:
-              propertiesCount > 0
-                ? `${propertiesCount}+`
-                : '247+',
-
+            val: propertiesCount > 0 ? `${propertiesCount}+` : '247+',
             lbl: 'Listings',
           },
-
           {
-            val:
-              companiesCount > 0
-                ? `${companiesCount}+`
-                : '18+',
-
+            val: companiesCount > 0 ? `${companiesCount}+` : '18+',
             lbl: 'Companies',
           },
-
           {
-            val: '4.9★',
+            val: '4.9\u2605',
             lbl: 'Rating',
           },
         ].map((s) => (
           <View
             key={s.lbl}
-            style={styles.statPill}
+            style={[
+              styles.statPill,
+              {
+                backgroundColor: colorWithAlpha(colors.text, 0.07),
+                borderColor: colorWithAlpha(colors.text, 0.1),
+              },
+            ]}
           >
-            <Text style={styles.statVal}>
-              {s.val}
-            </Text>
+            <Text style={[styles.statVal, { color: colors.text }]}>{s.val}</Text>
 
-            <Text style={styles.statLbl}>
+            <Text style={[styles.statLbl, { color: colors.mutedText }]}>
               {s.lbl}
             </Text>
           </View>
@@ -283,7 +305,6 @@ const styles = StyleSheet.create({
   hero: {
     marginHorizontal: 16,
     marginBottom: 14,
-    backgroundColor: '#0f2044',
     borderRadius: 24,
     padding: 10,
     overflow: 'hidden',
@@ -296,8 +317,6 @@ const styles = StyleSheet.create({
     width: 170,
     height: 170,
     borderRadius: 85,
-    backgroundColor:
-      'rgba(201,168,76,0.10)',
   },
 
   deco2: {
@@ -307,8 +326,6 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor:
-      'rgba(201,168,76,0.06)',
   },
 
   topRow: {
@@ -327,11 +344,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor:
-      'rgba(255,255,255,0.10)',
     borderWidth: 1,
-    borderColor:
-      'rgba(255,255,255,0.14)',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -342,12 +355,10 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#c9a84c',
   },
 
   locText: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.82)',
     flexShrink: 1,
   },
 
@@ -362,9 +373,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -377,16 +386,13 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#c9a84c',
     borderWidth: 1.5,
-    borderColor: '#0f2044',
   },
 
   badge: {
     position: 'absolute',
     top: -3,
     right: -3,
-    backgroundColor: '#e11d48',
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -397,7 +403,6 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
   },
@@ -406,11 +411,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor:
-      'rgba(201,168,76,0.28)',
     borderWidth: 1.5,
-    borderColor:
-      'rgba(201,168,76,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -424,7 +425,6 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#f0d98a',
   },
 
   greeting: {
@@ -434,7 +434,6 @@ const styles = StyleSheet.create({
 
   hey: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.45)',
     fontWeight: '300',
     letterSpacing: 0.3,
     marginBottom: 3,
@@ -443,18 +442,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#ffffff',
     lineHeight: 30,
-    letterSpacing: -0.3,
-  },
-
-  nameGold: {
-    color: '#f0d98a',
+    letterSpacing: 0,
   },
 
   tagline: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
     marginTop: 5,
     fontWeight: '300',
     letterSpacing: 0.5,
@@ -468,11 +461,7 @@ const styles = StyleSheet.create({
 
   statPill: {
     flex: 1,
-    backgroundColor:
-      'rgba(255,255,255,0.07)',
     borderWidth: 1,
-    borderColor:
-      'rgba(255,255,255,0.10)',
     borderRadius: 12,
     padding: 10,
   },
@@ -480,13 +469,11 @@ const styles = StyleSheet.create({
   statVal: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
     lineHeight: 20,
   },
 
   statLbl: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.38)',
     marginTop: 2,
     fontWeight: '300',
   },

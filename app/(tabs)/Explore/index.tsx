@@ -22,6 +22,8 @@ import LikeButton from '@/components/LikeButton';
 import PremiumLoader from '@/components/PremiumLoader';
 import ExplorePageSkeleton from '@/components/ExplorePageSkeleton';
 import { useToast } from '@/components/Toast';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -66,6 +68,7 @@ const FILTERS = ['All', 'Premium', 'Featured', 'For Rent', 'For Sell'];
 
 export default function ExplorePage() {
   const { show } = useToast();
+  const { colors } = useTheme();
   const router = useRouter();
   const searchInputRef = useRef<TextInput>(null);
 
@@ -286,7 +289,7 @@ const onRefresh = useCallback(() => {
 }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredProperties}
         keyExtractor={(item) => String(item.id)}
@@ -294,58 +297,77 @@ const onRefresh = useCallback(() => {
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.buttonBackground} />}
         ListHeaderComponent={
           <>
-            <LinearGradient colors={['#0b1733', '#091530', '#091530']} style={styles.hero}>
+            <LinearGradient
+              colors={[
+                colorWithAlpha(colors.cardBackground, 0.98),
+                colors.background,
+                colors.background,
+              ]}
+              style={[styles.hero, { borderBottomColor: colors.border }]}
+            >
               <View style={styles.headerRow}>
-                <TouchableOpacity onPress={() => router.replace('/(tabs)/Home')} style={styles.iconBtn}>
-                  <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
+                <TouchableOpacity
+                  onPress={() => router.replace('/(tabs)/Home')}
+                  style={[
+                    styles.iconBtn,
+                    { backgroundColor: colorWithAlpha(colors.text, 0.08), borderColor: colors.border },
+                  ]}
+                >
+                  <Ionicons name="arrow-back" size={20} color={colors.icon} />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => searchInputRef.current?.focus()} style={styles.iconBtn}>
-                  <Ionicons name="filter" size={18} color={COLORS.textPrimary} />
+                <TouchableOpacity
+                  onPress={() => searchInputRef.current?.focus()}
+                  style={[
+                    styles.iconBtn,
+                    { backgroundColor: colorWithAlpha(colors.text, 0.08), borderColor: colors.border },
+                  ]}
+                >
+                  <Ionicons name="filter" size={18} color={colors.icon} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.heroTextWrap}>
-                <Text style={styles.kicker}>Smart discovery</Text>
-                <Text style={styles.heroTitle}>Explore premium homes</Text>
-                <Text style={styles.heroSub}>
+                <Text style={[styles.kicker, { color: colors.warning }]}>Smart discovery</Text>
+                <Text style={[styles.heroTitle, { color: colors.text }]}>Explore premium homes</Text>
+                <Text style={[styles.heroSub, { color: colors.mutedText }]}>
                   Curated listings ranked by relevance, location, premium status and engagement.
                 </Text>
               </View>
 
-              <View style={styles.searchWrap}>
-                <Ionicons name="search-outline" size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
+              <View style={[styles.searchWrap, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                <Ionicons name="search-outline" size={18} color={colors.mutedText} style={styles.searchIcon} />
                 <TextInput
                   ref={searchInputRef}
-                  style={styles.searchInput}
+                  style={[styles.searchInput, { color: colors.text }]}
                   placeholder="Search by name, city or state..."
-                  placeholderTextColor="#98a2b3"
+                  placeholderTextColor={colors.mutedText}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   returnKeyType="search"
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
-                    <Ionicons name="close-circle" size={18} color="#b5b8c3" />
+                    <Ionicons name="close-circle" size={18} color={colors.mutedText} />
                   </TouchableOpacity>
                 )}
               </View>
 
               <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{totalCount}</Text>
-                  <Text style={styles.statLabel}>Listings</Text>
+                <View style={[styles.statCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                  <Text style={[styles.statValue, { color: colors.buttonBackground }]}>{totalCount}</Text>
+                  <Text style={[styles.statLabel, { color: colors.mutedText }]}>Listings</Text>
                 </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{premiumCount}</Text>
-                  <Text style={styles.statLabel}>Premium</Text>
+                <View style={[styles.statCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                  <Text style={[styles.statValue, { color: colors.buttonBackground }]}>{premiumCount}</Text>
+                  <Text style={[styles.statLabel, { color: colors.mutedText }]}>Premium</Text>
                 </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{featuredCount}</Text>
-                  <Text style={styles.statLabel}>Featured</Text>
+                <View style={[styles.statCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                  <Text style={[styles.statValue, { color: colors.buttonBackground }]}>{featuredCount}</Text>
+                  <Text style={[styles.statLabel, { color: colors.mutedText }]}>Featured</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -357,9 +379,15 @@ const onRefresh = useCallback(() => {
                   <TouchableOpacity
                     key={filter}
                     onPress={() => setActiveTab(filter)}
-                    style={[styles.filterChip, active && styles.filterChipActive]}
+                    style={[
+                      styles.filterChip,
+                      {
+                        backgroundColor: active ? colors.buttonBackground : colors.cardBackground,
+                        borderColor: colors.border,
+                      },
+                    ]}
                   >
-                    <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>{filter}</Text>
+                    <Text style={[styles.filterChipText, { color: active ? colors.background : colors.text }]}>{filter}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -372,9 +400,15 @@ const onRefresh = useCallback(() => {
                   <TouchableOpacity
                     key={String(cat.id)}
                     onPress={() => setActiveCategory(String(cat.id))}
-                    style={[styles.categoryChip, active && styles.categoryChipActive]}
+                    style={[
+                      styles.categoryChip,
+                      {
+                        backgroundColor: active ? colorWithAlpha(colors.buttonBackground, 0.15) : colorWithAlpha(colors.text, 0.04),
+                        borderColor: active ? colorWithAlpha(colors.buttonBackground, 0.35) : colors.border,
+                      },
+                    ]}
                   >
-                    <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{cat.name}</Text>
+                    <Text style={[styles.categoryText, { color: active ? colors.warning : colors.mutedText }]}>{cat.name}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -384,11 +418,11 @@ const onRefresh = useCallback(() => {
               <>
                 <View style={styles.sectionHead}>
                   <View>
-                    <Text style={styles.sectionTitle}>Featured for you</Text>
-                    <Text style={styles.sectionSub}>Premium and promoted listings</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Featured for you</Text>
+                    <Text style={[styles.sectionSub, { color: colors.mutedText }]}>Premium and promoted listings</Text>
                   </View>
                   <TouchableOpacity onPress={() => setActiveTab('Premium')}>
-                    <Text style={styles.sectionLink}>See premium</Text>
+                    <Text style={[styles.sectionLink, { color: colors.buttonBackground }]}>See premium</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -414,16 +448,16 @@ const onRefresh = useCallback(() => {
                         {imageUrl ? (
                           <Image source={{ uri: imageUrl }} style={styles.featuredImage} />
                         ) : (
-                          <View style={[styles.featuredImage, { backgroundColor: '#18284f' }]} />
+                          <View style={[styles.featuredImage, { backgroundColor: colors.inputBackground }]} />
                         )}
 
                         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.82)']} style={styles.featuredOverlay} />
 
                         <View style={styles.featuredTopBadges}>
                           {isPremium && (
-                            <View style={styles.badgeGold}>
-                              <Ionicons name="diamond" size={11} color="#091530" />
-                              <Text style={styles.badgeGoldText}>PREMIUM</Text>
+                            <View style={[styles.badgeGold, { backgroundColor: colors.buttonBackground }]}>
+                              <Ionicons name="diamond" size={11} color={colors.background} />
+                              <Text style={[styles.badgeGoldText, { color: colors.background }]}>PREMIUM</Text>
                             </View>
                           )}
                           {item.featured_until && (
@@ -448,8 +482,8 @@ const onRefresh = useCallback(() => {
             )}
 
             <View style={styles.feedHead}>
-              <Text style={styles.feedTitle}>Marketplace feed</Text>
-              <Text style={styles.feedSub}>Fresh, premium and location-aware results</Text>
+              <Text style={[styles.feedTitle, { color: colors.text }]}>Marketplace feed</Text>
+              <Text style={[styles.feedSub, { color: colors.mutedText }]}>Fresh, premium and location-aware results</Text>
             </View>
           </>
         }
@@ -465,7 +499,13 @@ const onRefresh = useCallback(() => {
           return (
             <TouchableOpacity
               key={String(prop.id)}
-              style={styles.card}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
+                },
+              ]}
               activeOpacity={0.92}
               onPress={() =>
                 router.push({
@@ -478,7 +518,7 @@ const onRefresh = useCallback(() => {
                 {thumbnailUrl ? (
                   <Image source={{ uri: thumbnailUrl }} style={styles.cardImage} />
                 ) : (
-                  <View style={[styles.cardImage, { backgroundColor: '#162751' }]} />
+                  <View style={[styles.cardImage, { backgroundColor: colors.inputBackground }]} />
                 )}
 
                 <LinearGradient colors={['transparent', 'rgba(0,0,0,0.75)']} style={styles.cardOverlay} />
@@ -486,9 +526,9 @@ const onRefresh = useCallback(() => {
                 <View style={styles.cardTopRow}>
                   <View style={styles.leftBadgeStack}>
                     {isPremium && (
-                      <View style={styles.badgeGoldSmall}>
-                        <Ionicons name="diamond" size={11} color="#091530" />
-                        <Text style={styles.badgeGoldSmallText}>PREMIUM</Text>
+                      <View style={[styles.badgeGoldSmall, { backgroundColor: colors.buttonBackground }]}>
+                        <Ionicons name="diamond" size={11} color={colors.background} />
+                        <Text style={[styles.badgeGoldSmallText, { color: colors.background }]}>PREMIUM</Text>
                       </View>
                     )}
 
@@ -500,38 +540,38 @@ const onRefresh = useCallback(() => {
                   </View>
 
                   <View style={styles.likeWrap}>
-                    <LikeButton propertyId={Number(prop.id)} variant="icon" size={17} color="red" />
+                    <LikeButton propertyId={Number(prop.id)} variant="icon" size={17} />
                   </View>
                 </View>
 
                 <View style={styles.rankPill}>
-                  <Entypo name="star" size={11} color={COLORS.gold} />
-                  <Text style={styles.rankPillText}>Explore</Text>
+                  <Entypo name="star" size={11} color={colors.buttonBackground} />
+                  <Text style={[styles.rankPillText, { color: colors.text }]}>Explore</Text>
                 </View>
               </View>
 
               <View style={styles.cardInfo}>
-                <Text numberOfLines={1} style={styles.cardName}>{prop.propertyName}</Text>
+                <Text numberOfLines={1} style={[styles.cardName, { color: colors.text }]}>{prop.propertyName}</Text>
 
-                <Text style={styles.location}>
-                  <Ionicons name="location-outline" size={13} color={COLORS.textSecondary} />{' '}
+                <Text style={[styles.location, { color: colors.mutedText }]}>
+                  <Ionicons name="location-outline" size={13} color={colors.mutedText} />{' '}
                   {prop.city}, {prop.state}
                 </Text>
 
-                <Text style={styles.price}>
+                <Text style={[styles.price, { color: colors.warning }]}>
                   ₦{formatPrice(price)}
-                  <Text style={styles.priceSuffix}>{prop.listingType === 'Rent' ? ' / month' : ''}</Text>
+                  <Text style={[styles.priceSuffix, { color: colors.mutedText }]}>{prop.listingType === 'Rent' ? ' / month' : ''}</Text>
                 </Text>
 
                 <View style={styles.metaRow}>
                   <View style={styles.metaItem}>
-                    <Ionicons name="eye-outline" size={13} color={COLORS.textSecondary} />
-                    <Text style={styles.metaText}>{Number(prop.views_count || 0)}</Text>
+                    <Ionicons name="eye-outline" size={13} color={colors.mutedText} />
+                    <Text style={[styles.metaText, { color: colors.text }]}>{Number(prop.views_count || 0)}</Text>
                   </View>
 
                   <View style={styles.metaItem}>
-                    <Ionicons name="heart-outline" size={13} color={COLORS.textSecondary} />
-                    <Text style={styles.metaText}>{Number(prop.likes_count || 0)}</Text>
+                    <Ionicons name="heart-outline" size={13} color={colors.mutedText} />
+                    <Text style={[styles.metaText, { color: colors.text }]}>{Number(prop.likes_count || 0)}</Text>
                   </View>
 
                   {isBoosted && (
@@ -548,7 +588,7 @@ const onRefresh = useCallback(() => {
         ListFooterComponent={
           loadingMore ? (
             <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color={COLORS.gold} />
+              <ActivityIndicator size="small" color={colors.buttonBackground} />
             </View>
           ) : null
         }
@@ -558,8 +598,8 @@ const onRefresh = useCallback(() => {
               <View style={styles.emptyIconWrap}>
                 <Ionicons name="home-outline" size={28} color={COLORS.gold} />
               </View>
-              <Text style={styles.emptyTitle}>No properties found</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No properties found</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.mutedText }]}>
                 {searchQuery.trim()
                   ? `No results for “${searchQuery}”`
                   : 'Try a different filter or category to discover more listings.'}
@@ -573,7 +613,7 @@ const onRefresh = useCallback(() => {
                     setActiveTab('All');
                   }}
                 >
-                  <Text style={styles.clearText}>Clear filters</Text>
+                  <Text style={[styles.clearText, { color: colors.background }]}>Clear filters</Text>
                 </TouchableOpacity>
               )}
             </View>

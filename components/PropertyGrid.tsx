@@ -9,28 +9,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { colorWithAlpha } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+
 import LikeButton from "./LikeButton";
 
-/* =========================
-   COLORS
-========================= */
-const COLORS = {
-  bg: "#091530",
-  card: "#0f2044",
-  gold: "#c9a84c",
-  goldLight: "#f0d98a",
-  textPrimary: "#ffffff",
-  textSecondary: "#94a3b8",
-  border: "rgba(255,255,255,0.08)",
-  borderStrong: "rgba(201,168,76,0.25)",
-  mutedCard: "#0b1a33",
-  success: "#22c55e",
-  danger: "#ef4444",
-};
-
-/* =========================
-   TYPES
-========================= */
 type Property = {
   id: number | string;
   propertyName: string;
@@ -50,256 +34,175 @@ type Props = {
   loadingMore?: boolean;
 };
 
-/* =========================
-   COMPONENT
-========================= */
 export default function PropertyGrid({ properties }: Props) {
+  const { colors } = useTheme();
+
   const formatPrice = (price: any) => {
     return Number(String(price).replace(/,/g, "")).toLocaleString();
   };
 
-  /* =========================
-     RENDER ITEM
-  ========================= */
-  const renderItem = useCallback(({ item }: { item: Property }) => {
-    const id = Number(item.id);
+  const renderItem = useCallback(
+    ({ item }: { item: Property }) => {
+      const id = Number(item.id);
 
-    const img =
-      item.images && item.images.length > 0
-        ? `https://insighthub.com.ng/${item.images[0]}`
-        : null;
+      const img =
+        item.images && item.images.length > 0
+          ? `https://insighthub.com.ng/${item.images[0]}`
+          : null;
 
-    return (
-      <TouchableOpacity
-        activeOpacity={0.9}
-        style={{
-          width: "48%",
-          backgroundColor: COLORS.card,
-          borderRadius: 22,
-          overflow: "hidden",
-          borderWidth: 1,
-          borderColor: COLORS.border,
-          marginBottom: 10,
+      const listingColor =
+        item.listingType === "Rent"
+          ? colors.tint
+          : item.listingType === "Sell"
+            ? colors.success
+            : colors.buttonBackground;
 
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.25,
-          shadowRadius: 14,
+      const statusColor =
+        item.status === "available"
+          ? colors.success
+          : item.status === "sold"
+            ? colors.error
+            : colors.mutedText;
 
-          elevation: 6,
-        }}
-        onPress={() =>
-          router.push({
-            pathname: "/Home/Properties/Details",
-            params: { id: String(id) },
-          })
-        }
-      >
-        {/* IMAGE */}
-        <View style={{ position: "relative" }}>
-          {img ? (
-            <Image
-              source={{ uri: img }}
-              style={{
-                width: "100%",
-                height: 140,
-              }}
-              resizeMode="cover"
-            />
-          ) : (
-            <View
-              style={{
-                width: "100%",
-                height: 140,
-                backgroundColor: COLORS.mutedCard,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Ionicons
-                name="image-outline"
-                size={30}
-                color={COLORS.textSecondary}
-              />
-            </View>
-          )}
-
-          {/* DARK OVERLAY */}
-          <View
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              backgroundColor: "rgba(0,0,0,0.15)",
-            }}
-          />
-
-          {/* LIKE BUTTON */}
-          <TouchableOpacity
-            style={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              backgroundColor: "rgba(9,21,48,0.9)",
-              padding: 8,
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: COLORS.borderStrong,
-            }}
-          >
-            <LikeButton
-              propertyId={id}
-              variant="minimal"
-              size={17}
-              color={COLORS.danger}
-            />
-          </TouchableOpacity>
-          {/* LISTING TYPE BADGE */}
-          <View
-            style={{
-              position: "absolute",
-              top: 10,
-              left: 10,
-              backgroundColor:
-                item.listingType === "Rent"
-                  ? "#2563eb"
-                  : item.listingType === "Sell"
-                    ? "#16a34a"
-                    : "#c9a84c",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.15)",
-            }}
-          >
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: "800",
-                letterSpacing: 0.5,
-                textTransform: "uppercase",
-              }}
-            >
-              {item.listingType === "Rent"
-                ? "FOR RENT"
-                : item.listingType === "Sell"
-                  ? "FOR SALE"
-                  : item.listingType}
-            </Text>
-          </View>
-
-          {/* PRICE BADGE */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 10,
-              left: 10,
-              backgroundColor: COLORS.gold,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 30,
-            }}
-          >
-            <Text
-              style={{
-                color: COLORS.bg,
-                fontSize: 12,
-                fontWeight: "700",
-              }}
-            >
-              {item.listingType === "Rent"
-                ? `₦${formatPrice(item.rentPrice)}/yr`
-                : `₦${formatPrice(item.sellPrice)}`}
-            </Text>
-          </View>
-        </View>
-
-        {/* INFO */}
-        <View
-          style={{
-            padding: 14,
-          }}
+      return (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+              shadowColor: colors.shadow,
+            },
+          ]}
+          onPress={() =>
+            router.push({
+              pathname: "/Home/Properties/Details",
+              params: { id: String(id) },
+            })
+          }
         >
-          {/* PROPERTY NAME */}
-          <Text
-            numberOfLines={1}
-            style={{
-              fontWeight: "700",
-              fontSize: 15,
-              color: COLORS.textPrimary,
-            }}
-          >
-            {item.propertyName}
-          </Text>
+          <View style={styles.imageWrap}>
+            {img ? (
+              <Image source={{ uri: img }} style={styles.image} resizeMode="cover" />
+            ) : (
+              <View
+                style={[
+                  styles.imageFallback,
+                  { backgroundColor: colors.inputBackground },
+                ]}
+              >
+                <Ionicons
+                  name="image-outline"
+                  size={30}
+                  color={colors.mutedText}
+                />
+              </View>
+            )}
 
-          {/* DETAILS */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginTop: 10,
-            }}
-          >
             <View
               style={[
-                styles.sellerStatusPill,
+                styles.imageOverlay,
+                { backgroundColor: colorWithAlpha(colors.shadow, 0.15) },
+              ]}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.likeWrap,
                 {
-                  backgroundColor:
-                    item.status === "available" ? "#166534"
-                      : item.status === "sold" ? "#991b1b"
-                        : "#374151",
+                  backgroundColor: colorWithAlpha(colors.background, 0.9),
+                  borderColor: colorWithAlpha(colors.buttonBackground, 0.25),
                 },
               ]}
             >
-              <Text style={styles.sellerStatusText}>{item.status}</Text>
+              <LikeButton
+                propertyId={id}
+                variant="minimal"
+                size={17}
+                color={colors.error}
+              />
+            </TouchableOpacity>
+
+            <View
+              style={[
+                styles.listingBadge,
+                {
+                  backgroundColor: listingColor,
+                  borderColor: colorWithAlpha(colors.text, 0.15),
+                },
+              ]}
+            >
+              <Text style={[styles.listingText, { color: colors.background }]}>
+                {item.listingType === "Rent"
+                  ? "FOR RENT"
+                  : item.listingType === "Sell"
+                    ? "FOR SALE"
+                    : item.listingType}
+              </Text>
             </View>
 
-            {/* LOCATION */}
             <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginLeft: 10,
-                flex: 1,
-              }}
+              style={[
+                styles.priceBadge,
+                { backgroundColor: colors.buttonBackground },
+              ]}
             >
-              <Ionicons
-                name="location-outline"
-                size={14}
-                color={COLORS.textSecondary}
-              />
-
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 12,
-                  marginLeft: 3,
-                  color: COLORS.textSecondary,
-                  flex: 1,
-                }}
-              >
-                {item.city}, {item.state}
+              <Text style={[styles.priceText, { color: colors.background }]}>
+                {item.listingType === "Rent"
+                  ? `\u20a6${formatPrice(item.rentPrice)}/yr`
+                  : `\u20a6${formatPrice(item.sellPrice)}`}
               </Text>
             </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    );
-  }, []);
 
-  /* =========================
-     RENDER
-  ========================= */
+          <View style={styles.info}>
+            <Text
+              numberOfLines={1}
+              style={[styles.name, { color: colors.text }]}
+            >
+              {item.propertyName}
+            </Text>
+
+            <View style={styles.detailsRow}>
+              <View
+                style={[styles.sellerStatusPill, { backgroundColor: statusColor }]}
+              >
+                <Text style={[styles.sellerStatusText, { color: colors.background }]}>
+                  {item.status}
+                </Text>
+              </View>
+
+              <View style={styles.locationRow}>
+                <Ionicons
+                  name="location-outline"
+                  size={14}
+                  color={colors.mutedText}
+                />
+
+                <Text
+                  numberOfLines={1}
+                  style={[styles.locationText, { color: colors.mutedText }]}
+                >
+                  {item.city}, {item.state}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [colors],
+  );
+
   return (
     <View
-      style={{
-        marginTop: 20,
-        paddingBottom: 20,
-        backgroundColor: COLORS.bg,
-        flex: 1,
-      }}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+        },
+      ]}
     >
       <FlatList
         data={properties}
@@ -308,28 +211,14 @@ export default function PropertyGrid({ properties }: Props) {
         initialNumToRender={6}
         maxToRenderPerBatch={10}
         windowSize={5}
-        removeClippedSubviews={true}
+        removeClippedSubviews
         showsVerticalScrollIndicator={false}
         maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-        columnWrapperStyle={{
-          justifyContent: "space-between",
-          paddingHorizontal: 12,
-          marginBottom: 16,
-        }}
-        contentContainerStyle={{
-          paddingBottom: 100,
-          paddingTop: 5,
-        }}
+        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={styles.contentContainer}
         renderItem={renderItem}
         ListEmptyComponent={() => (
-          <Text
-            style={{
-              textAlign: "center",
-              marginTop: 40,
-              color: COLORS.textSecondary,
-              fontSize: 15,
-            }}
-          >
+          <Text style={[styles.emptyText, { color: colors.mutedText }]}>
             No properties found.
           </Text>
         )}
@@ -339,11 +228,120 @@ export default function PropertyGrid({ properties }: Props) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    marginTop: 20,
+    paddingBottom: 20,
+    flex: 1,
+  },
+  card: {
+    width: "48%",
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 1,
+    marginBottom: 10,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  imageWrap: {
+    position: "relative",
+  },
+  image: {
+    width: "100%",
+    height: 140,
+  },
+  imageFallback: {
+    width: "100%",
+    height: 140,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageOverlay: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
+  likeWrap: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  listingBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  listingText: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  priceBadge: {
+    position: "absolute",
+    bottom: 10,
+    left: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 30,
+  },
+  priceText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  info: {
+    padding: 14,
+  },
+  name: {
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  detailsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
   sellerStatusPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 20,
   },
-  sellerStatusText: { fontSize: 9, fontWeight: "700", color: "#fff", textTransform: "capitalize" },
-
+  sellerStatusText: {
+    fontSize: 9,
+    fontWeight: "700",
+    textTransform: "capitalize",
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 10,
+    flex: 1,
+  },
+  locationText: {
+    fontSize: 12,
+    marginLeft: 3,
+    flex: 1,
+  },
+  columnWrapper: {
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    marginBottom: 16,
+  },
+  contentContainer: {
+    paddingBottom: 100,
+    paddingTop: 5,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 40,
+    fontSize: 15,
+  },
 });

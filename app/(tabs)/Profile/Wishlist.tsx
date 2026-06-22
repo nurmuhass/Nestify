@@ -14,6 +14,8 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import LikeButton from '../../../components/LikeButton';
 import PremiumLoader from '@/components/PremiumLoader';
+import { colorWithAlpha } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const formatPrice = (val: any) =>
   Number(String(val).replace(/,/g, '')).toLocaleString('en-NG');
@@ -27,6 +29,7 @@ const formatDate = (dateString: string) =>
 
 export default function SavedProperties() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [saved, setSaved] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,9 +65,9 @@ export default function SavedProperties() {
   };
 
   const statusColor = (status: string) =>
-    status === 'available' ? '#28a745'
-    : status === 'sold'    ? '#dc3545'
-    : '#6c757d';
+    status === 'available' ? colors.success
+    : status === 'sold'    ? colors.error
+    : colors.mutedText;
 
   const statusLabel = (status: string) =>
     status === 'available' ? 'Available'
@@ -102,17 +105,17 @@ export default function SavedProperties() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colorWithAlpha(colors.cardBackground, 0.65), borderColor: colors.border }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#fff" />
+            <Ionicons name="arrow-back" size={20} color={colors.icon} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Saved Properties</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Saved Properties</Text>
         </View>
-        <View style={styles.countBadge}>
-          <Text style={styles.countText}>{saved.length} saved</Text>
+        <View style={[styles.countBadge, { backgroundColor: colors.inputBackground }]}>
+          <Text style={[styles.countText, { color: colors.mutedText }]}>{saved.length} saved</Text>
         </View>
       </View>
 
@@ -123,18 +126,18 @@ export default function SavedProperties() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="heart-outline" size={32} color="rgba(255,255,255,0.4)" />
+            <View style={[styles.emptyIcon, { backgroundColor: colors.cardBackground }]}>
+              <Ionicons name="heart-outline" size={32} color={colors.mutedText} />
             </View>
-            <Text style={styles.emptyTitle}>No saved properties yet</Text>
-            <Text style={styles.emptySub}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No saved properties yet</Text>
+            <Text style={[styles.emptySub, { color: colors.mutedText }]}>
               Tap the heart icon on any property to save it here
             </Text>
           </View>
         }
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.card}
+            style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
             activeOpacity={0.92}
 
               onPress={() =>
@@ -145,7 +148,7 @@ export default function SavedProperties() {
                     }
           >
             {/* Image */}
-            <View style={styles.cardImg}>
+            <View style={[styles.cardImg, { backgroundColor: colors.inputBackground }]}>
               {item.images?.[0] ? (
                 <Image
                   source={{ uri: `https://insighthub.com.ng/${item.images[0]}` }} 
@@ -153,8 +156,8 @@ export default function SavedProperties() {
                   resizeMode="cover"
                 />
               ) : (
-                <View style={styles.imgPlaceholder}>
-                  <MaterialIcons name="home" size={40} color="#ccc" />
+                <View style={[styles.imgPlaceholder, { backgroundColor: colors.inputBackground }]}>
+                  <MaterialIcons name="home" size={40} color={colors.mutedText} />
                 </View>
               )}
 
@@ -183,20 +186,20 @@ export default function SavedProperties() {
 
             {/* Body */}
             <View style={styles.cardBody}>
-              <Text style={styles.cardName} numberOfLines={1}>
+              <Text style={[styles.cardName, { color: colors.text }]} numberOfLines={1}>
                 {item.propertyName}
               </Text>
 
               <View style={styles.locRow}>
-                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.6)" />
-                <Text style={styles.locText} numberOfLines={1}>
+                <Ionicons name="location-outline" size={12} color={colors.mutedText} />
+                <Text style={[styles.locText, { color: colors.mutedText }]} numberOfLines={1}>
                   {[item.city, item.state].filter(Boolean).join(', ')}
                 </Text>
               </View>
 
-              <Text style={styles.price}>
+              <Text style={[styles.price, { color: colors.buttonBackground }]}>
                 {priceDisplay(item)}{' '}
-                <Text style={styles.priceSub}>{priceSub(item)}</Text>
+                <Text style={[styles.priceSub, { color: colors.mutedText }]}>{priceSub(item)}</Text>
               </Text>
 
               {/* Chips */}
@@ -204,19 +207,19 @@ export default function SavedProperties() {
                 {chips(item)
                   .slice(0, 4)
                   .map((chip, i) => (
-                    <View key={i} style={styles.chip}>
-                      <Text style={styles.chipText}>{chip}</Text>
+                    <View key={i} style={[styles.chip, { backgroundColor: colors.inputBackground }]}>
+                      <Text style={[styles.chipText, { color: colors.mutedText }]}>{chip}</Text>
                     </View>
                   ))}
               </View>
 
               {/* Footer */}
-              <View style={styles.cardFooter}>
-                <Text style={styles.savedDate}>
+              <View style={[styles.cardFooter, { borderColor: colors.border }]}>
+                <Text style={[styles.savedDate, { color: colors.mutedText }]}>
                   {item.created_at ? `Saved ${formatDate(item.created_at)}` : ''}
                 </Text>
-                <View style={styles.viewBtn}>
-                  <Text style={styles.viewBtnText}>View details</Text>
+                <View style={[styles.viewBtn, { borderColor: colors.buttonBackground }]}>
+                  <Text style={[styles.viewBtnText, { color: colors.buttonBackground }]}>View details</Text>
                 </View>
               </View>
             </View>

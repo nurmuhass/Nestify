@@ -15,13 +15,13 @@ import {
 } from "react-native";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import { useToast } from "@/components/Toast";
+import { useTheme } from "@/context/ThemeContext";
 
 const BASE = "https://insighthub.com.ng";
-const GOLD = "#C9A84C";
-const DARK = "#0F0F1A";
 
 export default function EditStaff() {
   const { show } = useToast();
+  const { colors } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
@@ -226,16 +226,16 @@ export default function EditStaff() {
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+          <Ionicons name="arrow-back" size={22} color={colors.icon} />
         </TouchableOpacity>
-        <Text style={styles.title}>Edit Staff</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Edit Staff</Text>
 
         <TouchableOpacity onPress={handleDelete} style={{ marginLeft: "auto" }}>
-          <Ionicons name="trash" size={22} color="#ff4d4d" />
+          <Ionicons name="trash" size={22} color={colors.error} />
         </TouchableOpacity>
       </View>
 
@@ -247,71 +247,71 @@ export default function EditStaff() {
               ? { uri: image }
               : require("@/assets/images/andrew.jpg")
           }
-          style={styles.avatar}
+        style={[styles.avatar, { borderColor: colors.buttonBackground }]}
         />
-        <View style={styles.editIcon}>
-          <Ionicons name="pencil" size={14} color="#000" />
+        <View style={[styles.editIcon, { backgroundColor: colors.buttonBackground }]}>
+          <Ionicons name="pencil" size={14} color={colors.background} />
         </View>
       </TouchableOpacity>
 
       {/* Inputs */}
-      <View style={styles.inputBox}>
+      <View style={[styles.inputBox, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
         <TextInput
           value={name}
           onChangeText={setName}
           placeholder="Name"
-          placeholderTextColor="#777"
-          style={styles.input}
+          placeholderTextColor={colors.mutedText}
+          style={[styles.input, { color: colors.text }]}
         />
       </View>
 
-      <View style={styles.inputBox}>
+      <View style={[styles.inputBox, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
         <TextInput
           value={email}
           onChangeText={setEmail}
           placeholder="Email"
-          placeholderTextColor="#777"
-          style={styles.input}
+          placeholderTextColor={colors.mutedText}
+          style={[styles.input, { color: colors.text }]}
         />
       </View>
 
-      <View style={styles.inputBox}>
+      <View style={[styles.inputBox, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
         <TextInput
           value={phone}
           onChangeText={setPhone}
           placeholder="Phone"
-          placeholderTextColor="#777"
-          style={styles.input}
+          placeholderTextColor={colors.mutedText}
+          style={[styles.input, { color: colors.text }]}
         />
       </View>
 
-      <View style={styles.inputBox}>
+      <View style={[styles.inputBox, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
         <TextInput
           value={stateVal}
           onChangeText={setStateVal}
           placeholder="State"
-          placeholderTextColor="#777"
-          style={styles.input}
+          placeholderTextColor={colors.mutedText}
+          style={[styles.input, { color: colors.text }]}
         />
       </View>
 
-      <View style={styles.inputBox}>
+      <View style={[styles.inputBox, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
         <TextInput
           value={city}
           onChangeText={setCity}
           placeholder="City"
-          placeholderTextColor="#777"
-          style={styles.input}
+          placeholderTextColor={colors.mutedText}
+          style={[styles.input, { color: colors.text }]}
         />
       </View>
 
       {/* Button */}
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { backgroundColor: colors.buttonBackground }]}
         onPress={handleUpdate}
         disabled={updating}
       >
-        <Text style={styles.buttonText}>
+        <Text style={[styles.buttonText, { color: colors.background }]}>
           {updating ? "Updating..." : "Save Changes"}
         </Text>
       </TouchableOpacity>

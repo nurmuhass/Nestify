@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { useToast } from '@/components/Toast';
+import { useTheme } from '@/context/ThemeContext';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type Property = {
@@ -55,17 +56,21 @@ const RecentPill = ({
     label: string;
     onPress: () => void;
     onRemove: () => void;
-}) => (
-    <TouchableOpacity style={styles.pill} onPress={onPress} activeOpacity={0.7}>
-        <Ionicons name="time-outline" size={13} color="#94a3b8" style={{ marginRight: 5 }} />
-        <Text style={styles.pillText} numberOfLines={1}>
+}) => {
+    const { colors } = useTheme();
+
+    return (
+    <TouchableOpacity style={[styles.pill, { backgroundColor: colors.cardBackground, borderColor: colors.border }]} onPress={onPress} activeOpacity={0.7}>
+        <Ionicons name="time-outline" size={13} color={colors.icon} style={{ marginRight: 5 }} />
+        <Text style={[styles.pillText, { color: colors.text }]} numberOfLines={1}>
             {label}
         </Text>
         <TouchableOpacity onPress={onRemove} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="close" size={13} color="#94a3b8" style={{ marginLeft: 6 }} />
+            <Ionicons name="close" size={13} color={colors.icon} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
     </TouchableOpacity>
-);
+    );
+};
 
 /* ─── Property result card ───────────────────────────────────── */
 const ResultCard = ({
@@ -75,6 +80,7 @@ const ResultCard = ({
     item: Property;
     index: number;
 }) => {
+    const { colors } = useTheme();
     const anim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -108,19 +114,19 @@ const ResultCard = ({
             }}
         >
             <TouchableOpacity
-                style={styles.card}
+                style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 activeOpacity={0.88}
                 onPress={() =>
                     router.push({ pathname: '/Home/Properties/Details', params: { id: String(item.id) } })
                 }
             >
                 {/* Thumbnail */}
-                <View style={styles.cardThumb}>
+                <View style={[styles.cardThumb, { backgroundColor: colors.inputBackground }]}>
                     {thumb ? (
-                        <Image source={{ uri: thumb }} style={styles.cardImg} resizeMode="cover" />
+                        <Image source={{ uri: thumb }} style={[styles.cardImg, { backgroundColor: colors.inputBackground }]} resizeMode="cover" />
                     ) : (
-                        <View style={[styles.cardImg, styles.cardImgFallback]}>
-                            <Ionicons name="home-outline" size={26} color="#cbd5e1" />
+                        <View style={[styles.cardImg, styles.cardImgFallback, { backgroundColor: colors.inputBackground }]}>
+                            <Ionicons name="home-outline" size={26} color={colors.icon} />
                         </View>
                     )}
                     <View style={styles.cardTagWrap}>
@@ -130,13 +136,13 @@ const ResultCard = ({
 
                 {/* Info */}
                 <View style={styles.cardBody}>
-                    <Text style={styles.cardName} numberOfLines={2}>
+                    <Text style={[styles.cardName, { color: colors.text }]} numberOfLines={2}>
                         {item.propertyName}
                     </Text>
 
                     <View style={styles.cardRow}>
-                        <Ionicons name="location-outline" size={13} color="#94a3b8" />
-                        <Text style={styles.cardLoc} numberOfLines={1}>
+                        <Ionicons name="location-outline" size={13} color={colors.icon} />
+                        <Text style={[styles.cardLoc, { color: colors.mutedText }]} numberOfLines={1}>
                             {[item.city, item.state].filter(Boolean).join(', ') || 'Nigeria'}
                         </Text>
                     </View>
@@ -144,24 +150,24 @@ const ResultCard = ({
                     {(item.bedrooms || item.bathrooms) ? (
                         <View style={styles.cardFeatures}>
                             {item.bedrooms ? (
-                                <View style={styles.featureChip}>
-                                    <MaterialCommunityIcons name="bed-outline" size={12} color="#64748b" />
-                                    <Text style={styles.featureText}>{item.bedrooms}</Text>
+                                <View style={[styles.featureChip, { backgroundColor: colors.inputBackground }]}>
+                                    <MaterialCommunityIcons name="bed-outline" size={12} color={colors.icon} />
+                                    <Text style={[styles.featureText, { color: colors.mutedText }]}>{item.bedrooms}</Text>
                                 </View>
                             ) : null}
                             {item.bathrooms ? (
-                                <View style={styles.featureChip}>
-                                    <MaterialCommunityIcons name="shower" size={12} color="#64748b" />
-                                    <Text style={styles.featureText}>{item.bathrooms}</Text>
+                                <View style={[styles.featureChip, { backgroundColor: colors.inputBackground }]}>
+                                    <MaterialCommunityIcons name="shower" size={12} color={colors.icon} />
+                                    <Text style={[styles.featureText, { color: colors.mutedText }]}>{item.bathrooms}</Text>
                                 </View>
                             ) : null}
                         </View>
                     ) : null}
 
-                    <Text style={styles.cardPrice}>{price}</Text>
+                    <Text style={[styles.cardPrice, { color: colors.warning }]}>{price}</Text>
                 </View>
 
-                <Ionicons name="chevron-forward" size={16} color="#cbd5e1" style={styles.cardChevron} />
+                <Ionicons name="chevron-forward" size={16} color={colors.icon} style={styles.cardChevron} />
             </TouchableOpacity>
         </Animated.View>
     );
@@ -170,6 +176,7 @@ const ResultCard = ({
 /* ─── Main Screen ────────────────────────────────────────────── */
 export default function SearchScreen() {
     const inputRef = useRef<TextInput>(null);
+    const { colors } = useTheme();
 
     const [query, setQuery] = useState('');
     const [activeFilter, setFilter] = useState('All');
@@ -272,27 +279,27 @@ export default function SearchScreen() {
 
     const borderColor = borderAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: ['#e2e8f0', '#3b82f6'],
+        outputRange: [colors.border, colors.buttonBackground],
     });
 
     return (
         <KeyboardAvoidingView
-            style={styles.root}
+            style={[styles.root, { backgroundColor: colors.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             {/* ── Top bar ── */}
-            <View style={styles.topBar}>
-                <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={20} color="#fff" />
+            <View style={[styles.topBar, { backgroundColor: colors.background }]}>
+                <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.inputBackground }]} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={20} color={colors.icon} />
                 </TouchableOpacity>
 
-                <Animated.View style={[styles.searchBox, { borderColor }]}>
-                    <Ionicons name="search" size={17} color={query ? '#3b82f6' : '#94a3b8'} />
+                <Animated.View style={[styles.searchBox, { borderColor, backgroundColor: colors.inputBackground }]}>
+                    <Ionicons name="search" size={17} color={query ? colors.buttonBackground : colors.icon} />
                     <TextInput
                         ref={inputRef}
-                        style={styles.searchInput}
+                        style={[styles.searchInput, { color: colors.text }]}
                         placeholder="Search properties, cities…"
-                        placeholderTextColor="#94a3b8"
+                        placeholderTextColor={colors.mutedText}
                         value={query}
                         onChangeText={setQuery}
                         onSubmitEditing={handleSubmit}
@@ -304,8 +311,8 @@ export default function SearchScreen() {
                     />
                     {query.length > 0 && (
                         <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                            <View style={styles.clearBtn}>
-                                <Ionicons name="close" size={12} color="#fff" />
+                            <View style={[styles.clearBtn, { backgroundColor: colors.buttonBackground }]}>
+                                <Ionicons name="close" size={12} color={colors.background} />
                             </View>
                         </TouchableOpacity>
                     )}
@@ -313,15 +320,21 @@ export default function SearchScreen() {
             </View>
 
             {/* ── Filter chips ── */}
-            <View style={styles.filters}>
+            <View style={[styles.filters, { backgroundColor: colors.background }]}>
                 {FILTERS.map((f) => (
                     <TouchableOpacity
                         key={f}
-                        style={[styles.filterChip, activeFilter === f && styles.filterChipActive]}
+                        style={[
+                            styles.filterChip,
+                            {
+                                backgroundColor: activeFilter === f ? colors.buttonBackground : colors.cardBackground,
+                                borderColor: activeFilter === f ? colors.buttonBackground : colors.border,
+                            },
+                        ]}
                         onPress={() => setFilter(f)}
                         activeOpacity={0.75}
                     >
-                        <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>
+                        <Text style={[styles.filterText, { color: activeFilter === f ? colors.background : colors.mutedText }, activeFilter === f && styles.filterTextActive]}>
                             {f === 'All' ? 'All types' : `For ${f}`}
                         </Text>
                     </TouchableOpacity>
@@ -329,8 +342,8 @@ export default function SearchScreen() {
 
                 {/* Result count badge */}
                 {query.trim().length > 0 && (
-                    <View style={styles.countBadge}>
-                        <Text style={styles.countText}>
+                    <View style={[styles.countBadge, { backgroundColor: colors.cardBackground, borderColor: colors.buttonBackground }]}>
+                        <Text style={[styles.countText, { color: colors.warning }]}>
                             {results.length} {results.length === 1 ? 'result' : 'results'}
                         </Text>
                     </View>
@@ -338,13 +351,13 @@ export default function SearchScreen() {
             </View>
 
             {/* ── Divider ── */}
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             {/* ── Body ── */}
             {loading ? (
                 <View style={styles.center}>
-                    <ActivityIndicator size="large" color="#c9a84c" />
-                    <Text style={styles.loadingText}>Finding properties…</Text>
+                    <ActivityIndicator size="large" color={colors.buttonBackground} />
+                    <Text style={[styles.loadingText, { color: colors.mutedText }]}>Finding properties…</Text>
                 </View>
 
             ) : isIdle ? (
@@ -353,14 +366,14 @@ export default function SearchScreen() {
                     {recent.length > 0 ? (
                         <>
                             <View style={styles.idleHeader}>
-                                <Text style={styles.idleTitle}>Recent searches</Text>
+                                <Text style={[styles.idleTitle, { color: colors.mutedText }]}>Recent searches</Text>
                                 <TouchableOpacity
                                     onPress={async () => {
                                         setRecent([]);
                                         await AsyncStorage.removeItem(RECENT_KEY);
                                     }}
                                 >
-                                    <Text style={styles.clearAll}>Clear all</Text>
+                                    <Text style={[styles.clearAll, { color: colors.buttonBackground }]}>Clear all</Text>
                                 </TouchableOpacity>
                             </View>
                             <View style={styles.pillsWrap}>
@@ -378,11 +391,11 @@ export default function SearchScreen() {
 
                     {/* Prompt illustration */}
                     <View style={styles.promptWrap}>
-                        <View style={styles.promptIcon}>
-                            <Ionicons name="search" size={32} color="#3b82f6" />
+                        <View style={[styles.promptIcon, { backgroundColor: colors.cardBackground, borderColor: colors.buttonBackground }]}>
+                            <Ionicons name="search" size={32} color={colors.buttonBackground} />
                         </View>
-                        <Text style={styles.promptTitle}>Find your next home</Text>
-                        <Text style={styles.promptSub}>
+                        <Text style={[styles.promptTitle, { color: colors.text }]}>Find your next home</Text>
+                        <Text style={[styles.promptSub, { color: colors.mutedText }]}>
                             Search by property name, city, or state across thousands of listings.
                         </Text>
                     </View>
@@ -391,16 +404,16 @@ export default function SearchScreen() {
             ) : isEmpty ? (
                 /* No results */
                 <View style={styles.center}>
-                    <View style={styles.emptyIcon}>
-                        <Ionicons name="home-outline" size={34} color="#94a3b8" />
+                    <View style={[styles.emptyIcon, { backgroundColor: colors.cardBackground }]}>
+                        <Ionicons name="home-outline" size={34} color={colors.icon} />
                     </View>
-                    <Text style={styles.emptyTitle}>No properties found</Text>
-                    <Text style={styles.emptySub}>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>No properties found</Text>
+                    <Text style={[styles.emptySub, { color: colors.mutedText }]}>
                         No results for{' '}
-                        <Text style={{ color: '#0f172a', fontWeight: '600' }}>{`"${query}"`}</Text>
+                        <Text style={{ color: colors.text, fontWeight: '600' }}>{`"${query}"`}</Text>
                     </Text>
-                    <TouchableOpacity style={styles.emptyReset} onPress={() => setQuery('')}>
-                        <Text style={styles.emptyResetText}>Clear search</Text>
+                    <TouchableOpacity style={[styles.emptyReset, { backgroundColor: colors.buttonBackground }]} onPress={() => setQuery('')}>
+                        <Text style={[styles.emptyResetText, { color: colors.background }]}>Clear search</Text>
                     </TouchableOpacity>
                 </View>
 

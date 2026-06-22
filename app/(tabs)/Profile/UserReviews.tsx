@@ -19,6 +19,7 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { CompanyReview, ReviewSummary, useCompanyReviews } from '@/hooks/useCompanyReviews';
 import PremiumLoader from '@/components/PremiumLoader';
+import { useTheme } from '@/context/ThemeContext';
 
 const COLORS = {
   bg: '#091530',
@@ -53,6 +54,7 @@ const formatTime = (d: string) => {
 
 export default function UserReviewsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [userId, setUserId] = useState<number | null>(null);
   const [userName, setUserName] = useState('');
 
@@ -88,32 +90,32 @@ export default function UserReviewsScreen() {
         style={styles.ratingBarRow}
         onPress={() => applyFilter(filterRating === star ? null : star)}
       >
-        <Text style={styles.ratingBarStar}>{star}</Text>
-        <MaterialIcons name="star" size={12} color={COLORS.gold} />
-        <View style={styles.ratingBarTrack}>
-          <View style={[styles.ratingBarFill, { width: `${pct}%` as any }]} />
+        <Text style={[styles.ratingBarStar, { color: colors.mutedText }]}>{star}</Text>
+        <MaterialIcons name="star" size={12} color={colors.buttonBackground} />
+        <View style={[styles.ratingBarTrack, { backgroundColor: colors.border }]}>
+          <View style={[styles.ratingBarFill, { backgroundColor: colors.buttonBackground, width: `${pct}%` as any }]} />
         </View>
-        <Text style={styles.ratingBarCount}>{count}</Text>
+        <Text style={[styles.ratingBarCount, { color: colors.mutedText }]}>{count}</Text>
       </TouchableOpacity>
     );
   };
 
   // ── Summary card ────────────────────────────────────────────────────────────
   const Summary = ({ s }: { s: ReviewSummary }) => (
-    <View style={styles.summaryCard}>
+    <View style={[styles.summaryCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <View style={styles.summaryLeft}>
-        <Text style={styles.avgScore}>{s.average.toFixed(1)}</Text>
+        <Text style={[styles.avgScore, { color: colors.buttonBackground }]}>{s.average.toFixed(1)}</Text>
         <View style={styles.summaryStars}>
           {[1, 2, 3, 4, 5].map(i => (
             <MaterialIcons
               key={i}
               name="star"
               size={18}
-              color={i <= Math.round(s.average) ? COLORS.gold : COLORS.border}
+              color={i <= Math.round(s.average) ? colors.buttonBackground : colors.border}
             />
           ))}
         </View>
-        <Text style={styles.summaryTotal}>{s.total} review{s.total !== 1 ? 's' : ''}</Text>
+        <Text style={[styles.summaryTotal, { color: colors.mutedText }]}>{s.total} review{s.total !== 1 ? 's' : ''}</Text>
       </View>
       <View style={styles.summaryRight}>
         {[5, 4, 3, 2, 1].map(star => (
@@ -134,7 +136,7 @@ export default function UserReviewsScreen() {
     const isLong = item.comment.length > 120;
 
     return (
-      <View style={styles.reviewCard}>
+      <View style={[styles.reviewCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
         <View style={styles.reviewHeader}>
           {item.reviewer_avatar ? (
             <Image
@@ -142,55 +144,55 @@ export default function UserReviewsScreen() {
               style={styles.avatar}
             />
           ) : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarInitial}>
+            <View style={[styles.avatarFallback, { backgroundColor: colors.buttonBackground }]}>
+              <Text style={[styles.avatarInitial, { color: colors.background }]}>
                 {(item.reviewer_name ?? '?')[0].toUpperCase()}
               </Text>
             </View>
           )}
 
           <View style={styles.reviewerInfo}>
-            <Text style={styles.reviewerName}>{item.reviewer_name}</Text>
+            <Text style={[styles.reviewerName, { color: colors.text }]}>{item.reviewer_name}</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(i => (
                 <MaterialIcons
                   key={i}
                   name="star"
                   size={13}
-                  color={i <= item.rating ? COLORS.gold : COLORS.border}
+                  color={i <= item.rating ? colors.buttonBackground : colors.border}
                 />
               ))}
-              <Text style={styles.reviewTime}> · {formatTime(item.created_at)}</Text>
+              <Text style={[styles.reviewTime, { color: colors.mutedText }]}> · {formatTime(item.created_at)}</Text>
             </View>
           </View>
 
           {/* Star badge */}
           <View style={[
             styles.starBadge,
-            { backgroundColor: COLORS.gold }
+            { backgroundColor: colors.buttonBackground }
           ]}>
             <MaterialIcons
               name="star"
               size={13}
-              color={COLORS.bg}
+              color={colors.background}
             />
             <Text style={[
               styles.starBadgeText,
-              { color: COLORS.bg }
+              { color: colors.background }
             ]}>
               {item.rating}.0
             </Text>
           </View>
         </View>
 
-        <Text style={styles.reviewComment}>
+        <Text style={[styles.reviewComment, { color: colors.text }]}>
           {isLong && !expanded
             ? item.comment.slice(0, 120) + '...'
             : item.comment}
         </Text>
         {isLong && (
           <TouchableOpacity onPress={() => setExpanded(e => !e)}>
-            <Text style={styles.readMore}>{expanded ? 'Show less' : 'Read more'}</Text>
+            <Text style={[styles.readMore, { color: colors.buttonBackground }]}>{expanded ? 'Show less' : 'Read more'}</Text>
           </TouchableOpacity>
         )}
 
@@ -200,7 +202,7 @@ export default function UserReviewsScreen() {
               <Image
                 key={`${img}-${i}`}
                 source={{ uri: `https://insighthub.com.ng/${img}` }}
-                style={styles.reviewImg}
+                style={[styles.reviewImg, { borderColor: colors.border }]}
                 resizeMode="cover"
               />
             ))}
@@ -216,23 +218,23 @@ export default function UserReviewsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.inputBackground }]} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={22} color={colors.icon} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>My Reviews</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>My Reviews</Text>
           {userName ? (
-            <Text style={styles.headerSub} numberOfLines={1}>{userName}</Text>
+            <Text style={[styles.headerSub, { color: colors.mutedText }]} numberOfLines={1}>{userName}</Text>
           ) : null}
         </View>
         {summary && summary.total > 0 && (
-          <View style={styles.headerBadge}>
-            <MaterialIcons name="star" size={14} color={COLORS.gold} />
-            <Text style={styles.headerBadgeText}>
+          <View style={[styles.headerBadge, { backgroundColor: colors.buttonBackground }]}>
+            <MaterialIcons name="star" size={14} color={colors.background} />
+            <Text style={[styles.headerBadgeText, { color: colors.background }]}>
               {summary.average.toFixed(1)}
             </Text>
           </View>
@@ -263,10 +265,18 @@ export default function UserReviewsScreen() {
                 const active = filterRating === f.value;
                 return (
                   <TouchableOpacity
-                    style={[styles.filterPill, active && styles.filterPillActive]}
+                    style={[
+                      styles.filterPill,
+                      { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                      active && { backgroundColor: colors.buttonBackground, borderColor: colors.buttonBackground },
+                    ]}
                     onPress={() => applyFilter(f.value)}
                   >
-                    <Text style={[styles.filterText, active && styles.filterTextActive]}>
+                    <Text style={[
+                      styles.filterText,
+                      { color: colors.mutedText },
+                      active && { color: colors.background },
+                    ]}>
                       {f.label}
                     </Text>
                   </TouchableOpacity>
@@ -275,7 +285,7 @@ export default function UserReviewsScreen() {
             />
 
             {reviews.length > 0 && (
-              <Text style={styles.sectionLabel}>
+              <Text style={[styles.sectionLabel, { color: colors.mutedText }]}>
                 {filterRating
                   ? `${filterRating}-star reviews (${summary?.breakdown?.[filterRating] ?? 0})`
                   : `All reviews (${summary?.total ?? 0})`}
@@ -285,14 +295,14 @@ export default function UserReviewsScreen() {
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator style={{ marginTop: 60 }} color={COLORS.gold} />
+            <ActivityIndicator style={{ marginTop: 60 }} color={colors.buttonBackground} />
           ) : (
             <View style={styles.empty}>
-              <View style={styles.emptyIcon}>
-                <MaterialIcons name="star-border" size={40} color="#ccc" />
+              <View style={[styles.emptyIcon, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                <MaterialIcons name="star-border" size={40} color={colors.mutedText} />
               </View>
-              <Text style={styles.emptyTitle}>No reviews yet</Text>
-              <Text style={styles.emptySub}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No reviews yet</Text>
+              <Text style={[styles.emptySub, { color: colors.mutedText }]}>
                 Reviews from clients will appear here once they interact with your listings
               </Text>
             </View>
@@ -302,7 +312,7 @@ export default function UserReviewsScreen() {
           hasMore
             ? <></>
             : reviews.length > 0
-              ? <Text style={styles.endText}>You have seen all reviews</Text>
+              ? <Text style={[styles.endText, { color: colors.mutedText }]}>You have seen all reviews</Text>
               : null
         }
         renderItem={({ item }) => <ReviewItem item={item} />}

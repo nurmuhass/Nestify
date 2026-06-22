@@ -21,6 +21,8 @@ import {
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { AuthContext } from '../../store';
 import { useToast } from '../../components/Toast';
+import { colorWithAlpha } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -52,6 +54,7 @@ function FloatingInput({
   secureTextEntry?: boolean;
   rightIcon?: React.ReactNode;
 }) {
+  const { colors } = useTheme();
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
   const [focused, setFocused] = useState(false);
 
@@ -68,19 +71,22 @@ function FloatingInput({
   const labelSize = anim.interpolate({ inputRange: [0, 1], outputRange: [15, 11] });
   const labelColor = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [MUTED, focused ? GOLD : MUTED],
+    outputRange: [colors.mutedText, focused ? colors.buttonBackground : colors.mutedText],
   });
 
   return (
     <View style={[
       inp.wrap,
-      focused && inp.wrapFocused,
+      {
+        backgroundColor: colorWithAlpha(colors.cardBackground, 0.7),
+        borderColor: focused ? colors.buttonBackground : colors.border,
+      },
     ]}>
       <Animated.Text style={[inp.label, { top: labelTop, fontSize: labelSize, color: labelColor }]}>
         {label}
       </Animated.Text>
       <TextInput
-        style={inp.field}
+        style={[inp.field, { color: colors.text }]}
         value={value}
         onChangeText={onChangeText}
         onFocus={onFocus}
@@ -135,6 +141,7 @@ const inp = StyleSheet.create({
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useContext(AuthContext);
+  const { colors, isDark } = useTheme();
 
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -175,7 +182,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY2} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       {/* Background photo + dark overlay */}
       <Image
@@ -184,7 +191,11 @@ export default function LoginScreen() {
         resizeMode="cover"
       />
       <LinearGradient
-        colors={['rgba(9,21,48,0.55)', 'rgba(9,21,48,0.82)', NAVY2]}
+        colors={[
+          colorWithAlpha(colors.background, isDark ? 0.55 : 0.42),
+          colorWithAlpha(colors.background, isDark ? 0.82 : 0.72),
+          colors.background,
+        ]}
         locations={[0, 0.45, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -200,21 +211,21 @@ export default function LoginScreen() {
         >
           {/* Logo mark */}
           <TouchableOpacity style={styles.logoWrap} onPress={() => router.push('./Welcome')}>
-            <View style={styles.logoRing}>
-              <Ionicons name="home" size={26} color={GOLD} />
+            <View style={[styles.logoRing, { backgroundColor: colorWithAlpha(colors.buttonBackground, 0.15), borderColor: colorWithAlpha(colors.buttonBackground, 0.4) }]}>
+              <Ionicons name="home" size={26} color={colors.buttonBackground} />
             </View>
-            <Text style={styles.logoText}>Nestify</Text>
+            <Text style={[styles.logoText, { color: colors.text }]}>Nestify</Text>
           </TouchableOpacity>
 
           {/* Hero copy */}
-          <Text style={styles.headline}>Welcome{'\n'}back.</Text>
-          <Text style={styles.sub}>Sign in to continue exploring premium properties.</Text>
+          <Text style={[styles.headline, { color: colors.text }]}>Welcome{'\n'}back.</Text>
+          <Text style={[styles.sub, { color: colors.mutedText }]}>Sign in to continue exploring premium properties.</Text>
 
           {/* Divider */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           {/* Form card */}
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colorWithAlpha(colors.cardBackground, 0.72), borderColor: colors.border }]}>
             <FloatingInput
               label="Email or Phone"
               value={emailOrPhone}
@@ -232,7 +243,7 @@ export default function LoginScreen() {
                   <Entypo
                     name={showPw ? 'eye' : 'eye-with-line'}
                     size={20}
-                    color={MUTED}
+                    color={colors.mutedText}
                   />
                 </TouchableOpacity>
               }
@@ -240,48 +251,48 @@ export default function LoginScreen() {
 
             <TouchableOpacity style={styles.forgotBtn}
               onPress={() => router.push('./ForgotPassword')}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
+              <Text style={[styles.forgotText, { color: colors.buttonBackground }]}>Forgot password?</Text>
             </TouchableOpacity>
 
             {/* Login button */}
             <TouchableOpacity
-              style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, { backgroundColor: colors.buttonBackground }, loading && styles.primaryBtnDisabled]}
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color={NAVY2} size="small" />
+                <ActivityIndicator color={colors.background} size="small" />
               ) : (
                 <>
-                  <Text style={styles.primaryBtnText}>Sign In</Text>
-                  <Ionicons name="arrow-forward" size={18} color={NAVY2} />
+                  <Text style={[styles.primaryBtnText, { color: colors.background }]}>Sign In</Text>
+                  <Ionicons name="arrow-forward" size={18} color={colors.background} />
                 </>
               )}
             </TouchableOpacity>
 
             {/* Divider */}
             <View style={styles.orRow}>
-              <View style={styles.orLine} />
-              <Text style={styles.orText}>or</Text>
-              <View style={styles.orLine} />
+              <View style={[styles.orLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.orText, { color: colors.mutedText }]}>or</Text>
+              <View style={[styles.orLine, { backgroundColor: colors.border }]} />
             </View>
 
             {/* Register link */}
             <TouchableOpacity
-              style={styles.outlineBtn}
+              style={[styles.outlineBtn, { borderColor: colors.border }]}
               onPress={() => router.push('./Register')}
               activeOpacity={0.8}
             >
-              <Text style={styles.outlineBtnText}>Create an Account</Text>
+              <Text style={[styles.outlineBtnText, { color: colors.text }]}>Create an Account</Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.terms}>
+          <Text style={[styles.terms, { color: colors.mutedText }]}>
             By signing in you agree to our{' '}
-            <Text style={{ color: GOLD }}>Terms of Service</Text>
+            <Text style={{ color: colors.buttonBackground }}>Terms of Service</Text>
             {' & '}
-            <Text style={{ color: GOLD }}>Privacy Policy</Text>
+            <Text style={{ color: colors.buttonBackground }}>Privacy Policy</Text>
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

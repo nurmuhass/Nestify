@@ -16,6 +16,7 @@ import {
 import LikeButton from '@/components/LikeButton';
 import PremiumLoader from '@/components/PremiumLoader';
 import { useToast } from '@/components/Toast';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +38,7 @@ type Props = {
 export default function GetRelatedProperties({ propertyId }: Props) {
     const router = useRouter();
     const { show } = useToast();
+    const { colors } = useTheme();
 
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -134,7 +136,7 @@ export default function GetRelatedProperties({ propertyId }: Props) {
         return (
             <TouchableOpacity
                 activeOpacity={0.9}
-                style={styles.card}
+                style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
                 onPress={() =>
                     router.push({
                         pathname: '/Home/Properties/Details',
@@ -143,14 +145,14 @@ export default function GetRelatedProperties({ propertyId }: Props) {
                 }
             >
                 {/* IMAGE */}
-                <View style={styles.imageWrap}>
+                <View style={[styles.imageWrap, { backgroundColor: colors.inputBackground }]}>
                     {image ? (
                         <Image
                             source={{ uri: image }}
-                            style={styles.image}
+                            style={[styles.image, { backgroundColor: colors.inputBackground }]}
                         />
                     ) : (
-                        <View style={[styles.image, styles.placeholder]} />
+                        <View style={[styles.image, styles.placeholder, { backgroundColor: colors.inputBackground }]} />
                     )}
 
                     {/* GRADIENT OVERLAY */}
@@ -162,9 +164,9 @@ export default function GetRelatedProperties({ propertyId }: Props) {
                             <Ionicons
                                 name="diamond"
                                 size={12}
-                                color="#000"
+                                color={colors.background}
                             />
-                            <Text style={styles.premiumText}>
+                            <Text style={[styles.premiumText, { color: colors.background }]}>
                                 Premium
                             </Text>
                         </View>
@@ -182,7 +184,7 @@ export default function GetRelatedProperties({ propertyId }: Props) {
 
                     {/* LISTING TYPE */}
                     <View style={styles.listingBadge}>
-                        <Text style={styles.listingText}>
+                        <Text style={[styles.listingText, { color: colors.background }]}>
                             {item.listingType}
                         </Text>
                     </View>
@@ -190,7 +192,7 @@ export default function GetRelatedProperties({ propertyId }: Props) {
 
                 {/* CONTENT */}
                 <View style={styles.content}>
-                    <Text numberOfLines={1} style={styles.name}>
+                    <Text numberOfLines={1} style={[styles.name, { color: colors.text }]}>
                         {item.propertyName}
                     </Text>
 
@@ -198,17 +200,17 @@ export default function GetRelatedProperties({ propertyId }: Props) {
                         <Ionicons
                             name="location-outline"
                             size={14}
-                            color={COLORS.gold}
+                            color={colors.buttonBackground}
                         />
 
-                        <Text style={styles.location}>
+                        <Text style={[styles.location, { color: colors.mutedText }]}>
                             {item.city}, {item.state}
                         </Text>
                     </View>
 
                     <View style={styles.bottomRow}>
                         <View>
-                            <Text style={styles.price}>
+                            <Text style={[styles.price, { color: colors.buttonBackground }]}>
                                 ₦
                                 {formatPrice(
                                     item.listingType === 'Rent'
@@ -217,7 +219,7 @@ export default function GetRelatedProperties({ propertyId }: Props) {
                                 )}
                             </Text>
 
-                            <Text style={styles.subText}>
+                            <Text style={[styles.subText, { color: colors.mutedText }]}>
                                 {item.listingType === 'Rent'
                                     ? 'per year'
                                     : 'sale price'}
@@ -228,10 +230,10 @@ export default function GetRelatedProperties({ propertyId }: Props) {
                             <MaterialIcons
                                 name="favorite"
                                 size={15}
-                                color={COLORS.gold}
+                                color={colors.buttonBackground}
                             />
 
-                            <Text style={styles.statText}>
+                            <Text style={[styles.statText, { color: colors.buttonBackground }]}>
                                 {item.likes_count || 0}
                             </Text>
                         </View>
@@ -254,20 +256,20 @@ export default function GetRelatedProperties({ propertyId }: Props) {
             {/* HEADER */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.title}>
+                    <Text style={[styles.title, { color: colors.text }]}>
                         Related Properties
                     </Text>
 
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.subtitle, { color: colors.mutedText }]}>
                         Similar premium listings around you
                     </Text>
                 </View>
 
-                <View style={styles.iconCircle}>
+                <View style={[styles.iconCircle, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
                     <Ionicons
                         name="sparkles"
                         size={18}
-                        color={COLORS.gold}
+                        color={colors.buttonBackground}
                     />
                 </View>
             </View>
@@ -291,7 +293,7 @@ export default function GetRelatedProperties({ propertyId }: Props) {
                 ListFooterComponent={
                     loadingMore ? (
                         <View style={styles.loadingMore}>
-                            <ActivityIndicator color={COLORS.gold} />
+                            <ActivityIndicator color={colors.buttonBackground} />
                         </View>
                     ) : null
                 }
